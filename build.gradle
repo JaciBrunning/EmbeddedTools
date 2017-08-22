@@ -1,0 +1,48 @@
+plugins {
+    id "com.gradle.plugin-publish" version "0.9.7"
+}
+
+apply plugin: 'groovy'
+apply plugin: 'maven-publish'
+
+dependencies {
+  compile gradleApi()
+  compile localGroovy()
+  compile('org.hidetake:groovy-ssh:2.7.0') {
+      exclude module: 'groovy-all'
+  }
+}
+
+repositories {
+    jcenter()
+}
+
+group = "jaci.gradle"
+archivesBaseName = "DeployTools"
+version = "2017.2.3"
+
+pluginBundle {
+    website = 'https://github.com/JacisNonsense/DeployTools'
+    vcsUrl = 'https://github.com/JacisNonsense/DeployTools'
+    description = 'Additions to the model-based DSL for deploying Java and Native projects to remote targets'
+    tags = ['remote', 'target', 'deploy', 'java', 'native']
+
+    plugins {
+        wpilibVersionPlugin {
+            id = "${project.group}.${project.archivesBaseName}"
+            displayName = 'DeployTools'
+        }
+    }
+}
+
+publishing {
+    publications {
+        plugin(MavenPublication) {
+            artifact jar
+        }
+    }
+}
+
+task wrapper(type: Wrapper) {
+    gradleVersion = '4.1'
+}

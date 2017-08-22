@@ -1,0 +1,65 @@
+plugins {
+    id "java"
+    id "cpp"
+    id "jaci.gradle.EmbeddedTools" version "...."
+}
+
+model {
+    targets {
+        roborio {
+            addresses << "roborio-team-frc.local"
+            addresses << "10.TE.AM.2"
+            addresses << "172.22.11.2"
+            directory "/home/lvuser/deploy"
+            user "lvuser"
+            password ""
+            promptPassword false // Can set true, ignores above
+            timeout 3
+            failOnMissing true
+        }
+    }
+
+    deployers {
+        javaArtifacts {
+            artifact jar
+            artifact src {
+                directory "subdir"
+                filename "filename"
+                pre << "echo Pre Deploy"
+                post << "echo Post Deploy"
+            }
+            pre << "echo Pre Deploy 1"
+            pre << "echo Pre Deploy 2"
+            post << "echo Post Deploy"
+            order 1 // default order is 50
+        }
+        nativeArtifacts {
+            component my_program {
+                // same options as above
+                libraries true          // deploy shared libraries
+                librootdir "/usr/local" // will deploy to include/ and lib/
+
+                platforms << "roborio-arm"  // filter deploy units based on platform
+            }
+        }
+        files {
+            file "myfile.dat" // same options as above
+        }
+    }
+
+    components {
+        my_program(NativeExecutable) {
+            targetPlatform "roborio"
+            sources.cpp {
+                source.srcDirs "src"
+                exportedHeaders.srcDirs "include"
+
+                lib library: "wpilib", linkage: "static" // etc
+            }
+        }
+    }
+}
+
+dependencies {
+    compile wpilib() // etc
+}
