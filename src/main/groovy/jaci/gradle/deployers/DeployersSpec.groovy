@@ -1,0 +1,73 @@
+import org.gradle.api.NamedDomainObjectSet
+import org.gradle.model.Managed
+import org.gradle.api.Named
+import org.gradle.model.ModelMap
+import java.util.List
+
+@Managed
+interface DeployableStep extends Named {
+    void setPredeploy(List<String> precommands)
+    List<String> getPredeploy()
+
+    void setPostdeploy(List<String> postcommands)
+    List<String> getPostdeploy()
+
+    void setOrder(int order)
+    int getOrder()
+}
+
+@Managed
+interface Deployer extends DeployableStep {
+    void setTargets(List<String> targets)
+    List<String> getTargets()
+
+    void setUser(String user)
+    String getUser()
+
+    void setPassword(String pass)
+    String getPassword()
+
+    void setPromptPassword(boolean prompt)
+    boolean getPromptPassword()
+
+    ModelMap<ArtifactBase> getArtifacts()
+}
+
+@Managed
+interface ArtifactBase extends DeployableStep {
+    void setDirectory(String directory)
+    String getDirectory()
+
+    void setFilename(String filename)
+    String getFilename()
+}
+
+@Managed 
+interface FileArtifact extends ArtifactBase {
+    void setFile(File file)
+    File getFile()
+}
+
+@Managed
+interface JavaArtifact extends FileArtifact { }
+
+@Managed 
+interface NativeArtifact extends FileArtifact {
+    void setLibraries(boolean deploySharedLibraries)
+    boolean getLibraries()
+
+    void setLibrootdir(String libRootDir)
+    String getLibrootdir()
+
+    void setPlatforms(List<String> platformfilter)
+    List<String> getPlatforms()
+}
+
+@Managed
+interface CommandArtifact extends ArtifactBase {
+    void setCommand(String command)
+    String getCommand()
+}
+
+@Managed
+interface DeployersSpec extends ModelMap<Deployer> { }

@@ -13,5 +13,8 @@ class DeployTools implements Plugin<Project> {
     static class DeployRules extends RuleSource {
         @Model("targets")
         void createTargetsModel(TargetsSpec spec) { }
+
+        @Model("deployers")
+        void createDeployersModel(DeployersSpec spec) { }
     }
 }
