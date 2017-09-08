@@ -1,0 +1,70 @@
+plugins {
+    id "java"
+    id "cpp"
+    id "jaci.gradle.DeployTools" version "...."
+}
+
+model {
+    targets {
+        roborio(RemoteTarget) {
+            addresses << "roborio-team-frc.local" << "10.TE.AM.2" << "172.22.11.2"
+            concurrent true     // Try to hit all target concurrently
+            directory "/home/lvuser/deploy"
+            user "lvuser"
+            password ""
+            promptPassword false // Can set true, ignores above
+            timeout 3
+            failOnMissing true
+        }
+    }
+
+    deployers {
+        java(JavaDeployer) {
+            artifact jar
+            artifact src {
+                directory "subdir"
+                filename "filename"
+                predeploy << "echo Pre Deploy"
+                postdeploy << "echo Post Deploy"
+            }
+            predeploy << "echo Pre Deploy 1"
+            predeploy << "echo Pre Deploy 2"
+            postdeploy << "echo Post Deploy"
+            order 1 // default order is 50, used to prioritize what deployer to run first
+
+            user "lvuser"   // Override creds provided in target
+            targets << "roborio"
+        }
+        nat(NativeDeployer) {
+            component my_program {
+                // same options as above
+                libraries true          // deploy shared libraries
+                librootdir "/usr/local" // will deploy to include/ and lib/
+
+                platforms << "roborio-arm"  // filter deploy units based on platform
+            }
+        }
+        files(FileDeployer) {
+            file "myfile.dat" // same options as above
+        }
+        commands(CommandDeployer) {
+            execute << "echo Hello World"
+        }
+    }
+
+    components {
+        my_program(NativeExecutable) {
+            targetPlatform "roborio"
+            sources.cpp {
+                source.srcDirs "src"
+                exportedHeaders.srcDirs "include"
+
+                lib library: "wpilib", linkage: "static" // etc
+            }
+        }
+    }
+}
+
+dependencies {
+    compile wpilib() // etc
+}

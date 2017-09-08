@@ -1,0 +1,68 @@
+buildscript {
+    repositories {
+        mavenLocal()
+    }
+    dependencies {
+        classpath group: "jaci.gradle", name: "DeployTools", version: "+" 
+    }
+}
+
+apply plugin: "java"
+apply plugin: "jaci.gradle.DeployTools"
+
+model {
+    targets {
+        roborio(RemoteTarget) {
+            addresses << "roborio-team-frc.local"
+            addresses << "10.TE.AM.2"
+            addresses << "172.22.11.2"
+            directory "/home/lvuser/deploy"
+            user "lvuser"
+            password ""
+            promptPassword false // Can set true, ignores above
+            timeout 3
+            failOnMissing true
+        }
+        other(RemoteTarget)
+    }
+
+    deployers {
+        test(Deployer) {
+            artifacts {
+                jar(JavaArtifact) {
+                    directory "subdir"
+                    filename "filename"
+                    order 1
+                }
+                src(JavaArtifact) {
+                    predeploy << "SRC PRE"
+                }
+
+                myfile(FileArtifact) {
+                    file "myfile.dat" // same options as above
+                }
+
+                my_program(NativeArtifact) {
+                    // same options as above
+                    libraries true          // deploy shared libraries
+                    librootdir "/usr/local" // will deploy to include/ and lib/
+
+                    platforms << "roborio-arm"  // filter deploy units based on platform
+                }
+
+                commands(CommandArtifact) {
+                    command "Hello World"
+                }
+            }
+
+            predeploy << "echo Predeploy"
+            postdeploy << "echo Postdeploy"
+            targets << "roborio"
+            order 1
+        }
+    }
+}
+
+task wrapper(type: Wrapper) {
+    gradleVersion = '4.1'
+}
