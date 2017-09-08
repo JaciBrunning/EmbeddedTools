@@ -9,9 +9,6 @@ interface RemoteTarget extends Named {
     void setAddresses(List<String> address)
     List<String> getAddresses()
 
-    void setConcurrent(boolean runConcurrent)
-    boolean getConcurrent()
-
     void setDirectory(String dir)
     String getDirectory()
 

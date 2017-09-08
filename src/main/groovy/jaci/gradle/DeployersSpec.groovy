@@ -27,9 +27,6 @@ interface Deployer extends DeployableStep {
     void setPassword(String pass)
     String getPassword()
 
-    void setPromptPassword(boolean prompt)
-    boolean getPromptPassword()
-
     ModelMap<ArtifactBase> getArtifacts()
 }
 
@@ -37,15 +34,18 @@ interface Deployer extends DeployableStep {
 interface ArtifactBase extends DeployableStep {
     void setDirectory(String directory)
     String getDirectory()
-
-    void setFilename(String filename)
-    String getFilename()
 }
 
 @Managed 
 interface FileArtifact extends ArtifactBase {
     void setFile(File file)
     File getFile()
+
+    void setFilename(String filename)
+    String getFilename()
+    
+    void setEnableCache(boolean enableCache)
+    boolean getEnableCache()
 }
 
 @Managed
