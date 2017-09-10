@@ -111,7 +111,6 @@ class DeployTargetTask extends DefaultTask {
 
     @TaskAction
     void deploy() {
-        // TODO: Determine target address
         def dryrun = project.hasProperty("deploy-dry")
         def skipcache = project.hasProperty("deploy-dirty")
 
@@ -186,7 +185,6 @@ class DeployTargetTask extends DefaultTask {
         }
         deployerList = deployerList.toSorted { a, b -> a.getOrder() <=> b.getOrder() }
 
-        // Start SSH session
         deployerList.forEach { deployer -> 
             deployer.getPredeploy().forEach { cmd ->
                 cmd_callback(cmd, rootDirectory)
