@@ -8,7 +8,6 @@ model {
     targets {
         roborio(RemoteTarget) {
             addresses << "roborio-team-frc.local" << "10.TE.AM.2" << "172.22.11.2"
-            concurrent true     // Try to hit all target concurrently
             directory "/home/lvuser/deploy"
             user "lvuser"
             password ""

@@ -44,8 +44,8 @@ interface FileArtifact extends ArtifactBase {
     void setFilename(String filename)
     String getFilename()
     
-    void setEnableCache(boolean enableCache)
-    boolean getEnableCache()
+    void setCache(boolean enableCache)
+    boolean getCache()
 }
 
 @Managed
@@ -59,8 +59,11 @@ interface NativeArtifact extends FileArtifact {
     void setLibrootdir(String libRootDir)
     String getLibrootdir()
 
-    void setPlatforms(List<String> platformfilter)
-    List<String> getPlatforms()
+    void setLibrarycache(boolean cacheSharedLibraries)
+    boolean getLibrarycache()
+
+    void setPlatform(String platform)
+    String getPlatform()
 }
 
 @Managed

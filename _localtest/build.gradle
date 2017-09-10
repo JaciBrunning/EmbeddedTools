@@ -1,20 +1,21 @@
 buildscript {
     repositories {
         mavenLocal()
+        jcenter()
     }
     dependencies {
+        classpath group: 'org.hidetake', name: 'groovy-ssh', version: '2.7.0'
         classpath group: "jaci.gradle", name: "DeployTools", version: "+" 
     }
 }
 
 apply plugin: "java"
+apply plugin: "cpp"
 apply plugin: "jaci.gradle.DeployTools"
 
 model {
     targets {
         roborio(RemoteTarget) {
-            addresses << "roborio-team-frc.local"
-            addresses << "10.TE.AM.2"
             addresses << "172.22.11.2"
             directory "/home/lvuser/deploy"
             user "lvuser"
@@ -31,11 +32,11 @@ model {
             artifacts {
                 jar(JavaArtifact) {
                     directory "subdir"
-                    filename "filename"
+                    filename "filename.jar"
                     order 1
                 }
                 src(JavaArtifact) {
-                    predeploy << "SRC PRE"
+                    predeploy << "echo SrcPre"
                 }
 
                 myfile(FileArtifact) {
@@ -45,22 +46,57 @@ model {
                 my_program(NativeArtifact) {
                     // same options as above
                     libraries true          // deploy shared libraries
-                    librootdir "/usr/local" // will deploy to include/ and lib/
+                    librootdir "libfiles" // will deploy to include/ and lib/
 
-                    platforms << "roborio-arm"  // filter deploy units based on platform
+                    platform "x86"  // filter deploy units based on platform
+                }
+
+                my_other_program(NativeArtifact) {
+                    platform "x86"
                 }
 
                 commands(CommandArtifact) {
-                    command "Hello World"
+                    command "echo 'Hello World'"
                 }
             }
 
-            predeploy << "echo Predeploy"
+            predeploy << "pwd"
             postdeploy << "echo Postdeploy"
             targets << "roborio"
             order 1
         }
     }
+
+    platforms {
+        x86 {
+            architecture 'x86'
+        }
+        x64 {
+            architecture 'x86_64'
+        }
+    }
+
+    components {
+        my_other_program(NativeLibrarySpec) {
+            targetPlatform "x86"
+            targetPlatform "x64"
+            sources.cpp {
+                source.srcDirs "src_c"
+            }
+        }
+        my_program(NativeExecutableSpec) {
+            targetPlatform "x86"
+            targetPlatform "x64"
+            sources.cpp {
+                source.srcDirs "src_c"
+                lib project: ":", library: "my_other_program", linkage: "shared"
+            }
+        }
+    }
+}
+
+jar {
+    from configurations.compile.collect { it.isDirectory() ? it : zipTree(it) }
 }
 
 task wrapper(type: Wrapper) {

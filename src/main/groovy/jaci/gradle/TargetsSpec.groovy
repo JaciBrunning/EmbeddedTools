@@ -12,6 +12,9 @@ interface RemoteTarget extends Named {
     void setDirectory(String dir)
     String getDirectory()
 
+    void setMkdirs(boolean mkdirs)
+    boolean getMkdirs()
+
     void setUser(String user)
     String getUser()
 
