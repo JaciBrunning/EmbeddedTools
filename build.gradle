@@ -18,7 +18,7 @@ repositories {
 }
 
 group = "jaci.gradle"
-archivesBaseName = "DeployTools"
+archivesBaseName = "EmbeddedTools"
 version = "2017.2.3"
 
 pluginBundle {
@@ -30,7 +30,7 @@ pluginBundle {
     plugins {
         wpilibVersionPlugin {
             id = "${project.group}.${project.archivesBaseName}"
-            displayName = 'DeployTools'
+            displayName = 'EmbeddedTools'
         }
     }
 }

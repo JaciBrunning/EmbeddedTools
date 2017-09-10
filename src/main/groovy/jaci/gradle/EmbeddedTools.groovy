@@ -9,7 +9,7 @@ import groovy.util.*
 
 import org.hidetake.groovy.ssh.Ssh
 
-class DeployTools implements Plugin<Project> {
+class EmbeddedTools implements Plugin<Project> {
     void apply(Project project) {
         project.extensions.deploy_ssh = Ssh.newService()
     }
