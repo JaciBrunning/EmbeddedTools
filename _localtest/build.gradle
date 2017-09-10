@@ -56,7 +56,7 @@ model {
                 }
 
                 commands(CommandArtifact) {
-                    command "echo 'Hello World'"
+                    command "whoami"
                 }
             }
 

@@ -28,7 +28,7 @@ pluginBundle {
     tags = ['remote', 'target', 'deploy', 'java', 'native']
 
     plugins {
-        wpilibVersionPlugin {
+        embeddedTools {
             id = "${project.group}.${project.archivesBaseName}"
             displayName = 'EmbeddedTools'
         }
@@ -38,6 +38,7 @@ pluginBundle {
 publishing {
     publications {
         plugin(MavenPublication) {
+            artifactId 'EmbeddedTools'
             artifact jar
         }
     }

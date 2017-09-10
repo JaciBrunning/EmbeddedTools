@@ -27,6 +27,9 @@ interface Deployer extends DeployableStep {
     void setPassword(String pass)
     String getPassword()
 
+    void setPromptPassword(boolean prompt)
+    boolean getPromptPassword()
+
     ModelMap<ArtifactBase> getArtifacts()
 }
 

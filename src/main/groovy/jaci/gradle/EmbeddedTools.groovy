@@ -9,6 +9,8 @@ import groovy.util.*
 
 import org.hidetake.groovy.ssh.Ssh
 
+import groovy.swing.SwingBuilder
+
 class EmbeddedTools implements Plugin<Project> {
     void apply(Project project) {
         project.extensions.deploy_ssh = Ssh.newService()
@@ -31,6 +33,30 @@ class EmbeddedTools implements Plugin<Project> {
         return s.join("/")
     }
 
+    static String promptPassword(String user) {
+        def password = null
+        if (System.console() == null) {
+            // Using Gradle Daemon, try for a dialog box.
+            println "-> Could not prompt console password. Please enter password in dialog box:"
+            try {
+                new SwingBuilder().edt {
+                    dialog(modal: true, title: "Password for user ${user}", alwaysOnTop: true, resizable: false, locationRelativeTo: null, pack: true, show: true) {
+                        vbox {
+                            label(text: "Enter Password for user ${user}")
+                            input = passwordField()
+                            button(defaultButton: true, text: 'OK', actionPerformed: { password = input.password; dispose() })
+                        }
+                    }
+                }
+            } catch (all) {
+                println "--> Could not spawn password dialog box (may be headless). Using default password (in build.gradle or blank if not set). Run with --no-daemon to prompt password"
+            }
+        } else {
+            password = new String(System.console().readPassword("\n-> Password for user ${user}?:\n"))
+        }
+        return password
+    }
+
     static class DeployRules extends RuleSource {
         @Model("targets")
         void createTargetsModel(TargetsSpec spec) { }
@@ -38,10 +64,11 @@ class EmbeddedTools implements Plugin<Project> {
         @Defaults 
         void setDefaultTargetValues(@Each RemoteTarget target) {
             target.setAddresses([])
+            target.setMkdirs(true)
+            target.setPassword("")
             target.setPromptPassword(false)
             target.setTimeout(5)
             target.setFailOnMissing(true)
-            target.setMkdirs(true)
         }
 
         @Model("deployers")
@@ -50,6 +77,9 @@ class EmbeddedTools implements Plugin<Project> {
         @Defaults
         void setDefaultDeployerValues(@Each Deployer deployer) {
             deployer.setOrder(50)
+            deployer.setUser(null)
+            deployer.setPassword("")
+            deployer.setPromptPassword(false)
         }
 
         @Defaults
