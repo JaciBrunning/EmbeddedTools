@@ -7,14 +7,14 @@ Multiple targets can be supported, as well as multiple deployers.
 
 The plugin can be run with both Java and Native (C, C++, etc) projects, or neither if only files and commands are deployed. 
 
-Commands:
-`gradlew deploy` will run the deploy steps for all deployers
+Commands:  
+`gradlew deploy` will run the deploy steps for all deployers  
 `gradlew deploy<deployer>` will run the deploy steps for the `<deployer>` deployer on all targets
 
-Properties:
-`gradlew deploy -Pdeploy-quiet` will suppress deploy task output
-`gradlew deploy -Pdeploy-dry` will do a dry run (will not connect to target, will only print commands run and files deployed)
-`gradlew deploy -Pdeploy-dirty` will force caches of all deployed files to be invalidated, forcing the files to be redeployed
+Properties:  
+`gradlew deploy -Pdeploy-quiet` will suppress deploy task output  
+`gradlew deploy -Pdeploy-dry` will do a dry run (will not connect to target, will only print commands run and files deployed)  
+`gradlew deploy -Pdeploy-dirty` will force caches of all deployed files to be invalidated, forcing the files to be redeployed  
 
 ## Installing plugin
 Include the following in your `build.gradle`
