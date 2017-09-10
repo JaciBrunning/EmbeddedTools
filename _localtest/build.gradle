@@ -69,20 +69,35 @@ model {
 
     platforms {
         defaultPlatforms()
+        roborio { operatingSystem 'linux'; architecture 'arm' }
+    }
+
+    toolChains {
+        defaultToolchains()
+        roborioGcc(CrossGcc) {
+            target('roborio') {
+                defineTools(it, "arm-frc-linux-gnueabi-", '')
+            }
+            println platforms
+        }
+        gcc(Gcc) {
+            println platforms
+        }
     }
 
     components {
         my_other_program(NativeLibrarySpec) {
-            targetPlatform "any-32"
+            // targetPlatform "any-32"
             targetPlatform "any-64"
             targetPlatform 'arm'
             sources.cpp {
-                source.srcDirs "src_c"
+                source.srcDirs "src_c_lib"
             }
         }
         my_program(NativeExecutableSpec) {
             targetPlatform "any-32"
             targetPlatform "any-64"
+            targetPlatform "roborio"
             sources.cpp {
                 source.srcDirs "src_c"
             }
