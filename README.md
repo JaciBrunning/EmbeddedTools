@@ -96,7 +96,7 @@ model {
                 }
             }
 
-            postdeploy << "Goodbye World"               // Commands to run after deploying artifacts
+            postdeploy << "echo Goodbye World"               // Commands to run after deploying artifacts
             targets << "myTarget"                       // Targets this deployer will deploy to
             order 1                                     // Order of the target. Smaller numbers will deploy first. Default: 50
         }
