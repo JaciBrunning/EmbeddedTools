@@ -22,8 +22,8 @@ archivesBaseName = "EmbeddedTools"
 version = "2017.8.10" // YYYY.MM.DD(revision)
 
 pluginBundle {
-    website = 'https://github.com/JacisNonsense/DeployTools'
-    vcsUrl = 'https://github.com/JacisNonsense/DeployTools'
+    website = 'https://github.com/JacisNonsense/EmbeddedTools'
+    vcsUrl = 'https://github.com/JacisNonsense/EmbeddedTools'
     description = 'Additions to the model-based DSL for deploying Java and Native projects to remote targets'
     tags = ['remote', 'target', 'deploy', 'java', 'native']
 
