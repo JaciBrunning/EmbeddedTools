@@ -24,7 +24,7 @@ plugins {
 }
 ```
 
-See [https://plugins.gradle.org/plugin/jaci.gradle.EmbeddedTools]() for the latest version
+See [https://plugins.gradle.org/plugin/jaci.gradle.EmbeddedTools](https://plugins.gradle.org/plugin/jaci.gradle.EmbeddedTools) for the latest version
 
 ## Model 
 
