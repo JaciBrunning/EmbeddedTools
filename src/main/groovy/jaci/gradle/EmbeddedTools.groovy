@@ -14,6 +14,7 @@ import groovy.swing.SwingBuilder
 class EmbeddedTools implements Plugin<Project> {
     void apply(Project project) {
         project.extensions.deploy_ssh = Ssh.newService()
+        Toolchains.apply(project)
     }
 
     static String join(String root, String relative) {

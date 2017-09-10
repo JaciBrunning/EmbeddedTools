@@ -48,11 +48,11 @@ model {
                     libraries true          // deploy shared libraries
                     librootdir "libfiles" // will deploy to include/ and lib/
 
-                    platform "x86"  // filter deploy units based on platform
+                    platform "any-32"  // filter deploy units based on platform
                 }
 
                 my_other_program(NativeArtifact) {
-                    platform "x86"
+                    platform "any-32"
                 }
 
                 commands(CommandArtifact) {
@@ -68,28 +68,23 @@ model {
     }
 
     platforms {
-        x86 {
-            architecture 'x86'
-        }
-        x64 {
-            architecture 'x86_64'
-        }
+        defaultPlatforms()
     }
 
     components {
         my_other_program(NativeLibrarySpec) {
-            targetPlatform "x86"
-            targetPlatform "x64"
+            targetPlatform "any-32"
+            targetPlatform "any-64"
+            targetPlatform 'arm'
             sources.cpp {
                 source.srcDirs "src_c"
             }
         }
         my_program(NativeExecutableSpec) {
-            targetPlatform "x86"
-            targetPlatform "x64"
+            targetPlatform "any-32"
+            targetPlatform "any-64"
             sources.cpp {
                 source.srcDirs "src_c"
-                lib project: ":", library: "my_other_program", linkage: "shared"
             }
         }
     }
