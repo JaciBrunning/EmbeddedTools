@@ -1,3 +1,5 @@
+package jaci.gradle.targets
+
 import org.gradle.api.NamedDomainObjectSet
 import org.gradle.model.Managed
 import org.gradle.api.Named
