@@ -11,6 +11,7 @@ buildscript {
 
 apply plugin: "java"
 apply plugin: "cpp"
+apply plugin: "c"
 apply plugin: "jaci.gradle.EmbeddedTools"
 
 model {
@@ -68,28 +69,26 @@ model {
     }
 
     platforms {
-        defaultPlatforms()
+        'any-32' { architecture "x86" }
+        'any-64' { architecture "x86_64" }
         roborio { operatingSystem 'linux'; architecture 'arm' }
     }
 
     toolChains {
-        defaultToolchains()
         roborioGcc(CrossGcc) {
             target('roborio') {
                 defineTools(it, "arm-frc-linux-gnueabi-", '')
             }
-            println platforms
         }
-        gcc(Gcc) {
-            println platforms
-        }
+        gcc(Gcc) { }
+        visualCpp(VisualCpp) { }
     }
 
     components {
         my_other_program(NativeLibrarySpec) {
             // targetPlatform "any-32"
-            targetPlatform "any-64"
-            targetPlatform 'arm'
+            targetPlatform "roborio"
+            // targetPlatform "any-64"
             sources.cpp {
                 source.srcDirs "src_c_lib"
             }
@@ -110,5 +109,5 @@ jar {
 }
 
 task wrapper(type: Wrapper) {
-    gradleVersion = '3.5'
+    gradleVersion = '4.2'
 }

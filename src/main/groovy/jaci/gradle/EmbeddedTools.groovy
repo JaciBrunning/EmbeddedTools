@@ -1,5 +1,7 @@
 package jaci.gradle
-import jaci.gradle.*
+
+import jaci.gradle.deployers.*
+import jaci.gradle.toolchains.*
 
 import org.gradle.api.*
 import org.gradle.model.*
@@ -10,20 +12,6 @@ import groovy.util.*
 import org.hidetake.groovy.ssh.Ssh
 
 import groovy.swing.SwingBuilder
-
-import org.gradle.internal.os.OperatingSystem
-
-
-import org.gradle.api.internal.file.FileResolver
-import org.gradle.process.internal.ExecActionFactory
-import org.gradle.internal.reflect.Instantiator
-import org.gradle.internal.service.ServiceRegistry
-import org.gradle.nativeplatform.*
-import org.gradle.nativeplatform.toolchain.*
-import org.gradle.nativeplatform.platform.NativePlatform
-import org.gradle.nativeplatform.plugins.NativeComponentPlugin
-import org.gradle.internal.operations.BuildOperationProcessor
-import org.gradle.nativeplatform.toolchain.internal.gcc.version.CompilerMetaDataProviderFactory
 
 class EmbeddedTools implements Plugin<Project> {
     void apply(Project project) {
@@ -185,19 +173,6 @@ class EmbeddedTools implements Plugin<Project> {
                     }
                 }
             }
-        }
-
-        @Defaults
-        void addToolchain(NativeToolChainRegistry toolChainRegistry, ServiceRegistry serviceRegistry) {
-            def fileResolver = serviceRegistry.get(FileResolver.class);
-            def execActionFactory = serviceRegistry.get(ExecActionFactory.class);
-            def instantiator = serviceRegistry.get(Instantiator.class);
-            def buildOperationProcessor = serviceRegistry.get(BuildOperationProcessor.class);
-            def metaDataProviderFactory = serviceRegistry.get(CompilerMetaDataProviderFactory.class);
-            toolChainRegistry.registerFactory(CrossGcc.class, { String name ->
-                return instantiator.newInstance(CrossGcc.class, instantiator, name, buildOperationProcessor, OperatingSystem.LINUX, fileResolver, execActionFactory, metaDataProviderFactory)
-            })
-            // toolChainRegistry.registerDefaultToolChain("crossGcc", CrossGcc.class)
         }
     }
 }
