@@ -14,6 +14,10 @@ apply plugin: "cpp"
 apply plugin: "c"
 apply plugin: "jaci.gradle.EmbeddedTools"
 
+import jaci.gradle.deployers.*
+import jaci.gradle.targets.*
+import jaci.gradle.toolchains.*
+
 model {
     targets {
         roborio(RemoteTarget) {

@@ -1,3 +1,5 @@
+package jaci.gradle.toolchains
+
 import org.gradle.api.*
 
 import org.gradle.nativeplatform.toolchain.*

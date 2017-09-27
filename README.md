@@ -50,6 +50,10 @@ model {
 ## Model 
 
 ```gradle
+import jaci.gradle.deployers.*
+import jaci.gradle.targets.*
+import jaci.gradle.toolchains.*
+
 model {
     targets {
         myTarget(RemoteTarget) {

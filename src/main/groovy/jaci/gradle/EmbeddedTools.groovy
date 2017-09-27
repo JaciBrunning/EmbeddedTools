@@ -1,6 +1,7 @@
 package jaci.gradle
 
 import jaci.gradle.deployers.*
+import jaci.gradle.targets.*
 import jaci.gradle.toolchains.*
 
 import org.gradle.api.*
