@@ -26,6 +26,27 @@ plugins {
 
 See [https://plugins.gradle.org/plugin/jaci.gradle.EmbeddedTools](https://plugins.gradle.org/plugin/jaci.gradle.EmbeddedTools) for the latest version
 
+## Cross GCC
+EmbeddedTools adds a new toolchain type, `CrossGcc`, with the purpose for building on embedded platforms. Furthermore, all C, C++, Asm, ObjC and ObjC++ binary components
+are optional builds, meaning the build will continue even if there is no toolchain present.
+
+```gradle
+model {
+    platforms {
+        crossArm { operatingSystem 'linux'; architecture 'arm' }    // Add a new target platform for building
+    }
+
+    toolChains {
+        crossGcc(CrossGcc) {
+            target('crossArm') {
+                defineTools(it, "arm-prefix-", "-suffix")   // Defines tools for C, C++, Asm, Linkers and Archivers. Does not define Objective C/C++
+            }
+        }
+    }
+    // Define components as normal
+}
+```
+
 ## Model 
 
 ```gradle
@@ -99,6 +120,18 @@ model {
             postdeploy << "echo Goodbye World"               // Commands to run after deploying artifacts
             targets << "myTarget"                       // Targets this deployer will deploy to
             order 1                                     // Order of the target. Smaller numbers will deploy first. Default: 50
+        }
+    }
+
+    platforms {
+        crossArm { operatingSystem 'linux'; architecture 'arm' }    // Add a new target platform for building
+    }
+
+    toolChains {
+        crossGcc(CrossGcc) {
+            target('crossArm') {
+                defineTools(it, "arm-prefix-", "-suffix")   // Defines tools for C, C++, Asm, Linkers and Archivers. Does not define Objective C/C++
+            }
         }
     }
 }
