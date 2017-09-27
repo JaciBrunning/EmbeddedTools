@@ -1,5 +1,7 @@
 package jaci.gradle
-import jaci.gradle.*
+
+import jaci.gradle.deployers.*
+import jaci.gradle.toolchains.*
 
 import org.gradle.api.*
 import org.gradle.model.*
@@ -14,6 +16,7 @@ import groovy.swing.SwingBuilder
 class EmbeddedTools implements Plugin<Project> {
     void apply(Project project) {
         project.extensions.deploy_ssh = Ssh.newService()
+        project.getPluginManager().apply(ToolchainsPlugin.class)
     }
 
     static String join(String root, String relative) {

@@ -19,7 +19,7 @@ repositories {
 
 group = "jaci.gradle"
 archivesBaseName = "EmbeddedTools"
-version = "2017.8.10" // YYYY.MM.DD(revision)
+version = "2017.9.27" // YYYY.MM.DD(revision)
 
 pluginBundle {
     website = 'https://github.com/JacisNonsense/EmbeddedTools'
@@ -45,5 +45,5 @@ publishing {
 }
 
 task wrapper(type: Wrapper) {
-    gradleVersion = '4.1'
+    gradleVersion = '4.2'
 }
