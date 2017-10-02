@@ -11,6 +11,9 @@ interface RemoteTarget extends Named {
     void setAddresses(List<String> address)
     List<String> getAddresses()
 
+    void setAsyncFind(boolean asyncFind)
+    boolean getAsyncFind()
+
     void setDirectory(String dir)
     String getDirectory()
 

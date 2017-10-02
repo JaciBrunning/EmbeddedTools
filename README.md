@@ -58,6 +58,7 @@ model {
     targets {
         myTarget(RemoteTarget) {
             addresses << "10.0.0.1" << "mytarget"       // Addresses for the remote target. Can be IP addresses, hostnames
+            asyncFind true                              // Search for each address in a new task for parallel execution. Makes finding target faster on multi-core systems. Default: true
             directory "/home/myuser"                    // Directory to deploy to. Default: user home directory
             mkdirs true                                 // Make directories when deploying. Default: true
             user "myuser"                               // User to login as. Required.

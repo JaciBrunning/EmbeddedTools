@@ -11,13 +11,47 @@ import org.gradle.nativeplatform.*
 import groovy.util.*
 
 import org.hidetake.groovy.ssh.Ssh
+import org.hidetake.groovy.ssh.core.Service
+
+import org.gradle.internal.logging.slf4j.OutputEventListenerBackedLoggerContext
 
 import groovy.swing.SwingBuilder
 
 class EmbeddedTools implements Plugin<Project> {
     void apply(Project project) {
-        project.extensions.deploy_ssh = Ssh.newService()
         project.getPluginManager().apply(ToolchainsPlugin.class)
+        getSsh()
+    }
+
+    static Service ssh_service
+    static OutputEventListenerBackedLoggerContext ssh_defaultContext
+    static Service getSsh() {
+        if (ssh_service == null) {
+            ssh_service = Ssh.newService()
+
+            def logfield = ssh_service.log.class.getDeclaredField("context")
+            logfield.setAccessible(true)
+
+            ssh_defaultContext = logfield.get(ssh_service.log)
+        }
+        return ssh_service
+    }
+
+    static void silenceSsh() {
+        def logfield = ssh_service.log.class.getDeclaredField("context")
+        logfield.setAccessible(true)
+
+        def ctx = new OutputEventListenerBackedLoggerContext({ text -> return }, { text -> return }, org.gradle.internal.time.Time.clock())
+        ctx.setOutputEventListener({ event -> return })
+            
+        logfield.set(ssh_service.log, ctx)
+    }
+
+    static void unsilenceSsh() {
+        def logfield = ssh_service.log.class.getDeclaredField("context")
+        logfield.setAccessible(true)
+
+        logfield.set(ssh_service.log, ssh_defaultContext)
     }
 
     static String join(String root, String relative) {
@@ -68,6 +102,7 @@ class EmbeddedTools implements Plugin<Project> {
         @Defaults 
         void setDefaultTargetValues(@Each RemoteTarget target) {
             target.setAddresses([])
+            target.setAsyncFind(true)
             target.setMkdirs(true)
             target.setPassword("")
             target.setPromptPassword(false)

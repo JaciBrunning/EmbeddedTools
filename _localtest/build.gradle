@@ -4,9 +4,15 @@ buildscript {
         jcenter()
     }
     dependencies {
-        classpath group: 'org.hidetake', name: 'groovy-ssh', version: '2.7.0'
+        classpath('org.hidetake:groovy-ssh:2.9.0') {
+            exclude module: 'groovy-all'
+        }
         classpath group: "jaci.gradle", name: "EmbeddedTools", version: "+" 
     }
+}
+
+plugins {
+    id 'com.gradle.build-scan' version '1.9'
 }
 
 apply plugin: "java"
@@ -18,10 +24,16 @@ import jaci.gradle.deployers.*
 import jaci.gradle.targets.*
 import jaci.gradle.toolchains.*
 
+buildScan {
+  licenseAgreementUrl = 'https://gradle.com/terms-of-service'
+  licenseAgree = 'yes'
+}
+
 model {
     targets {
         roborio(RemoteTarget) {
-            addresses << "172.22.11.2"
+            addresses << "172.22.11.2" << "roborio-5333-frc.local" << "10.53.33.2"
+            asyncFind true
             directory "/home/lvuser/deploy"
             user "lvuser"
             password ""

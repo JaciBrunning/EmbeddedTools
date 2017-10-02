@@ -1,5 +1,6 @@
 package jaci.gradle.deployers
 
+import jaci.gradle.EmbeddedTools
 import jaci.gradle.targets.*
 
 import org.gradle.api.DefaultTask
@@ -10,6 +11,7 @@ import org.gradle.nativeplatform.*
 
 import org.hidetake.groovy.ssh.Ssh
 import org.hidetake.groovy.ssh.core.*
+import org.hidetake.groovy.ssh.core.settings.*
 import org.hidetake.groovy.ssh.connection.*
 
 import java.security.MessageDigest
@@ -43,6 +45,9 @@ class DetermineTargetAddressTask extends DefaultTask {
     @Input
     RemoteTarget target
 
+    @Input
+    int targetid
+
     @TaskAction
     void determineAddress() {
         if (project.hasProperty("deploy-dry")) {
@@ -53,33 +58,51 @@ class DetermineTargetAddressTask extends DefaultTask {
                 def pass = EmbeddedTools.promptPassword(target.user)
                 if (pass != null) ext.password = pass
             }
-            
-            def runTest = { addr ->
+
+            ext.foundTarget = false
+            if (target.asyncFind) {
+                def found = []
+                
+                EmbeddedTools.silenceSsh()
                 try {
-                    def result = project.deploy_ssh.run {
-                        // TODO: Set knownHosts policy
-                        session(host: addr, user: target.user, password: ext.password, timeoutSec: target.timeout, knownHosts: AllowAnyHosts.instance) {
-                            println "\t--> Success"
+                    EmbeddedTools.ssh.run {
+                        target.addresses.forEach { addr ->
+                            println "-> Attempting target address: ${addr}"
+                            session(host: addr, user: target.user, password: ext.password, timeoutSec: target.timeout, knownHosts: AllowAnyHosts.instance) {
+                                println "-> Target ${addr} found!"
+                                found << addr
+                            }
                         }
                     }
-                    return true
-                } catch (all) {
-                    println "\t--> Fail"
-                    return false
-                }
-            }
+                } catch (all) {}
+                EmbeddedTools.unsilenceSsh()
 
-            def foundTarget = target.addresses.any { addr ->
-                println "-> Attempting target address: ${addr}"
-                if (runTest(addr)) {
-                    ext.address = addr
-                    return true
+                ext.foundTarget = found.size() > 0
+                if (ext.foundTarget) {
+                    ext.address = found.last()
                 }
-                return false
+            } else {
+                target.addresses.any { addr ->
+                    println "-> Attempting target address: ${addr}"
+                    EmbeddedTools.silenceSsh()
+                    try {
+                        EmbeddedTools.ssh.run {
+                            session(host: addr, user: target.user, password: ext.password, timeoutSec: target.timeout, knownHosts: AllowAnyHosts.instance) {
+                                println "-> Target ${addr} found!"
+                                ext.address = addr
+                                ext.foundTarget = true
+                            }
+                        }
+                    } catch (all) {}
+                    EmbeddedTools.unsilenceSsh()
+                    return ext.foundTarget
+                }
             }
-            ext.foundTarget = foundTarget
-            if (target.failOnMissing && !foundTarget) {
-                throw new DeployException("Target ${target.name} could not be found! ${target.name}.failOnMissing is set.")
+            if (!ext.foundTarget) {
+                if (target.failOnMissing) 
+                    throw new DeployException("Target ${target.name} could not be found! Failing as ${target.name}.failOnMissing is true.")
+                else
+                    println "Target ${target.name} could not be found! Ignoring as ${target.name}.failOnMissing is false."
             }
         }
     }
@@ -134,7 +157,7 @@ class DeployTargetTask extends DefaultTask {
                     }
                 }
 
-                project.deploy_ssh.run {
+                EmbeddedTools.ssh.run {
                     session(host: address, user: user, password: password, timeoutSec: target.timeout, knownHosts: AllowAnyHosts.instance) {
                         def cachecheck = !skipcache
                         try {
