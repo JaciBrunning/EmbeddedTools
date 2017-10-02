@@ -114,6 +114,12 @@ class EmbeddedTools implements Plugin<Project> {
         void createDeployersModel(DeployersSpec spec) { }
 
         @Defaults
+        void setDefaultsDeployableStep(@Each DeployableStep deployableStep) {
+            deployableStep.setPredeploy([])
+            deployableStep.setPostdeploy([])
+        }
+
+        @Defaults
         void setDefaultDeployerValues(@Each Deployer deployer) {
             deployer.setOrder(50)
             deployer.setUser(null)
