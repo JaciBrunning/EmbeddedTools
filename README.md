@@ -93,6 +93,15 @@ model {
                     order 1                                 // Set the order of this artifact. Smaller numbers deployed first. Default: 50
                 }
 
+                myfileset(FileSetArtifact) {            // Deploy multiple files all at once
+                    files = fileTree(dir: 'myfiles').files  // Set the files to use. Required.
+                    cache true                              // Cache files on remote system? Default: true
+
+                    predeploy << "mycommand"                // Set commands to run before deploying this artifact
+                    postdeploy << "mycommand"               // Set commands to run after deploying this artifact
+                    order 1                                 // Set the order of this artifact. Smaller numbers deployed first. Default: 50
+                }
+
                 jar(JavaArtifact) {                     // Set up a Java artifact. Name of this artifact is the task name (jar for most projects)
                     filename "myfile.othername"             // Set the filename on the remote system. Default: name of java artifact file
                     cache true                              // Cache file on remote system? Default: true

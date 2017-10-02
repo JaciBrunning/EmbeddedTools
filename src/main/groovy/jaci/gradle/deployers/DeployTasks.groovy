@@ -256,6 +256,12 @@ class DeployTargetTask extends DefaultTask {
                 def filename = customFilename == null ? file.name : customFilename
                 deploySourceFile = file
                 deployTargetFile = (deployTargetFile == null) ? EmbeddedTools.join(deployDirectory, filename) : deployTargetFile
+            } else if (artifact instanceof FileSetArtifact) {
+                def files = artifact.getFiles()
+                files.forEach { file ->
+                    def targetFile = EmbeddedTools.join(deployDirectory, file.name)
+                    file_callback(file, targetFile, deployDirectory, artifact.cache)
+                }
             } else if (artifact instanceof CommandArtifact) {
                 cmd_callback(artifact.getCommand(), deployDirectory)
             }

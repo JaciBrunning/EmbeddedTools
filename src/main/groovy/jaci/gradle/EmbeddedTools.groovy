@@ -138,6 +138,12 @@ class EmbeddedTools implements Plugin<Project> {
         }
 
         @Defaults
+        void setDefaultFileSetArtifactValues(@Each FileSetArtifact artifact) {
+            artifact.setCache(true)
+            artifact.setFiles([] as Set)
+        }
+
+        @Defaults
         void setDefaultNativeArtifactValues(@Each NativeArtifact artifact) {
             artifact.setLibraries(true)
             artifact.setLibrarycache(true)

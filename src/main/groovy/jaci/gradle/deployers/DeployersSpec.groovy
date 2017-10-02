@@ -4,6 +4,7 @@ import org.gradle.api.NamedDomainObjectSet
 import org.gradle.model.Managed
 import org.gradle.api.Named
 import org.gradle.model.ModelMap
+import org.gradle.api.file.FileCollection
 import java.util.List
 
 @Managed
@@ -49,6 +50,15 @@ interface FileArtifact extends ArtifactBase {
     void setFilename(String filename)
     String getFilename()
     
+    void setCache(boolean enableCache)
+    boolean getCache()
+}
+
+@Managed
+interface FileSetArtifact extends ArtifactBase {
+    void setFiles(Set<File> files)
+    Set<File> getFiles()
+
     void setCache(boolean enableCache)
     boolean getCache()
 }
