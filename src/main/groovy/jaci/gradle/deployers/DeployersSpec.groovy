@@ -7,6 +7,10 @@ import org.gradle.model.ModelMap
 import org.gradle.api.file.FileCollection
 import java.util.List
 
+enum CacheMethod {
+    MD5_FILE, MD5_CMD, EXISTS
+}
+
 @Managed
 interface DeployableStep extends Named {
     void setPredeploy(List<String> precommands)
@@ -52,6 +56,9 @@ interface FileArtifact extends ArtifactBase {
     
     void setCache(boolean enableCache)
     boolean getCache()
+
+    void setCacheMethod(CacheMethod cacheMethod)
+    CacheMethod getCacheMethod()
 }
 
 @Managed
@@ -61,6 +68,9 @@ interface FileSetArtifact extends ArtifactBase {
 
     void setCache(boolean enableCache)
     boolean getCache()
+
+    void setCacheMethod(CacheMethod cacheMethod)
+    CacheMethod getCacheMethod()
 }
 
 @Managed

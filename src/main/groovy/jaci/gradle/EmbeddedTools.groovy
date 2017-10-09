@@ -135,11 +135,13 @@ class EmbeddedTools implements Plugin<Project> {
         @Defaults
         void setDefaultFileArtifactValues(@Each FileArtifact artifact) {
             artifact.setCache(true)
+            artifact.setCacheMethod(CacheMethod.MD5_CMD)
         }
 
         @Defaults
         void setDefaultFileSetArtifactValues(@Each FileSetArtifact artifact) {
             artifact.setCache(true)
+            artifact.setCacheMethod(CacheMethod.MD5_CMD)
             artifact.setFiles([] as Set)
         }
 

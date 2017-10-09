@@ -87,6 +87,7 @@ model {
                     file "myfile.dat"                       // Set the file to deploy. Required.
                     filename "myfile.othername"             // Set the filename on the remote system. Default: name of file above
                     cache true                              // Cache file on remote system? Default: true
+                    cacheMethod CacheMethod.MD5_CMD         // Set the caching method, one of { MD5_CMD, MD5_FILE, EXISTS }. MD5_CMD is better for smaller files.
 
                     predeploy << "mycommand"                // Set commands to run before deploying this artifact
                     postdeploy << "mycommand"               // Set commands to run after deploying this artifact
@@ -96,6 +97,7 @@ model {
                 myfileset(FileSetArtifact) {            // Deploy multiple files all at once
                     files = fileTree(dir: 'myfiles').files  // Set the files to use. Required.
                     cache true                              // Cache files on remote system? Default: true
+                    cacheMethod CacheMethod.MD5_CMD         // Set the caching method, one of { MD5_CMD, MD5_FILE, EXISTS }. MD5_CMD is better for smaller files.
 
                     predeploy << "mycommand"                // Set commands to run before deploying this artifact
                     postdeploy << "mycommand"               // Set commands to run after deploying this artifact
@@ -105,6 +107,7 @@ model {
                 jar(JavaArtifact) {                     // Set up a Java artifact. Name of this artifact is the task name (jar for most projects)
                     filename "myfile.othername"             // Set the filename on the remote system. Default: name of java artifact file
                     cache true                              // Cache file on remote system? Default: true
+                    cacheMethod CacheMethod.MD5_CMD         // Set the caching method, one of { MD5_CMD, MD5_FILE, EXISTS }. MD5_CMD is better for smaller files.
 
                     predeploy << "mycommand"                // Set commands to run before deploying this artifact
                     postdeploy << "mycommand"               // Set commands to run after deploying this artifact
@@ -114,6 +117,7 @@ model {
                 myprogram(NativeArtifact) {             // Set up a Native (C, C++, etc) artifact. Name of this artifact is the name of the native component.
                     filename "myfile.othername"             // Set the filename on the remote system. Default: name of native artifact file
                     cache true                              // Cache file on remote system? Default: true
+                    cacheMethod CacheMethod.MD5_CMD         // Set the caching method, one of { MD5_CMD, MD5_FILE, EXISTS }. MD5_CMD is better for smaller files.
 
                     predeploy << "mycommand"                // Set commands to run before deploying this artifact
                     postdeploy << "mycommand"               // Set commands to run after deploying this artifact
