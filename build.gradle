@@ -1,5 +1,5 @@
 plugins {
-    id "com.gradle.plugin-publish" version "0.9.7"
+    id "com.gradle.plugin-publish" version "0.9.8"
 }
 
 apply plugin: 'groovy'
@@ -19,7 +19,7 @@ repositories {
 
 group = "jaci.gradle"
 archivesBaseName = "EmbeddedTools"
-version = "2017.10.09" // YYYY.MM.DD(revision)
+version = "2017.10.10" // YYYY.MM.DD(revision)
 
 pluginBundle {
     website = 'https://github.com/JacisNonsense/EmbeddedTools'
