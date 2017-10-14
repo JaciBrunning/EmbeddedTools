@@ -3,13 +3,10 @@ package jaci.gradle
 import jaci.gradle.deployers.*
 import jaci.gradle.targets.*
 import jaci.gradle.toolchains.*
-
 import org.gradle.api.*
 import org.gradle.model.*
 import org.gradle.platform.base.*
 import org.gradle.nativeplatform.*
-import groovy.util.*
-
 import org.hidetake.groovy.ssh.Ssh
 import org.hidetake.groovy.ssh.core.Service
 
@@ -133,6 +130,12 @@ class EmbeddedTools implements Plugin<Project> {
         }
 
         @Defaults
+        void setDefaultConditions(@Each DeployConditional cond) {
+            cond.setCommand(null)
+            cond.setExpect(null)
+        }
+
+        @Defaults
         void setDefaultFileArtifactValues(@Each FileArtifact artifact) {
             artifact.setCache(true)
             artifact.setCacheMethod(CacheMethod.MD5_CMD)
@@ -149,6 +152,11 @@ class EmbeddedTools implements Plugin<Project> {
         void setDefaultNativeArtifactValues(@Each NativeArtifact artifact) {
             artifact.setLibraries(true)
             artifact.setLibrarycache(true)
+        }
+
+        @Defaults
+        void setDefaultCommandArtifactValues(@Each CommandArtifact artifact) {
+            artifact.setCompanionTask(null)
         }
 
         @Mutate
@@ -175,6 +183,21 @@ class EmbeddedTools implements Plugin<Project> {
 
                     targets.findAll { target -> target.name in deployer.targets }.forEach { target ->
                         task.finalizedBy('deployTarget' + target.name.capitalize())
+                    }
+                }
+                deployer.artifacts.forEach { artifact ->
+                    if (artifact instanceof CommandArtifact && artifact.companionTask != null) {
+                        if (tasks.containsKey(artifact.companionTask)) {
+                            tasks.get(artifact.companionTask).with { ArtifactCompanionTask task ->
+                                if (task.command == null) task.command = artifact.command
+                                task.dependsOn('deploy' + deployer.name.capitalize())
+                            }
+                        } else {
+                            tasks.create(artifact.companionTask, ArtifactCompanionTask) { ArtifactCompanionTask task ->
+                                task.command = artifact.command
+                                task.dependsOn('deploy' + deployer.name.capitalize())
+                            }
+                        }
                     }
                 }
             }
@@ -209,6 +232,7 @@ class EmbeddedTools implements Plugin<Project> {
                                         // Task already exists, ignore
                                     }
                                     if (artifact.libraries) {
+                                        // TODO
                                         // spec.component.sources.forEach { src ->
                                         //     src.libs.forEach { lib ->
                                         //         if (lib.linkage == "shared") {

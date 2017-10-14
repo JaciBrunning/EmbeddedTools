@@ -58,6 +58,10 @@ model {
 
                 myfile(FileArtifact) {
                     file "myfile.dat" // same options as above
+                    onlyIf {
+                        command "echo 'hello world'"
+                        expect 'hello a(.+)'
+                    }
                 }
 
                 my_program(NativeArtifact) {
@@ -74,6 +78,7 @@ model {
 
                 commands(CommandArtifact) {
                     command "whoami"
+                    companionTask "helloWorld"
                 }
             }
 
@@ -117,6 +122,13 @@ model {
                 source.srcDirs "src_c"
             }
         }
+    }
+}
+
+task helloWorld(type: ArtifactCompanionTask) { task ->
+    task.command "echo 'Goodbye'"
+    task.doLast {
+        println "OUT -> ${task.targetOutputs}"
     }
 }
 

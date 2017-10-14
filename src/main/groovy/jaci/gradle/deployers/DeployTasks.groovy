@@ -6,16 +6,22 @@ import jaci.gradle.targets.*
 import org.gradle.api.DefaultTask
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.TaskAction
-import org.gradle.platform.base.*
 import org.gradle.nativeplatform.*
-
-import org.hidetake.groovy.ssh.Ssh
-import org.hidetake.groovy.ssh.core.*
-import org.hidetake.groovy.ssh.core.settings.*
 import org.hidetake.groovy.ssh.connection.*
 
 import java.security.MessageDigest
 import java.nio.file.Files
+
+class ArtifactCompanionTask extends DefaultTask {
+    @Input
+    String command
+
+    Map<String, String> targetOutputs = [:]
+
+    String commandOutput(String target) {
+        return targetOutputs[target]
+    }
+}
 
 class DeployerTask extends DefaultTask {
     @Input
@@ -120,7 +126,7 @@ class DeployTargetTask extends DefaultTask {
         def dryrun = project.hasProperty("deploy-dry")
         def skipcache = project.hasProperty("deploy-dirty")
 
-        def printmsg = project.hasProperty("deploy-quiet") ? { msg -> } : { msg -> println msg }
+        def printmsg = project.hasProperty("deploy-quiet") ? { msg, indent -> } : { msg, indent -> println((['  ']*indent).join('') + msg) }
 
         def rootDirectory = target.directory == null ? "." : target.directory
 
@@ -131,22 +137,27 @@ class DeployTargetTask extends DefaultTask {
         }
         deployerList = deployerList.toSorted { a, b -> a.getOrder() <=> b.getOrder() }
 
-        deployerList.forEach { deployer -> 
+        deployerList.forEach { deployer ->
+            printmsg("-> Deployer ${deployer.name}", 0)
             if (dryrun) {
-                runDeploy(deployer, rootDirectory, { cmd, workingdir ->
-                    printmsg "-C-> ${cmd} @ ${workingdir}"
-                }, { filesrc, filedst, workingdir, cache ->
-                    printmsg "-F-> (${cache && !skipcache ? 'CACHE' : 'NO CACHE'}) ${filesrc} ==> ${filedst}"
-                })
+                runDeploy(printmsg, 1, deployer, rootDirectory,
+                    { cmd, workingdir, indent ->
+                        printmsg "-C-> ${cmd} @ ${workingdir}", indent
+                        true
+                    }, { filesrc, filedst, workingdir, cache, cache_method, indent ->
+                        printmsg "-F-> (${cache && !skipcache ? 'CACHE' : 'NO CACHE'}) ${filesrc} ==> ${filedst}", indent
+                    }
+                )
             } else {
                 def addrTask = project.tasks.findByName(addrTaskName)
                 if (!addrTask.foundTarget) {
-                    println "-> Skipping target ${target.name} (could not find target)"
+                    printmsg "-> Skipping target ${target.name} (could not find target)", 1
                     return
                 }
                 def address = addrTask.address
                 def user = target.user
                 def password = addrTask.password
+                printmsg "-> Using Target ${target.name} (${address})", 1
 
                 if (deployer.user != null) {
                     user = deployer.user
@@ -164,72 +175,87 @@ class DeployTargetTask extends DefaultTask {
                         try {
                             def sum = execute "echo test | md5sum"
                             if (!sum.split(" ")[0].equalsIgnoreCase("d8e8fca2dc0f896fd7cb4cb0031ba249")) {
-                                printmsg "-> md5sum not producing expected output on remote target. Skipping Cache Check for MD5_CMD artifacts..."
+                                printmsg "-> md5sum not producing expected output on remote target. Skipping Cache Check for MD5_CMD artifacts...", 1
                                 skip_md5_cmd = true
                             }
                         } catch (all) {
-                            printmsg "-> md5sum not supported on remote target. Skipping Cache Check for MD5_CMD artifacts..."
+                            printmsg "-> md5sum not supported on remote target. Skipping Cache Check for MD5_CMD artifacts...", 1
                             skip_md5_cmd = true
                         }
 
-                        runDeploy(deployer, rootDirectory, { cmd, workingdir ->
-                            if (target.mkdirs) execute "mkdir -p ${workingdir}"
-                            
-                            printmsg "-C-> ${cmd} @ ${workingdir}"
-                            def result = execute([ "cd ${workingdir}", cmd ].join('\n'))
-                            printmsg "------> ${result}"
+                        runDeploy(printmsg, 1, deployer, rootDirectory,
+                { cmd, workingdir, indent ->
+                                if (target.mkdirs) execute "mkdir -p ${workingdir}"
 
-                        }, { filesrc, filedst, workingdir, cache, cache_method ->
-                            if (target.mkdirs) execute "mkdir -p ${workingdir}"
+                                printmsg "-C-> ${cmd} @ ${workingdir}", indent
+                                def result = execute([ "cd ${workingdir}", cmd ].join('\n'))
+                                printmsg "----> ${result}", indent
 
-                            def toDeploy = true
-                            def md5LocalSum = null
-                            if (cache && cachecheck) {
-                                if ((!skip_md5_cmd && cache_method == CacheMethod.MD5_CMD) || cache_method == CacheMethod.MD5_FILE) {
-                                    def remote_md5 = ""
-                                    if (cache_method == CacheMethod.MD5_CMD) {
-                                        remote_md5 = execute("md5sum ${filedst} 2> /dev/null || true").split(" ")[0]
-                                    } else {
-                                        remote_md5 = execute("cat ${filedst}.md5 2> /dev/null || true")
+                                result
+                            }, { filesrc, filedst, workingdir, cache, cache_method, indent ->
+                                if (target.mkdirs) execute "mkdir -p ${workingdir}"
+
+                                def toDeploy = true
+                                def md5LocalSum = null
+                                if (cache && cachecheck) {
+                                    if ((!skip_md5_cmd && cache_method == CacheMethod.MD5_CMD) || cache_method == CacheMethod.MD5_FILE) {
+                                        def remote_md5 = ""
+                                        if (cache_method == CacheMethod.MD5_CMD) {
+                                            remote_md5 = execute("md5sum ${filedst} 2> /dev/null || true").split(" ")[0]
+                                        } else {
+                                            remote_md5 = execute("cat ${filedst}.md5 2> /dev/null || true")
+                                        }
+                                        def md = MessageDigest.getInstance("MD5")
+                                        md.update(Files.readAllBytes(filesrc.toPath()))
+                                        def local_md5 = md.digest().encodeHex().toString()
+                                        if (cache_method == CacheMethod.MD5_FILE) {
+                                            md5LocalSum = local_md5
+                                        }
+
+                                        if (remote_md5.equals(local_md5)) toDeploy = false
+                                    } else if (cache_method == CacheMethod.EXISTS) {
+                                        def remote_exists = execute("[ -f '${filedst}' ] && echo 'Found'")
+                                        toDeploy = !remote_exists.equals('Found')
                                     }
-                                    def md = MessageDigest.getInstance("MD5")
-                                    md.update(Files.readAllBytes(filesrc.toPath()))
-                                    def local_md5 = md.digest().encodeHex().toString()
-                                    if (cache_method == CacheMethod.MD5_FILE) {
-                                        md5LocalSum = local_md5
-                                    }
+                                }
 
-                                    if (remote_md5.equals(local_md5)) toDeploy = false
-                                } else if (cache_method == CacheMethod.EXISTS) {
-                                    def remote_exists = execute("[ -f '${filedst}' ] && echo 'Found'")
-                                    toDeploy = !remote_exists.equals('Found')
+                                if (toDeploy) {
+                                    printmsg "-F->${cache && cachecheck ? " (OUT OF DATE)" : ""} ${filedst}", indent
+                                    put from: filesrc, into: filedst
+                                    if (md5LocalSum != null) {
+                                        execute "echo ${md5LocalSum} > ${filedst}.md5"
+                                    }
                                 }
                             }
-
-                            if (toDeploy) {
-                                printmsg "-F->${cache && cachecheck ? " (OUT OF DATE)" : ""} ${filedst}"
-                                put from: filesrc, into: filedst
-                                if (md5LocalSum != null) {
-                                    execute "echo ${md5LocalSum} > ${filedst}.md5"
-                                }
-                            }
-                        })
+                        )
                     }
                 }
             }
         }
     }
 
-    void runDeploy(deployer, rootDirectory, cmd_callback, file_callback) {
+    void runDeploy(printmsg, indent, deployer, rootDirectory, cmd_callback, file_callback) {
         deployer.getPredeploy().forEach { cmd ->
-            cmd_callback(cmd, rootDirectory)
+            cmd_callback(cmd, rootDirectory, indent)
         } 
 
-        deployer.getArtifacts().toSorted { a, b -> a.getOrder() <=> b.getOrder() }.forEach { artifact ->
+        deployer.getArtifacts().toSorted { a, b -> a.getOrder() <=> b.getOrder() }.forEach { ArtifactBase artifact ->
             def deployDirectory = (artifact.directory != null) ? EmbeddedTools.join(rootDirectory, artifact.directory) : rootDirectory
 
+            printmsg("Artifact ${artifact.name}", indent)
+            if (artifact.onlyIf.command != null && artifact.onlyIf.expect != null) {
+                printmsg("-> onlyIf check...", indent+1)
+                def result = cmd_callback(artifact.onlyIf.command, deployDirectory, indent+2)
+                if (result != true && !(result =~ artifact.onlyIf.expect)) {
+                    printmsg("-> Skipping!, onlyIf does not match expected result (should match /${artifact.onlyIf.expect}/)!", indent+2)
+                    return
+                } else {
+                    printmsg("-> Success!", indent+2)
+                }
+            }
+
             if (artifact.getPredeploy() != null) artifact.getPredeploy().forEach { cmd ->
-                cmd_callback(cmd, deployDirectory)
+                cmd_callback(cmd, deployDirectory, indent+1)
             }
 
             def customFilename = (artifact instanceof FileArtifact) ? artifact.getFilename() : null
@@ -263,7 +289,7 @@ class DeployTargetTask extends DefaultTask {
                             lib.getRuntimeFiles().files.forEach { libfile ->
                                 if (libfile.exists()) {
                                     def libTargetFile = EmbeddedTools.join(libDeployDir, libfile.name)
-                                    file_callback(libfile, libTargetFile, libDeployDir, artifact.librarycache, artifact.cacheMethod)
+                                    file_callback(libfile, libTargetFile, libDeployDir, artifact.librarycache, artifact.cacheMethod, indent+1)
                                 }
                             }
                         }
@@ -278,25 +304,34 @@ class DeployTargetTask extends DefaultTask {
                 def files = artifact.getFiles()
                 files.forEach { file ->
                     def targetFile = EmbeddedTools.join(deployDirectory, file.name)
-                    file_callback(file, targetFile, deployDirectory, artifact.cache, artifact.cacheMethod)
+                    file_callback(file, targetFile, deployDirectory, artifact.cache, artifact.cacheMethod, indent+1)
                 }
             } else if (artifact instanceof CommandArtifact) {
-                cmd_callback(artifact.getCommand(), deployDirectory)
+                if (artifact.companionTask != null) {
+                    ArtifactCompanionTask task = project.tasks.findByName(artifact.companionTask)
+                    if (task != null && task.command != null) {
+                        task.targetOutputs[target.name] = cmd_callback(task.command, deployDirectory, indent+1)
+                    } else {
+                        cmd_callback(artifact.getCommand(), deployDirectory, indent+1)
+                    }
+                } else {
+                    cmd_callback(artifact.getCommand(), deployDirectory, indent+1)
+                }
             }
-            
+
             if (deploySourceFile != null && deployTargetFile != null) {
                 deployTargetFile = EmbeddedTools.normalize(deployTargetFile)
                 if (deploySourceFile.exists())
-                file_callback(deploySourceFile, deployTargetFile, deployDirectory, artifact.cache, artifact.cacheMethod)
+                file_callback(deploySourceFile, deployTargetFile, deployDirectory, artifact.cache, artifact.cacheMethod, indent+1)
             }
 
             if (artifact.getPostdeploy() != null) artifact.getPostdeploy().forEach { cmd ->
-                cmd_callback(cmd, deployDirectory)
+                cmd_callback(cmd, deployDirectory, indent+1)
             }
         }
 
         deployer.getPostdeploy().forEach { cmd -> 
-            cmd_callback(cmd, rootDirectory)
+            cmd_callback(cmd, rootDirectory, indent)
         }
     }
 }

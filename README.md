@@ -89,6 +89,11 @@ model {
                     cache true                              // Cache file on remote system? Default: true
                     cacheMethod CacheMethod.MD5_CMD         // Set the caching method, one of { MD5_CMD, MD5_FILE, EXISTS }. MD5_CMD is better for smaller files.
 
+                    onlyIf {                                // Only execute this artifact if the result of command matches the regex of expect. Optional.
+                        command 'echo "Hello World"'
+                        expect 'Hello (.+)'
+                    }
+
                     predeploy << "mycommand"                // Set commands to run before deploying this artifact
                     postdeploy << "mycommand"               // Set commands to run after deploying this artifact
                     order 1                                 // Set the order of this artifact. Smaller numbers deployed first. Default: 50
@@ -98,6 +103,11 @@ model {
                     files = fileTree(dir: 'myfiles').files  // Set the files to use. Required.
                     cache true                              // Cache files on remote system? Default: true
                     cacheMethod CacheMethod.MD5_CMD         // Set the caching method, one of { MD5_CMD, MD5_FILE, EXISTS }. MD5_CMD is better for smaller files.
+
+                    onlyIf {                                // Only execute this artifact if the result of command matches the regex of expect. Optional.
+                        command 'echo "Hello World"'
+                        expect 'Hello (.+)'
+                    }
 
                     predeploy << "mycommand"                // Set commands to run before deploying this artifact
                     postdeploy << "mycommand"               // Set commands to run after deploying this artifact
@@ -109,6 +119,11 @@ model {
                     cache true                              // Cache file on remote system? Default: true
                     cacheMethod CacheMethod.MD5_CMD         // Set the caching method, one of { MD5_CMD, MD5_FILE, EXISTS }. MD5_CMD is better for smaller files.
 
+                    onlyIf {                                // Only execute this artifact if the result of command matches the regex of expect. Optional.
+                        command 'echo "Hello World"'
+                        expect 'Hello (.+)'
+                    }
+
                     predeploy << "mycommand"                // Set commands to run before deploying this artifact
                     postdeploy << "mycommand"               // Set commands to run after deploying this artifact
                     order 1                                 // Set the order of this artifact. Smaller numbers deployed first. Default: 50
@@ -118,6 +133,11 @@ model {
                     filename "myfile.othername"             // Set the filename on the remote system. Default: name of native artifact file
                     cache true                              // Cache file on remote system? Default: true
                     cacheMethod CacheMethod.MD5_CMD         // Set the caching method, one of { MD5_CMD, MD5_FILE, EXISTS }. MD5_CMD is better for smaller files.
+
+                    onlyIf {                                // Only execute this artifact if the result of command matches the regex of expect. Optional.
+                        command 'echo "Hello World"'
+                        expect 'Hello (.+)'
+                    }
 
                     predeploy << "mycommand"                // Set commands to run before deploying this artifact
                     postdeploy << "mycommand"               // Set commands to run after deploying this artifact
@@ -132,6 +152,21 @@ model {
                 mycommand(CommandArtifact) {            // Set up a Command artifact to deploy. 
                     directory "subdir"                      // Set the working directory for the command (relative to target directory. Absolute paths permitted)
                     command "echo Hello Command Artifact"   // Set the command to run
+
+                    onlyIf {                                // Only execute this artifact if the result of command matches the regex of expect. Optional.
+                        command 'echo "Hello World"'
+                        expect 'Hello (.+)'
+                    }
+
+                    companionTask 'myOutputTask'            // Get or create a companion task by name, of type ArtifactCompanionTask. Task depends on deployer. See below
+                    // Companion Task example:
+                    //  task myOutputTask(ArtifactCompanionTask) {
+                    //      command = 'echo "My Command"'           // String, command to run. Will be set to artifact.command (above) if not set by task
+                    //      doLast {
+                    //          println commandOutput('myTarget')          // Get output of command (when run on target) as a string
+                    //          println targetOutputs                      // Map of commandOutput() for all targets
+                    //      }
+                    //  }
                 }
             }
 

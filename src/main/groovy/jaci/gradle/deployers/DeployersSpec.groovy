@@ -41,9 +41,20 @@ interface Deployer extends DeployableStep {
 }
 
 @Managed
+interface DeployConditional {
+    void setCommand(String command)
+    String getCommand()
+
+    void setExpect(String result)
+    String getExpect()
+}
+
+@Managed
 interface ArtifactBase extends DeployableStep {
     void setDirectory(String directory)
     String getDirectory()
+
+    DeployConditional getOnlyIf()
 }
 
 @Managed 
@@ -95,6 +106,9 @@ interface NativeArtifact extends FileArtifact {
 interface CommandArtifact extends ArtifactBase {
     void setCommand(String command)
     String getCommand()
+
+    void setCompanionTask(String task)
+    String getCompanionTask()
 }
 
 @Managed
