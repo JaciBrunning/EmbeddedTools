@@ -45,6 +45,10 @@ deploy {
                 files = tasks.jar.outputs.files
                 directory = 'myjavadir'
             }
+
+            nativeArtifact('my_program') {
+                targetPlatform = 'roborio'
+            }
         }
         myOtherDeployer {
             targets << 'myTarget' << 'myOtherTarget'

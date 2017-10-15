@@ -3,6 +3,7 @@ package jaci.gradle.deploy.deployer
 import groovy.transform.CompileStatic
 import jaci.gradle.deploy.DeployContext
 import jaci.gradle.deploy.cache.Cacheable
+import org.gradle.api.Project
 import org.gradle.api.file.FileCollection
 
 @CompileStatic
@@ -14,7 +15,7 @@ class FileCollectionArtifact extends ArtifactBase implements Cacheable {
     FileCollection files = null
 
     @Override
-    void deploy(DeployContext ctx) {
+    void deploy(Project project, DeployContext ctx) {
         files.files.each { file ->
             ctx.put(file, file.name, cache)
         }

@@ -37,8 +37,12 @@ class Deployer extends DeployableStep {
         artifact(name, CommandArtifact, config)
     }
 
+    def nativeArtifact(String name, final Closure config) {
+        artifact(name, NativeArtifact, config)
+    }
+
     @Override
-    void deploy(DeployContext ctx) {
-        artifacts.toSorted { a, b -> a.getOrder() <=> b.getOrder() }.each { artifact -> artifact.doDeploy(ctx) }
+    void deploy(Project project, DeployContext ctx) {
+        artifacts.toSorted { a, b -> a.getOrder() <=> b.getOrder() }.each { artifact -> artifact.doDeploy(project, ctx) }
     }
 }

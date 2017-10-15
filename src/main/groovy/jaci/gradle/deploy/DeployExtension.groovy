@@ -1,13 +1,8 @@
 package jaci.gradle.deploy
 
-import groovy.transform.CompileStatic
 import jaci.gradle.deploy.deployer.Deployer
 import jaci.gradle.deploy.target.RemoteTarget
-import jaci.gradle.deploy.tasks.DeployerDeployConfigureTask
-import jaci.gradle.deploy.tasks.MasterDeployTask
-import jaci.gradle.deploy.tasks.TargetDeployConfigureTask
-import jaci.gradle.deploy.tasks.TargetDeployTask
-import jaci.gradle.deploy.tasks.TargetDiscoveryTask
+import jaci.gradle.deploy.tasks.*
 import org.gradle.api.NamedDomainObjectContainer
 import org.gradle.api.Project
 

@@ -4,6 +4,7 @@ import groovy.transform.CompileStatic
 import groovy.transform.EqualsAndHashCode
 import jaci.gradle.ClosureUtils
 import jaci.gradle.deploy.DeployContext
+import org.gradle.api.Project
 
 @CompileStatic
 @EqualsAndHashCode(includes = 'name')
@@ -23,7 +24,7 @@ abstract class DeployableStep {
     int order               = 50
     String directory        = null
 
-    void doDeploy(DeployContext ctx) {
+    void doDeploy(Project project, DeployContext ctx) {
         ctx = ctx.subContext(directory)
         ctx.logger().log("-> ${toString()}")
         precheck.forEach { Closure c -> ClosureUtils.delegateCall(ctx, c) }
@@ -37,12 +38,12 @@ abstract class DeployableStep {
 
         if (toRun) {
             predeploy.forEach { Closure c -> ClosureUtils.delegateCall(ctx, c) }
-            deploy(ctx)
+            deploy(project, ctx)
             postdeploy.forEach { Closure c -> ClosureUtils.delegateCall(ctx, c) }
         }
         ctx.logger().log("")
     }
-    abstract void deploy(DeployContext ctx)
+    abstract void deploy(Project project, DeployContext ctx)
 
     @Override
     String toString() {

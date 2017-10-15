@@ -2,6 +2,7 @@ package jaci.gradle.deploy.deployer
 
 import groovy.transform.CompileStatic
 import jaci.gradle.deploy.DeployContext
+import org.gradle.api.Project
 
 @CompileStatic
 class CommandArtifact extends ArtifactBase {
@@ -15,7 +16,7 @@ class CommandArtifact extends ArtifactBase {
     String result = null
 
     @Override
-    void deploy(DeployContext ctx) {
+    void deploy(Project project, DeployContext ctx) {
         if (ignoreError)
             result = ctx.executeMaybe(command)
         else
