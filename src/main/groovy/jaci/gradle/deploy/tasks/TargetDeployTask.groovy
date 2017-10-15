@@ -34,7 +34,7 @@ class TargetDeployTask extends DefaultTask {
         if (activeDeployers.size() > 0) {
             EmbeddedTools.ssh.run {
                 session(host: target._active_address, user: target.user, password: target.password, timeoutSec: target.timeout, knownHosts: AllowAnyHosts.instance) {
-                    def ctx = new DefaultDeployContext(target, log, delegate, target.directory ?: '.')
+                    def ctx = new DefaultDeployContext(project, target, log, delegate, target.directory ?: '.')
                     activeDeployers.each { Deployer dep ->
                         dep.doDeploy(ctx)
                     }

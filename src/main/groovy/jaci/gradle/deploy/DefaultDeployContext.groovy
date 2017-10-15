@@ -6,6 +6,7 @@ import jaci.gradle.PathUtils
 import jaci.gradle.deploy.cache.CacheMethod
 import jaci.gradle.deploy.cache.CacheMethods
 import jaci.gradle.deploy.target.RemoteTarget
+import org.gradle.api.Project
 import org.hidetake.groovy.ssh.session.SessionHandler
 
 @CompileStatic
@@ -14,12 +15,14 @@ class DefaultDeployContext implements DeployContext {
     SessionHandler handler
     DeployLogger logger
     RemoteTarget target
+    Project project
 
-    DefaultDeployContext(RemoteTarget target, DeployLogger logger, SessionHandler sessionHandler, String workingDir) {
+    DefaultDeployContext(Project project, RemoteTarget target, DeployLogger logger, SessionHandler sessionHandler, String workingDir) {
         this.workingDir = workingDir
         this.handler = sessionHandler
         this.logger = logger
         this.target = target
+        this.project = project
     }
 
     @Override
@@ -59,7 +62,7 @@ class DefaultDeployContext implements DeployContext {
         // TODO Check Cache
         boolean toDeploy = true
         boolean cacheUpdate = false
-        if (cache != null && !(cache instanceof Boolean && cache == false)) {
+        if (!project.hasProperty('skip-cache') && cache != null && !(cache instanceof Boolean && cache == false)) {
             CacheMethod cacheMethod = CacheMethods.getMethod(cache)
             if (cacheMethod != null && cacheMethod.compatible(this)) {
                 cacheUpdate = toDeploy = cacheMethod.needsUpdate(this, source, dest)
@@ -79,6 +82,6 @@ class DefaultDeployContext implements DeployContext {
 
     @Override
     DeployContext subContext(String workingDir) {
-        return new DefaultDeployContext(target, logger.push(), handler, PathUtils.combine(this.workingDir, workingDir))
+        return new DefaultDeployContext(project, target, logger.push(), handler, PathUtils.combine(this.workingDir, workingDir))
     }
 }
