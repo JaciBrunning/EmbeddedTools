@@ -3,6 +3,7 @@ package jaci.gradle.deploy
 class DeployLogger {
     int indent
     String indentStr
+    boolean silent = false
 
     DeployLogger(int indent) {
         this.indent = indent
@@ -14,6 +15,10 @@ class DeployLogger {
     }
 
     void log(String msg) {
-        println(indentStr + msg)
+        if (!silent) println(indentStr + msg)
+    }
+
+    void silent(boolean setSilent) {
+        silent = setSilent
     }
 }

@@ -39,7 +39,7 @@ deploy {
                 predeploy << { execute 'echo \$(pwd)' }
                 file = file('myfile.dat')
                 filename = "test"
-                postdeploy << { executeMaybe 'cat myfile.dat' }
+                postdeploy << { executeMaybe 'cat test' }
             }
         }
         myOtherDeployer {
