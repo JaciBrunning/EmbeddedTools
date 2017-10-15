@@ -1,5 +1,8 @@
 package jaci.gradle.deploy
 
+import groovy.transform.CompileStatic
+
+@CompileStatic
 interface DeployContext {
     // Get the working directory
     String workingDir()

@@ -1,7 +1,9 @@
 package jaci.gradle.deploy
 
+import groovy.transform.CompileStatic
 import jaci.gradle.PathUtils
 
+@CompileStatic
 class DebugDeployContext implements DeployContext {
     int indent
     String workingDir
