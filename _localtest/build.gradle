@@ -29,10 +29,15 @@ deploy {
             addresses << "172.22.11.2" << "roborio-5333-frc.local" << "10.53.33.2"
             user = 'lvuser'
         }
+        myOtherTarget {
+            addresses << "173.22.11.33"
+            user = 'lvuser'
+            failOnMissing = false
+        }
     }
     deployers {
         myDeployer {
-            targets << 'myTargets'
+            targets << 'myTarget'
 
             directory = 'mydep'
             onlyIf = { it.runCommand('echo Hello') == '<return>' }
@@ -40,6 +45,9 @@ deploy {
                 file = file('myfile.dat')
                 filename = "test"
             }
+        }
+        myOtherDeployer {
+            targets << 'myTarget' << 'myOtherTarget'
         }
     }
 }
@@ -94,6 +102,16 @@ task testMe() {
         println ""
 
         project.extensions.deploy.deployers.first().doDeploy(new DebugDeployContext("__test__", 0))
+    }
+}
+
+task myLastTask() {
+    doLast {
+        project.extensions.deploy.deployers.each {
+            println it
+            println it._active
+            println ""
+        }
     }
 }
 

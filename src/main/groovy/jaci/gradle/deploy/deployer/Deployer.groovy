@@ -14,11 +14,10 @@ class Deployer extends DeployableStep {
     Project project
 
     List<String> targets    = []
-    String user             = null
-    String password         = null
-    boolean promptPassword  = false
-
     List<ArtifactBase> artifacts = []
+
+    // Calculated Values (from tasks)
+    List<String> _active = []       // Active targets
 
     def artifact(String name, Class<? extends ArtifactBase> type, final Closure config) {
         def artifact = type.newInstance(name)
