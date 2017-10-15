@@ -11,6 +11,6 @@ class CommandArtifact extends ArtifactBase {
 
     @Override
     void deploy(DeployContext ctx) {
-        ctx.runCommand(command)
+        ctx.execute(command)
     }
 }

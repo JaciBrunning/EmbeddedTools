@@ -21,7 +21,6 @@ apply plugin: "c"
 apply plugin: "jaci.gradle.EmbeddedTools"
 
 import jaci.gradle.deploy.*
-import jaci.gradle.deploy.deployer.FileArtifact
 import jaci.gradle.toolchains.*
 
 deploy {

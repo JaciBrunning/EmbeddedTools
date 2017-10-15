@@ -17,16 +17,19 @@ class DebugDeployContext implements DeployContext {
     }
 
     @Override
-    String runCommand(String command) {
+    String execute(String command) {
         println((['']*indent).join(' ') + "-C-> ${command} @ ${workingDir}")
         return "<return>"
     }
 
     @Override
-    boolean sendFile(File source, String dest, Object cache) {
+    boolean put(File source, String dest, Object cache) {
         println((['']*indent).join(' ') + "-F-> ${source.absolutePath} --> ${dest} @ ${workingDir}")
         return true
     }
+
+    @Override
+    void withSession(Closure closure) { }
 
     @Override
     DeployContext subContext(String workingDir) {

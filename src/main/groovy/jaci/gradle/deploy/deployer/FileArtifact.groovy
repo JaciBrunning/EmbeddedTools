@@ -13,6 +13,6 @@ class FileArtifact extends ArtifactBase implements Cacheable {
 
     @Override
     void deploy(DeployContext ctx) {
-        ctx.sendFile(file, (filename == null ? file.name : filename), cache)
+        ctx.put(file, (filename == null ? file.name : filename), cache)
     }
 }

@@ -1,10 +1,17 @@
 package jaci.gradle.deploy
 
 interface DeployContext {
+    // Get the working directory
     String workingDir()
 
-    String runCommand(String command)
-    boolean sendFile(File source, String dest, cache)
+    // Run a command (execute)
+    String execute(String command)
+
+    // Send a single file
+    boolean put(File source, String dest, cache)
+
+    // Gives a closure access to the ssh session
+    void withSession(Closure closure)
 
     DeployContext subContext(String workingDir)
 }
