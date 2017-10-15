@@ -20,9 +20,30 @@ apply plugin: "cpp"
 apply plugin: "c"
 apply plugin: "jaci.gradle.EmbeddedTools"
 
-import jaci.gradle.deployers.*
-import jaci.gradle.targets.*
+import jaci.gradle.deploy.*
+import jaci.gradle.deploy.deployer.FileArtifact
 import jaci.gradle.toolchains.*
+
+deploy {
+    targets {
+        myTarget {
+            addresses << "172.22.11.2" << "roborio-5333-frc.local" << "10.53.33.2"
+            user = 'lvuser'
+        }
+    }
+    deployers {
+        myDeployer {
+            targets << 'myTargets'
+
+            directory = 'mydep'
+            onlyIf = { it.runCommand('echo Hello') == '<return>' }
+            fileArtifact('myFileArtifact') {
+                file = file('myfile.dat')
+                filename = "test"
+            }
+        }
+    }
+}
 
 buildScan {
   licenseAgreementUrl = 'https://gradle.com/terms-of-service'
@@ -30,65 +51,6 @@ buildScan {
 }
 
 model {
-    targets {
-        roborio(RemoteTarget) {
-            addresses << "172.22.11.2" << "roborio-5333-frc.local" << "10.53.33.2"
-            asyncFind true
-            directory "/home/lvuser/deploy"
-            user "lvuser"
-            password ""
-            promptPassword false // Can set true, ignores above
-            timeout 3
-            failOnMissing true
-        }
-        other(RemoteTarget)
-    }
-
-    deployers {
-        test(Deployer) {
-            artifacts {
-                jar(JavaArtifact) {
-                    directory "subdir"
-                    filename "filename.jar"
-                    order 1
-                }
-                src(JavaArtifact) {
-                    predeploy << "echo SrcPre"
-                }
-
-                myfile(FileArtifact) {
-                    file "myfile.dat" // same options as above
-                    onlyIf {
-                        command "echo 'hello world'"
-                        expect 'hello a(.+)'
-                    }
-                }
-
-                my_program(NativeArtifact) {
-                    // same options as above
-                    libraries true          // deploy shared libraries
-                    librootdir "libfiles" // will deploy to include/ and lib/
-
-                    platform "any-32"  // filter deploy units based on platform
-                }
-
-                my_other_program(NativeArtifact) {
-                    platform "any-32"
-                }
-
-                commands(CommandArtifact) {
-                    command "whoami"
-                    companionTask "helloWorld"
-                }
-            }
-
-            predeploy << "pwd"
-            postdeploy << "echo Postdeploy"
-            targets << "roborio"
-            order 1
-        }
-    }
-
     platforms {
         'any-32' { architecture "x86" }
         'any-64' { architecture "x86_64" }
@@ -125,10 +87,14 @@ model {
     }
 }
 
-task helloWorld(type: ArtifactCompanionTask) { task ->
-    task.command "echo 'Goodbye'"
-    task.doLast {
-        println "OUT -> ${task.targetOutputs}"
+task testMe() {
+    doLast {
+        println project.extensions.deploy.targets.first().dump()
+        println ""
+        println project.extensions.deploy.deployers.first()
+        println ""
+
+        project.extensions.deploy.deployers.first().doDeploy(new DebugDeployContext("__test__", 0))
     }
 }
 

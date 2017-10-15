@@ -1,19 +1,12 @@
 package jaci.gradle.toolchains
 
-import org.gradle.api.*
-
-import org.gradle.nativeplatform.toolchain.*
-import org.gradle.nativeplatform.toolchain.internal.*
-
 import org.gradle.api.internal.file.FileResolver
-import org.gradle.nativeplatform.toolchain.internal.gcc.AbstractGccCompatibleToolChain
 import org.gradle.internal.operations.BuildOperationExecutor
 import org.gradle.internal.os.OperatingSystem
 import org.gradle.internal.reflect.Instantiator
-import org.gradle.internal.service.ServiceRegistry
 import org.gradle.internal.work.WorkerLeaseService
 import org.gradle.nativeplatform.internal.CompilerOutputFileNamingSchemeFactory
-import org.gradle.nativeplatform.plugins.NativeComponentPlugin
+import org.gradle.nativeplatform.toolchain.internal.gcc.AbstractGccCompatibleToolChain
 import org.gradle.nativeplatform.toolchain.internal.gcc.version.CompilerMetaDataProviderFactory
 import org.gradle.process.internal.ExecActionFactory
 
