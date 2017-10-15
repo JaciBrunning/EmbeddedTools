@@ -54,10 +54,13 @@ class TargetDiscoveryTask extends DefaultTask {
                     }
                 }
             } catch (all) { }
-            println "-> Target(s) found at ${found.join(', ')}"
             EmbeddedTools.unsilenceSsh()
+            
+            if (found.size() > 0)
+                println "-> Target(s) found at ${found.join(', ')}. Using ${found.last()}"
 
-            if (found.size() > 0) target._active_address = found.last()
+            if (found.size() > 0)
+                target._active_address = found.last()
         } else {
             // Try targets sequentially. Max time: length(target.addresses) * target.timeout
             target.addresses.any { addr ->
