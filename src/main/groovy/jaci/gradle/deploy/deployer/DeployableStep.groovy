@@ -2,6 +2,7 @@ package jaci.gradle.deploy.deployer
 
 import groovy.transform.CompileStatic
 import groovy.transform.EqualsAndHashCode
+import jaci.gradle.ClosureUtils
 import jaci.gradle.deploy.DeployContext
 
 @CompileStatic
@@ -24,15 +25,22 @@ abstract class DeployableStep {
 
     void doDeploy(DeployContext ctx) {
         ctx = ctx.subContext(directory)
-        precheck.forEach { Closure c -> c.call(ctx) }
+        ctx.logger().log("-> ${toString()}")
+        precheck.forEach { Closure c -> ClosureUtils.delegateCall(ctx, c) }
+
         def toRun = true
-        if (onlyIf != null) toRun = onlyIf.call(ctx)
+        if (onlyIf != null) {
+            ctx.logger().log(" -> OnlyIf Check")
+            toRun = ClosureUtils.delegateCall(ctx, onlyIf)
+            ctx.logger().log(" -> ${toRun ? 'SUCCESS' : 'FAILED'}")
+        }
 
         if (toRun) {
-            predeploy.forEach { Closure c -> c.call(ctx) }
+            predeploy.forEach { Closure c -> ClosureUtils.delegateCall(ctx, c) }
             deploy(ctx)
-            postdeploy.forEach { Closure c -> c.call(ctx) }
+            postdeploy.forEach { Closure c -> ClosureUtils.delegateCall(ctx, c) }
         }
+        ctx.logger().log("")
     }
     abstract void deploy(DeployContext ctx)
 

@@ -55,7 +55,7 @@ class TargetDiscoveryTask extends DefaultTask {
                 }
             } catch (all) { }
             EmbeddedTools.unsilenceSsh()
-            
+
             if (found.size() > 0)
                 println "-> Target(s) found at ${found.join(', ')}. Using ${found.last()}"
 

@@ -29,21 +29,17 @@ deploy {
             addresses << "172.22.11.2" << "roborio-5333-frc.local" << "10.53.33.2"
             user = 'lvuser'
         }
-        myOtherTarget {
-            addresses << "173.22.11.33"
-            user = 'lvuser'
-            failOnMissing = false
-        }
     }
     deployers {
         myDeployer {
             targets << 'myTarget'
 
             directory = 'mydep'
-            onlyIf = { it.runCommand('echo Hello') == '<return>' }
             fileArtifact('myFileArtifact') {
+                predeploy << { execute 'echo \$(pwd)' }
                 file = file('myfile.dat')
                 filename = "test"
+                postdeploy << { executeMaybe 'cat myfile.dat' }
             }
         }
         myOtherDeployer {
@@ -100,8 +96,6 @@ task testMe() {
         println ""
         println project.extensions.deploy.deployers.first()
         println ""
-
-        project.extensions.deploy.deployers.first().doDeploy(new DebugDeployContext("__test__", 0))
     }
 }
 
