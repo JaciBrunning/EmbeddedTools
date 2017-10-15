@@ -12,7 +12,7 @@ Commands:
 `gradlew deploy<deployer>` will run the deploy steps for the `<deployer>` deployer on all targets
 `gradlew deploy<target>` will run the deploy steps for the `<target>` target on all deployers
 
-Properties:
+Properties:  
 `gradlew deploy -Pskip-cache` will skip the cache check and force redeployment of all files
 
 ## Installing plugin
