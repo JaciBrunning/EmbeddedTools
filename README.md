@@ -10,11 +10,10 @@ The plugin can be run with both Java and Native (C, C++, etc) projects, or neith
 Commands:  
 `gradlew deploy` will run the deploy steps for all deployers  
 `gradlew deploy<deployer>` will run the deploy steps for the `<deployer>` deployer on all targets
+`gradlew deploy<target>` will run the deploy steps for the `<target>` target on all deployers
 
-Properties:  
-`gradlew deploy -Pdeploy-quiet` will suppress deploy task output  
-`gradlew deploy -Pdeploy-dry` will do a dry run (will not connect to target, will only print commands run and files deployed)  
-`gradlew deploy -Pdeploy-dirty` will force caches of all deployed files to be invalidated, forcing the files to be redeployed  
+Properties:
+`gradlew deploy -Pskip-cache` will skip the cache check and force redeployment of all files
 
 ## Installing plugin
 Include the following in your `build.gradle`
@@ -50,132 +49,63 @@ model {
 ## Model 
 
 ```gradle
-import jaci.gradle.deployers.*
-import jaci.gradle.targets.*
 import jaci.gradle.toolchains.*
 
-model {
-    targets {
-        myTarget(RemoteTarget) {
-            addresses << "10.0.0.1" << "mytarget"       // Addresses for the remote target. Can be IP addresses, hostnames
-            asyncFind true                              // Search for each address in a new task for parallel execution. Makes finding target faster on multi-core systems. Default: true
-            directory "/home/myuser"                    // Directory to deploy to. Default: user home directory
-            mkdirs true                                 // Make directories when deploying. Default: true
-            user "myuser"                               // User to login as. Required.
-            password "secret"                           // Password to use for the user. Default: blank
-            promptPassword true                         // Prompt for the password when running gradlew deploy? Default: false
-            timeout 3                                   // Timeout in seconds when connecting to target. Default: 5
-            failOnMissing true                          // Throw an exception when the target cannot be found. If false, target is simply skipped. Default: true
-        }
+// DeployableStep properties //
+directory = 'mydir'     // Directory to use, relative to the scope prior
+order = 50              // The order of this element with other elements. Lower numbers first. Default: 50
+onlyIf = { execute('echo Hello') == 'Hello' }   // Only execute this step if the closure evaluates to true
+precheck = { execute('echo precheck') }         // Execute closure before onlyIf
+predeploy = { execute('echo predeploy') }       // Execute closure after onlyIf, but before deploy
+postdeploy = { execute('echo postdeploy') }     // Execute closure after deploy
 
-        myOtherTarget(RemoteTarget) {
-            addresses << "myothertarget"
-            user "myotheruser"
+// DSL
+deploy {
+    targets {
+        myTarget {
+            addresses << "10.XX.XX.YY" << "myhost.local"    // Define the addresses used to search for this device
+            async = true                // Check all addresses simultaneously. Default: true
+            mkdirs = true               // Make directories during deploy. Default: true
+            directory = '.'             // Root directory to deploy to, relative to user home dir. Default: .
+            user = 'myuser'             // User to login as. Required.
+            password = '**'             // Password to use for login. Default: ''
+            promptPassword = true       // Optionally prompt for password. Overrides password field
+            timeout = 3                 // Timeout before declaring the target unreachable in seconds. Default: 3
+            failOnMissing = true        // Fail the build if the target can't be found. Default: true
         }
     }
-
     deployers {
-        mydeployer(Deployer) {
-            predeploy << "echo Hello World"             // Commands to run prior to deploying artifacts
-
-            user "myotheruser"                          // User to login as. Default: target user
-            password "secret"                           // Password to use. Default: blank
-            promptPassword true                         // Prompt password? Default: false
-
-            artifacts {
-                myfile(FileArtifact) {                  // Set up a File artifact to deploy.
-                    file "myfile.dat"                       // Set the file to deploy. Required.
-                    filename "myfile.othername"             // Set the filename on the remote system. Default: name of file above
-                    cache true                              // Cache file on remote system? Default: true
-                    cacheMethod CacheMethod.MD5_CMD         // Set the caching method, one of { MD5_CMD, MD5_FILE, EXISTS }. MD5_CMD is better for smaller files.
-
-                    onlyIf {                                // Only execute this artifact if the result of command matches the regex of expect. Optional.
-                        command 'echo "Hello World"'
-                        expect 'Hello (.+)'
-                    }
-
-                    predeploy << "mycommand"                // Set commands to run before deploying this artifact
-                    postdeploy << "mycommand"               // Set commands to run after deploying this artifact
-                    order 1                                 // Set the order of this artifact. Smaller numbers deployed first. Default: 50
-                }
-
-                myfileset(FileSetArtifact) {            // Deploy multiple files all at once
-                    files = fileTree(dir: 'myfiles').files  // Set the files to use. Required.
-                    cache true                              // Cache files on remote system? Default: true
-                    cacheMethod CacheMethod.MD5_CMD         // Set the caching method, one of { MD5_CMD, MD5_FILE, EXISTS }. MD5_CMD is better for smaller files.
-
-                    onlyIf {                                // Only execute this artifact if the result of command matches the regex of expect. Optional.
-                        command 'echo "Hello World"'
-                        expect 'Hello (.+)'
-                    }
-
-                    predeploy << "mycommand"                // Set commands to run before deploying this artifact
-                    postdeploy << "mycommand"               // Set commands to run after deploying this artifact
-                    order 1                                 // Set the order of this artifact. Smaller numbers deployed first. Default: 50
-                }
-
-                jar(JavaArtifact) {                     // Set up a Java artifact. Name of this artifact is the task name (jar for most projects)
-                    filename "myfile.othername"             // Set the filename on the remote system. Default: name of java artifact file
-                    cache true                              // Cache file on remote system? Default: true
-                    cacheMethod CacheMethod.MD5_CMD         // Set the caching method, one of { MD5_CMD, MD5_FILE, EXISTS }. MD5_CMD is better for smaller files.
-
-                    onlyIf {                                // Only execute this artifact if the result of command matches the regex of expect. Optional.
-                        command 'echo "Hello World"'
-                        expect 'Hello (.+)'
-                    }
-
-                    predeploy << "mycommand"                // Set commands to run before deploying this artifact
-                    postdeploy << "mycommand"               // Set commands to run after deploying this artifact
-                    order 1                                 // Set the order of this artifact. Smaller numbers deployed first. Default: 50
-                }
-
-                myprogram(NativeArtifact) {             // Set up a Native (C, C++, etc) artifact. Name of this artifact is the name of the native component.
-                    filename "myfile.othername"             // Set the filename on the remote system. Default: name of native artifact file
-                    cache true                              // Cache file on remote system? Default: true
-                    cacheMethod CacheMethod.MD5_CMD         // Set the caching method, one of { MD5_CMD, MD5_FILE, EXISTS }. MD5_CMD is better for smaller files.
-
-                    onlyIf {                                // Only execute this artifact if the result of command matches the regex of expect. Optional.
-                        command 'echo "Hello World"'
-                        expect 'Hello (.+)'
-                    }
-
-                    predeploy << "mycommand"                // Set commands to run before deploying this artifact
-                    postdeploy << "mycommand"               // Set commands to run after deploying this artifact
-                    order 1                                 // Set the order of this artifact. Smaller numbers deployed first. Default: 50
-
-                    libraries true                          // Should shared libraries for this component be deployed? Default: true
-                    librootdir "/usr/local/lib"             // Directory to deploy shared libraries to. Relative to artifact directory. Default: same directory as artifact
-                    librarycache true                       // Should shared libraries be cached on the target? Default: true
-                    platform "x64"                          // What target platform for the component should be deployed? Required.
-                }
-
-                mycommand(CommandArtifact) {            // Set up a Command artifact to deploy. 
-                    directory "subdir"                      // Set the working directory for the command (relative to target directory. Absolute paths permitted)
-                    command "echo Hello Command Artifact"   // Set the command to run
-
-                    onlyIf {                                // Only execute this artifact if the result of command matches the regex of expect. Optional.
-                        command 'echo "Hello World"'
-                        expect 'Hello (.+)'
-                    }
-
-                    companionTask 'myOutputTask'            // Get or create a companion task by name, of type ArtifactCompanionTask. Task depends on deployer. See below
-                    // Companion Task example:
-                    //  task myOutputTask(ArtifactCompanionTask) {
-                    //      command = 'echo "My Command"'           // String, command to run. Will be set to artifact.command (above) if not set by task
-                    //      doLast {
-                    //          println commandOutput('myTarget')          // Get output of command (when run on target) as a string
-                    //          println targetOutputs                      // Map of commandOutput() for all targets
-                    //      }
-                    //  }
-                }
+        myDeployer {
+            targets << 'myTarget'       // Set the targets this deployer responds to
+            // Inherited from DeployableStep. See above. //
+            fileArtifact('myFileArtifact') {
+                // Inherited from DeployableStep. See above. //
+                file = file('myfile.dat')   // The file to deploy
+                filename = 'myfile2.dat'    // The filename to use. By default, it is the same name as file above
             }
 
-            postdeploy << "echo Goodbye World"               // Commands to run after deploying artifacts
-            targets << "myTarget"                       // Targets this deployer will deploy to
-            order 1                                     // Order of the target. Smaller numbers will deploy first. Default: 50
+            fileCollectionArtifact('myFileCollectionArtifact') {
+                // Inherited from DeployableStep. See above. //
+                files = tasks.jar.outputs.files`    // Set the files to use (in this case, the output jar file). Responds to FileCollection (e.g. FileTree, ZipTree, etc)
+            }
+
+            commandArtifact('myCommandArtifact') {
+                // Inherited from DeployableStep. See above. //
+                command = 'echo Hello'      // The command to run
+                ignoreError = true          // Ignore if the command fails? Default: false
+                // After the deploy task has run, you can access the 'result' property to obtain the command output.
+            }
+
+            nativeArtifact('myNativeArtifact') {
+                // Inherited from fileArtifact. See above. //
+                component = 'my_component'  // The name of the Native Component (in the model space) to deploy
+                targetPlatform = 'crossArm' // The name of the Target Platform variant of the binary to deploy
+            }
         }
     }
+}
 
+model {
     platforms {
         crossArm { operatingSystem 'linux'; architecture 'arm' }    // Add a new target platform for building
     }
