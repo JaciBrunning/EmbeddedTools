@@ -12,11 +12,13 @@ class CommandArtifact extends ArtifactBase {
     String command = null
     boolean ignoreError = false
 
+    String result = null
+
     @Override
     void deploy(DeployContext ctx) {
         if (ignoreError)
-            ctx.executeMaybe(command)
+            result = ctx.executeMaybe(command)
         else
-            ctx.execute(command)
+            result = ctx.execute(command)
     }
 }

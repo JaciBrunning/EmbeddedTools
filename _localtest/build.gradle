@@ -41,6 +41,10 @@ deploy {
                 filename = "test"
                 postdeploy << { executeMaybe 'cat test' }
             }
+            fileCollectionArtifact('myJavaArtifact') {
+                files = tasks.jar.outputs.files
+                directory = 'myjavadir'
+            }
         }
         myOtherDeployer {
             targets << 'myTarget' << 'myOtherTarget'

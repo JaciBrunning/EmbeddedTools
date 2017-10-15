@@ -39,6 +39,6 @@ class Deployer extends DeployableStep {
 
     @Override
     void deploy(DeployContext ctx) {
-        artifacts.each { artifact -> artifact.doDeploy(ctx) }
+        artifacts.toSorted { a, b -> a.getOrder() <=> b.getOrder() }.each { artifact -> artifact.doDeploy(ctx) }
     }
 }
