@@ -38,7 +38,7 @@ class DeployPlugin implements Plugin<Project> {
                         binaries.each { bin ->
                             if (bin instanceof NativeBinarySpec) {
                                 NativeBinarySpec spec = bin as NativeBinarySpec
-                                
+
                                 if (spec.component.name == na.component && spec.targetPlatform.name == na.targetPlatform) {
                                     if (spec instanceof NativeExecutableBinarySpec) {
                                         na.file = (spec as NativeExecutableBinarySpec).executable.file

@@ -2,6 +2,7 @@ package jaci.gradle
 
 import groovy.swing.SwingBuilder
 import jaci.gradle.deploy.DeployPlugin
+import jaci.gradle.nativedeps.NativeDepsPlugin
 import jaci.gradle.toolchains.ToolchainsPlugin
 import org.gradle.api.Plugin
 import org.gradle.api.Project
@@ -10,10 +11,19 @@ import org.hidetake.groovy.ssh.Ssh
 import org.hidetake.groovy.ssh.core.Service
 
 class EmbeddedTools implements Plugin<Project> {
+
+    @Override
     void apply(Project project) {
+        project.extensions.create('em_projectwrapper', ProjectWrapper, project)
         project.getPluginManager().apply(ToolchainsPlugin)
         project.getPluginManager().apply(DeployPlugin)
+        project.getPluginManager().apply(NativeDepsPlugin)
         getSsh()
+    }
+
+    static class ProjectWrapper {
+        Project project
+        ProjectWrapper(Project project) { this.project = project }
     }
 
     static Service ssh_service

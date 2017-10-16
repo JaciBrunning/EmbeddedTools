@@ -21,7 +21,14 @@ apply plugin: "c"
 apply plugin: "jaci.gradle.EmbeddedTools"
 
 import jaci.gradle.deploy.*
+import jaci.gradle.nativedeps.CombinedNativeLib
+import jaci.gradle.nativedeps.NativeLib
 import jaci.gradle.toolchains.*
+
+repositories.maven { repo ->
+    repo.name = "WPI"
+    repo.url = "http://first.wpi.edu/FRC/roborio/maven/release"
+}
 
 deploy {
     targets {
@@ -62,6 +69,38 @@ buildScan {
 }
 
 model {
+    libraries {
+        wpilibc(NativeLib) {
+            maven "edu.wpi.first.wpilibc:athena:2017.3.1"
+            sharedMatchers = ["**/wpilibc.so"]
+        }
+        hal(NativeLib) {
+            maven "edu.wpi.first.wpilib:hal:2017.3.1"
+        }
+        ntcore(NativeLib) {
+            maven "edu.wpi.first.wpilib.networktables.cpp:NetworkTables:3.1.7:arm@zip"
+        }
+        wpiutil(NativeLib) {
+            maven "edu.wpi.first.wpilib:wpiutil:1.0.2:arm@zip"
+        }
+        cscore(NativeLib) {
+            maven "edu.wpi.cscore.java:cscore:1.0.2:athena-uberzip@zip"
+        }
+
+        wpilib(CombinedNativeLib) {
+            targetPlatform = 'roborio'
+            libs << "wpilibc" << "hal" << "ntcore" << "wpiutil" << "cscore"
+        }
+
+        withType(NativeLib) {
+            targetPlatform = 'roborio'
+
+            headerDirs = ["include"]
+            staticMatchers = ["**/*.a"]
+            sharedMatchers = sharedMatchers ?: ["**/*.so*"]
+        }
+    }
+
     platforms {
         'any-32' { architecture "x86" }
         'any-64' { architecture "x86_64" }
@@ -72,6 +111,7 @@ model {
         roborioGcc(CrossGcc) {
             target('roborio') {
                 defineTools(it, "arm-frc-linux-gnueabi-", '')
+                cppCompiler.withArguments { a -> a << '-std=c++1y' }
             }
         }
         gcc(Gcc) { }
@@ -88,11 +128,12 @@ model {
             }
         }
         my_program(NativeExecutableSpec) {
-            targetPlatform "any-32"
-            targetPlatform "any-64"
+//            targetPlatform "any-32"
+//            targetPlatform "any-64"
             targetPlatform "roborio"
             sources.cpp {
                 source.srcDirs "src_c"
+                lib library: "wpilib"
             }
         }
     }
@@ -100,20 +141,7 @@ model {
 
 task testMe() {
     doLast {
-        println project.extensions.deploy.targets.first().dump()
         println ""
-        println project.extensions.deploy.deployers.first()
-        println ""
-    }
-}
-
-task myLastTask() {
-    doLast {
-        project.extensions.deploy.deployers.each {
-            println it
-            println it._active
-            println ""
-        }
     }
 }
 
