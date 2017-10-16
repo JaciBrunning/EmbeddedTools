@@ -50,6 +50,7 @@ model {
 
 ```gradle
 import jaci.gradle.toolchains.*
+import jaci.gradle.nativedeps.*
 
 // DeployableStep properties //
 directory = 'mydir'     // Directory to use, relative to the scope prior
@@ -106,6 +107,32 @@ deploy {
 }
 
 model {
+    libraries {
+        mylib(NativeLib) {
+            targetPlatform 'crossArm'           // Set the Target Platform for this library. Optional.
+            flavor 'default'                    // Set the Flavor for this library. Optional.
+            buildType 'debug'                   // Set the Build Type for this library. Optional.
+
+            // One of the following
+            file 'mydir'                                // Select a directory including the headers and compiled library files 
+            file 'myfile.zip'                           // Select a zipfile including the headers and compiled library files
+            maven 'mygroup:myartifact:myversion@zip'    // Select a maven artifact (zip file) including the headers and compiled library files
+
+            addLinkerArgs true                          // Add -L libraryDirectory for grouped .so files. Default: false
+            sharedMatchers << '**/*.so'                 // The search pattern for shared libraries
+            staticMatchers << '**/*.a'                  // The search pattern for static libraries
+            headerDirs << 'include'                     // The directories for headers of this library
+        }
+
+        myComboLib(CombinedNativeLib) {
+            targetPlatform 'crossArm'           // Set the Target Platform for this library. Optional.
+            flavor 'default'                    // Set the Flavor for this library. Optional.
+            buildType 'debug'                   // Set the Build Type for this library. Optional.
+
+            libs << 'mylib'                     // Set the libraries used in this combination lib
+        }
+    }
+
     platforms {
         crossArm { operatingSystem 'linux'; architecture 'arm' }    // Add a new target platform for building
     }
@@ -114,6 +141,15 @@ model {
         crossGcc(CrossGcc) {
             target('crossArm') {
                 defineTools(it, "arm-prefix-", "-suffix")   // Defines tools for C, C++, Asm, Linkers and Archivers. Does not define Objective C/C++
+            }
+        }
+    }
+
+    components {
+        my_program(NativeExecutableSpec) {
+            targetPlatform "crossArm"
+            sources.cpp {
+                lib library: "myComboLib"       // or lib library: 'mylib'
             }
         }
     }
