@@ -68,16 +68,16 @@ class NativeLibBinary implements SharedLibraryBinary, StaticLibraryBinary {
     // We've overridden above
     @Override
     File getSharedLibraryFile() {
-        return runtimeFiles.first()
+        return null
     }
 
     @Override
     File getSharedLibraryLinkFile() {
-        return runtimeFiles.first()
+        return null
     }
 
     @Override
     File getStaticLibraryFile() {
-        return linkFiles.first()
+        return null
     }
 }
