@@ -8,18 +8,10 @@ import org.gradle.api.file.FileCollection
 import org.gradle.api.file.FileTree
 import org.gradle.api.plugins.ExtensionContainer
 import org.gradle.language.nativeplatform.DependentSourceSet
-import org.gradle.language.nativeplatform.tasks.AbstractNativeCompileTask
-import org.gradle.model.Defaults
-import org.gradle.model.Each
-import org.gradle.model.Model
-import org.gradle.model.ModelMap
-import org.gradle.model.Mutate
-import org.gradle.model.RuleSource
+import org.gradle.model.*
 import org.gradle.nativeplatform.*
 import org.gradle.nativeplatform.platform.NativePlatform
 import org.gradle.nativeplatform.tasks.AbstractLinkTask
-import org.gradle.platform.base.BinaryContainer
-import org.gradle.platform.base.BinarySpec
 import org.gradle.platform.base.BinaryTasks
 import org.gradle.platform.base.PlatformContainer
 
@@ -84,13 +76,12 @@ class NativeDepsPlugin implements Plugin<Project> {
                 sharedFiles = rootTree.matching { pat -> pat.include(lib.sharedMatchers) }
                 staticFiles = rootTree.matching { pat -> pat.include(lib.staticMatchers) }
 
-                Set<File> headerDirs = lib.headerDirs.collect { new File(rootTree.asFileTrees.first().dir, it) }
-                FileCollection headerFiles = project.files(headerDirs)
+                PreemptiveDirectoryFileCollection headerFiles = new PreemptiveDirectoryFileCollection(rootTree, lib.headerDirs)
                 prelibs.create(libname) { PrebuiltLibrary pl ->
                     List<FileCollection> linkerLibs = lib.addLinkerArgs ? [staticFiles, sharedFiles] : []
                     NativeLibBinary natLib = new NativeLibBinary(pl.name, headerFiles, staticFiles + sharedFiles, sharedFiles, platform, flavor, buildType, linkerLibs)
                     pl.binaries.add(natLib)
-                    pl.headers.srcDirs.addAll(headerDirs)
+                    pl.headers.srcDirs.addAll(headerFiles.preemptive)
                 }
             }
 

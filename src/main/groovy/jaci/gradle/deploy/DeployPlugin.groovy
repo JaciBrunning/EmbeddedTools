@@ -15,13 +15,7 @@ import org.gradle.language.nativeplatform.DependentSourceSet
 import org.gradle.model.ModelMap
 import org.gradle.model.Mutate
 import org.gradle.model.RuleSource
-import org.gradle.nativeplatform.NativeBinarySpec
-import org.gradle.nativeplatform.NativeExecutableBinarySpec
-import org.gradle.nativeplatform.NativeLibraryBinary
-import org.gradle.nativeplatform.PrebuiltLibraries
-import org.gradle.nativeplatform.PrebuiltLibrary
-import org.gradle.nativeplatform.Repositories
-import org.gradle.nativeplatform.SharedLibraryBinarySpec
+import org.gradle.nativeplatform.*
 import org.gradle.nativeplatform.tasks.AbstractLinkTask
 import org.gradle.platform.base.BinaryContainer
 
