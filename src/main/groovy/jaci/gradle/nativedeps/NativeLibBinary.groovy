@@ -16,9 +16,10 @@ class NativeLibBinary implements SharedLibraryBinary, StaticLibraryBinary {
     NativePlatform targetPlatform
     Flavor flavor
     BuildType buildType
+    List<FileCollection> linkerLibs
 
     NativeLibBinary(String name, FileCollection headerDirs, FileCollection linkFiles, FileCollection runtimeFiles,
-                    NativePlatform targetPlatform, Flavor flavor, BuildType buildType) {
+                    NativePlatform targetPlatform, Flavor flavor, BuildType buildType, List<FileCollection> linkerLibs) {
         this.name = name
         this.headerDirs = headerDirs
         this.linkFiles = linkFiles
@@ -26,6 +27,7 @@ class NativeLibBinary implements SharedLibraryBinary, StaticLibraryBinary {
         this.targetPlatform = targetPlatform
         this.flavor = flavor
         this.buildType = buildType
+        this.linkerLibs = linkerLibs
     }
 
     @Override

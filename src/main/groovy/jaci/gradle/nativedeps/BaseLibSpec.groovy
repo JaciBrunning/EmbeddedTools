@@ -1,11 +1,12 @@
 package jaci.gradle.nativedeps
 
 import groovy.transform.CompileStatic
+import org.gradle.api.Named
 import org.gradle.model.Managed
 
 @Managed
 @CompileStatic
-interface BaseLibSpec {
+interface BaseLibSpec extends Named {
     void setTargetPlatform(String platforms)
     String getTargetPlatform()
 

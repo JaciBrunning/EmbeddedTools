@@ -15,6 +15,9 @@ interface NativeLib extends BaseLibSpec {
     void setSharedMatchers(List<String> matchers)
     List<String> getSharedMatchers()
 
+    void setAddLinkerArgs(boolean addLinkerArgs)
+    boolean getAddLinkerArgs()
+
     void setMaven(String dependencyNotation)
     String getMaven()
 
