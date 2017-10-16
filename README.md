@@ -83,11 +83,15 @@ deploy {
                 // Inherited from DeployableStep. See above. //
                 file = file('myfile.dat')   // The file to deploy
                 filename = 'myfile2.dat'    // The filename to use. By default, it is the same name as file above
+
+                cache = 'md5sum'            // Set the caching policy. Default: md5sum
             }
 
             fileCollectionArtifact('myFileCollectionArtifact') {
                 // Inherited from DeployableStep. See above. //
                 files = tasks.jar.outputs.files`    // Set the files to use (in this case, the output jar file). Responds to FileCollection (e.g. FileTree, ZipTree, etc)
+                
+                cache = 'md5sum'            // Set the caching policy. Default: md5sum
             }
 
             commandArtifact('myCommandArtifact') {
@@ -98,9 +102,15 @@ deploy {
             }
 
             nativeArtifact('myNativeArtifact') {
-                // Inherited from fileArtifact. See above. //
                 component = 'my_component'  // The name of the Native Component (in the model space) to deploy
                 targetPlatform = 'crossArm' // The name of the Target Platform variant of the binary to deploy
+
+                filename = 'myfile'         // Set the filename for this artifact
+                cache = 'md5sum'            // Set the caching policy. Default: md5sum
+
+                libraries = true            // Deploy native libraries? Default: false
+                libraryDir = 'somedir'      // Set the deploy directory for libraries
+                libcache = 'md5file'        // Set the caching policy. Default: md5file
             }
         }
     }
