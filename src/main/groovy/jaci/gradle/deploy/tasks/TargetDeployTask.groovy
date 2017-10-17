@@ -11,7 +11,6 @@ import org.gradle.api.NamedDomainObjectContainer
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.StopExecutionException
 import org.gradle.api.tasks.TaskAction
-import org.hidetake.groovy.ssh.connection.AllowAnyHosts
 
 @CompileStatic
 class TargetDeployTask extends DefaultTask {
@@ -32,14 +31,15 @@ class TargetDeployTask extends DefaultTask {
 
         def activeDeployers = deployers.findAll { Deployer dep -> dep._active.contains(target.name) }
         if (activeDeployers.size() > 0) {
-            EmbeddedTools.ssh.run {
-                session(host: target._active_address, user: target.user, password: target.password, timeoutSec: target.timeout, knownHosts: AllowAnyHosts.instance) {
-                    def ctx = new DefaultDeployContext(project, target, log, delegate, target.directory ?: '.')
-                    activeDeployers.toSorted { a, b -> a.getOrder() <=> b.getOrder() }.each { Deployer dep ->
-                        dep.doDeploy(project, ctx)
-                    }
-                }
-            }
+            // TODO
+//            EmbeddedTools.ssh.run {
+//                session(host: target._active_address, user: target.user, password: target.password, timeoutSec: target.timeout, knownHosts: AllowAnyHosts.instance) {
+//                    def ctx = new DefaultDeployContext(project, target, log, delegate, target.directory ?: '.')
+//                    activeDeployers.toSorted { a, b -> a.getOrder() <=> b.getOrder() }.each { Deployer dep ->
+//                        dep.doDeploy(project, ctx)
+//                    }
+//                }
+//            }
         }
     }
 }

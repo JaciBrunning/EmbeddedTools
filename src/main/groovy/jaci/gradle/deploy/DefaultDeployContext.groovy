@@ -6,20 +6,20 @@ import jaci.gradle.PathUtils
 import jaci.gradle.deploy.cache.CacheMethod
 import jaci.gradle.deploy.cache.CacheMethods
 import jaci.gradle.deploy.target.RemoteTarget
+import jaci.gradle.transport.SshSessionController
 import org.gradle.api.Project
-import org.hidetake.groovy.ssh.session.SessionHandler
 
 @CompileStatic
 class DefaultDeployContext implements DeployContext {
     String workingDir
-    SessionHandler handler
+    SshSessionController session
     DeployLogger logger
     RemoteTarget target
     Project project
 
-    DefaultDeployContext(Project project, RemoteTarget target, DeployLogger logger, SessionHandler sessionHandler, String workingDir) {
+    DefaultDeployContext(Project project, RemoteTarget target, DeployLogger logger, SshSessionController session, String workingDir) {
         this.workingDir = workingDir
-        this.handler = sessionHandler
+        this.session = session
         this.logger = logger
         this.target = target
         this.project = project
@@ -35,11 +35,11 @@ class DefaultDeployContext implements DeployContext {
         return workingDir
     }
 
-    String _execute(String command, HashMap map = [:]) {
-        if (target.mkdirs) handler.execute("mkdir -p ${workingDir()}")
+    String _execute(String command) {
+        if (target.mkdirs) session.execute("mkdir -p ${workingDir()}")
 
         logger.log("  -C-> ${command} @ ${workingDir}")
-        def result = handler.execute(map, [ "cd ${workingDir()}", command ].join('\n'))
+        def result = session.execute([ "cd ${workingDir()}", command ].join('\n'))
         if (result != null && result.length() > 0)
             logger.log("   -> ${result}")
         return result
@@ -50,13 +50,8 @@ class DefaultDeployContext implements DeployContext {
         return _execute(command)
     }
 
-    @Override
-    String executeMaybe(String command) {
-        return _execute(command, [ignoreError: true])
-    }
-
     void put_internal(Map<String, File> files, Object cache) {
-        if (target.mkdirs) handler.execute("mkdir -p ${workingDir()}")
+        if (target.mkdirs) session.execute("mkdir -p ${workingDir()}")
 
         if (!project.hasProperty('skip-cache') && cache != null && !(cache instanceof Boolean && cache == false)) {
             CacheMethod cacheMethod = CacheMethods.getMethod(cache)
@@ -68,7 +63,7 @@ class DefaultDeployContext implements DeployContext {
 
         files.each { String dst, File src ->
             logger.log("  -F-> ${project.rootDir.toURI().relativize(src.toURI()).getPath()} -> ${dst} @ ${workingDir}")
-            handler.put(from: src, into: PathUtils.combine(workingDir(), dst))
+            session.put(src, PathUtils.combine(workingDir(), dst))
         }
     }
 
@@ -84,6 +79,6 @@ class DefaultDeployContext implements DeployContext {
 
     @Override
     DeployContext subContext(String workingDir) {
-        return new DefaultDeployContext(project, target, logger.push(), handler, PathUtils.combine(this.workingDir, workingDir))
+        return new DefaultDeployContext(project, target, logger.push(), session, PathUtils.combine(this.workingDir, workingDir))
     }
 }

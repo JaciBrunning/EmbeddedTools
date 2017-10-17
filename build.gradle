@@ -7,11 +7,9 @@ apply plugin: 'groovy'
 apply plugin: 'maven-publish'
 
 dependencies {
-  compile gradleApi()
-  compile localGroovy()
-  compile('org.hidetake:groovy-ssh:2.9.0') {
-      exclude module: 'groovy-all'
-  }
+    compile gradleApi()
+    compile localGroovy()
+    compile 'com.jcraft:jsch:0.1.53'
 }
 
 repositories {

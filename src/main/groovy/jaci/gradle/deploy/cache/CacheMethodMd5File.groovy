@@ -18,7 +18,7 @@ class CacheMethodMd5File implements CacheMethod {
     @Override
     Set<String> needsUpdate(DeployContext context, Map<String, File> files) {
         context.logger().silent(true)
-        def remote_cache = context.executeMaybe("cat cache.md5 2> /dev/null || echo '{}'")
+        def remote_cache = context.execute("cat cache.md5 2> /dev/null || echo '{}'")
         def remote_md5 = new JsonSlurper().parseText(remote_cache)
 
         def md = MessageDigest.getInstance("MD5")

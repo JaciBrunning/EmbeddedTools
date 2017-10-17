@@ -13,9 +13,6 @@ interface DeployContext {
     // Run a command (execute)
     String execute(String command)
 
-    // Run a command (execute), ignoring error
-    String executeMaybe(String command)
-
     // Send a single file
     void put(File source, String dest, cache)
 

@@ -1,14 +1,14 @@
 package jaci.gradle
 
+import com.jcraft.jsch.JSch
 import groovy.swing.SwingBuilder
 import jaci.gradle.deploy.DeployPlugin
 import jaci.gradle.nativedeps.NativeDepsPlugin
 import jaci.gradle.toolchains.ToolchainsPlugin
+import jaci.gradle.transport.SshSessionController
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.internal.logging.slf4j.OutputEventListenerBackedLoggerContext
-import org.hidetake.groovy.ssh.Ssh
-import org.hidetake.groovy.ssh.core.Service
 
 class EmbeddedTools implements Plugin<Project> {
 
@@ -18,7 +18,6 @@ class EmbeddedTools implements Plugin<Project> {
         project.getPluginManager().apply(ToolchainsPlugin)
         project.getPluginManager().apply(DeployPlugin)
         project.getPluginManager().apply(NativeDepsPlugin)
-        getSsh()
     }
 
     static class ProjectWrapper {
@@ -26,35 +25,10 @@ class EmbeddedTools implements Plugin<Project> {
         ProjectWrapper(Project project) { this.project = project }
     }
 
-    static Service ssh_service
-    static OutputEventListenerBackedLoggerContext ssh_defaultContext
-    static Service getSsh() {
-        if (ssh_service == null) {
-            ssh_service = Ssh.newService()
-
-            def logfield = ssh_service.log.class.getDeclaredField("context")
-            logfield.setAccessible(true)
-
-            ssh_defaultContext = logfield.get(ssh_service.log)
-        }
-        return ssh_service
-    }
-
-    static void silenceSsh() {
-        def logfield = ssh_service.log.class.getDeclaredField("context")
-        logfield.setAccessible(true)
-
-        def ctx = new OutputEventListenerBackedLoggerContext({ text -> return }, { text -> return }, org.gradle.internal.time.Time.clock())
-        ctx.setOutputEventListener({ event -> return })
-            
-        logfield.set(ssh_service.log, ctx)
-    }
-
-    static void unsilenceSsh() {
-        def logfield = ssh_service.log.class.getDeclaredField("context")
-        logfield.setAccessible(true)
-
-        logfield.set(ssh_service.log, ssh_defaultContext)
+    static JSch jsch
+    static JSch getJsch() {
+        if (jsch == null) jsch = new JSch()
+        return jsch
     }
 
     static String promptPassword(String user) {

@@ -7,7 +7,6 @@ import org.gradle.api.DefaultTask
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.StopExecutionException
 import org.gradle.api.tasks.TaskAction
-import org.hidetake.groovy.ssh.connection.AllowAnyHosts
 
 @CompileStatic
 class TargetDiscoveryTask extends DefaultTask {
@@ -40,21 +39,22 @@ class TargetDiscoveryTask extends DefaultTask {
         assert target.user != null
         assert target.timeout > 0
 
+        // TODO
         if (target.async) {
             // Try all targets at once. Max time: target.timeout
             def found = []
             println "-> Attempting Target Addresses ${target.addresses.join(', ')}"
-            EmbeddedTools.silenceSsh()
-            try {
-                EmbeddedTools.ssh.run {
-                    target.addresses.each { addr ->
-                        session(host: addr, user: target.user, password: password, timeoutSec: target.timeout, knownHosts: AllowAnyHosts.instance) {
-                            found << addr
-                        }
-                    }
-                }
-            } catch (all) { }
-            EmbeddedTools.unsilenceSsh()
+//            EmbeddedTools.silenceSsh()
+//            try {
+//                EmbeddedTools.ssh.run {
+//                    target.addresses.each { addr ->
+//                        session(host: addr, user: target.user, password: password, timeoutSec: target.timeout, knownHosts: AllowAnyHosts.instance) {
+//                            found << addr
+//                        }
+//                    }
+//                }
+//            } catch (all) { }
+//            EmbeddedTools.unsilenceSsh()
 
             if (found.size() > 0)
                 println "-> Target(s) found at ${found.join(', ')}. Using ${found.last()}"
@@ -65,16 +65,16 @@ class TargetDiscoveryTask extends DefaultTask {
             // Try targets sequentially. Max time: length(target.addresses) * target.timeout
             target.addresses.any { addr ->
                 println "-> Attempting Target Address ${addr}"
-                EmbeddedTools.silenceSsh()
-                try {
-                    EmbeddedTools.ssh.run {
-                        session(host: addr, user: target.user, password: password, timeoutSec: target.timeout, knownHosts: AllowAnyHosts.instance) {
-                            println "-> Target found at ${addr}"
-                            target._active_address = addr
-                        }
-                    }
-                } catch (all) { }
-                EmbeddedTools.unsilenceSsh()
+//                EmbeddedTools.silenceSsh()
+//                try {
+//                    EmbeddedTools.ssh.run {
+//                        session(host: addr, user: target.user, password: password, timeoutSec: target.timeout, knownHosts: AllowAnyHosts.instance) {
+//                            println "-> Target found at ${addr}"
+//                            target._active_address = addr
+//                        }
+//                    }
+//                } catch (all) { }
+//                EmbeddedTools.unsilenceSsh()
                 return target._active_address != null
             }
         }
