@@ -15,8 +15,13 @@ interface NativeLib extends BaseLibSpec {
     void setSharedMatchers(List<String> matchers)
     List<String> getSharedMatchers()
 
-    void setAddLinkerArgs(boolean addLinkerArgs)
-    boolean getAddLinkerArgs()
+    // Library matchers determine what gets passed to the linker as a direct library
+    void setLibraryMatchers(List<String> matchers)
+    List<String> getLibraryMatchers()
+
+    // Library names determine what gets sent to the linker as a -l flag (good for system libraries / grouped .so)
+    void setLibraryNames(List<String> libnames)
+    List<String> getLibraryNames()
 
     void setMaven(String dependencyNotation)
     String getMaven()

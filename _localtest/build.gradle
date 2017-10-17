@@ -75,23 +75,23 @@ model {
     libraries {
         wpilibc(NativeLib) {
             maven "edu.wpi.first.wpilibc:athena:2017.3.1"
-            addLinkerArgs true
+            libraryNames = ['wpi']
         }
         hal(NativeLib) {
             maven "edu.wpi.first.wpilib:hal:2017.3.1"
-            addLinkerArgs true
+            libraryMatchers = ['**/*.so']
         }
         ntcore(NativeLib) {
             maven "edu.wpi.first.wpilib.networktables.cpp:NetworkTables:3.1.7:arm@zip"
-            addLinkerArgs true
+            libraryMatchers = ['**/*.so']
         }
         wpiutil(NativeLib) {
             maven "edu.wpi.first.wpilib:wpiutil:1.0.2:arm@zip"
-            addLinkerArgs true
+            libraryMatchers = ['**/*.so']
         }
         cscore(NativeLib) {
             maven "edu.wpi.cscore.java:cscore:1.0.2:athena-uberzip@zip"
-            addLinkerArgs true
+            libraryMatchers = ['**/*.so']
         }
 
         wpilib(CombinedNativeLib) {
@@ -119,6 +119,7 @@ model {
             target('roborio') {
                 defineTools(it, "arm-frc-linux-gnueabi-", '')
                 cppCompiler.withArguments { a -> a << '-std=c++11' }
+                linker.withArguments { a -> a << '-std=c++11' }
             }
         }
         gcc(Gcc) { }

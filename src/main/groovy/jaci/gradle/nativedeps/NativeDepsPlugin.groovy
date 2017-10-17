@@ -4,9 +4,9 @@ import jaci.gradle.EmbeddedTools
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.Task
-import org.gradle.api.file.FileCollection
 import org.gradle.api.file.FileTree
 import org.gradle.api.plugins.ExtensionContainer
+import org.gradle.internal.os.OperatingSystem
 import org.gradle.language.nativeplatform.DependentSourceSet
 import org.gradle.model.*
 import org.gradle.nativeplatform.*
@@ -56,7 +56,7 @@ class NativeDepsPlugin implements Plugin<Project> {
 
             spec.withType(NativeLib).each { lib ->
                 def libname = lib.name
-                FileTree rootTree, sharedFiles, staticFiles
+                FileTree rootTree, sharedFiles, staticFiles, matchedLibs
 
                 def flavor = flavors.getByName(lib.flavor ?: flavors.first().name)
                 def buildType = buildTypes.getByName(lib.buildType ?: buildTypes.first().name)
@@ -73,13 +73,14 @@ class NativeDepsPlugin implements Plugin<Project> {
                     rootTree = project.zipTree(lib.getFile())
                 }
 
-                sharedFiles = rootTree.matching { pat -> pat.include(lib.sharedMatchers) }
-                staticFiles = rootTree.matching { pat -> pat.include(lib.staticMatchers) }
+                sharedFiles = rootTree.matching { pat -> pat.include(lib.sharedMatchers  ?: ['<<EMBEDDEDTOOLS_NOMATCH>>']) }
+                staticFiles = rootTree.matching { pat -> pat.include(lib.staticMatchers  ?: ['<<EMBEDDEDTOOLS_NOMATCH>>']) }
+                matchedLibs = rootTree.matching { pat -> pat.include(lib.libraryMatchers ?: ['<<EMBEDDEDTOOLS_NOMATCH>>']) }
 
                 PreemptiveDirectoryFileCollection headerFiles = new PreemptiveDirectoryFileCollection(rootTree, lib.headerDirs)
+
                 prelibs.create(libname) { PrebuiltLibrary pl ->
-                    List<FileCollection> linkerLibs = lib.addLinkerArgs ? [staticFiles, sharedFiles] : []
-                    NativeLibBinary natLib = new NativeLibBinary(pl.name, headerFiles, staticFiles + sharedFiles, sharedFiles, platform, flavor, buildType, linkerLibs)
+                    NativeLibBinary natLib = new NativeLibBinary(pl.name, headerFiles, staticFiles + sharedFiles, matchedLibs, lib.libraryNames ?: [], platform, flavor, buildType)
                     pl.binaries.add(natLib)
                     pl.headers.srcDirs.addAll(headerFiles.preemptive)
                 }
@@ -89,17 +90,17 @@ class NativeDepsPlugin implements Plugin<Project> {
                 def libs = lib.libs.collect { prelibs.getByName(it) }
 
                 def binaries = libs.collect { it.binaries.first() as NativeLibBinary }
-                def linkFiles = binaries.collect { it.linkFiles }.inject { a, b -> a+b }
-                def runtimeFiles = binaries.collect { it.runtimeFiles }.inject { a, b -> a+b }
                 def headerFiles = binaries.collect { it.headerDirs }.inject { a, b -> a+b }
-                def linkerLibs = binaries.collect { it.linkerLibs }.inject { a, b -> a+b}
+                def linkerFiles = binaries.collect { it.linkerFiles }.inject { a, b -> a+b}
+                def matchedLibs = binaries.collect { it.matchedLibraries }.inject { a, b -> a+b }
+                def libNames = binaries.collect { it.libNames }.inject { a, b -> a+b }
 
                 def flavor = flavors.getByName(lib.flavor ?: flavors.first().name)
                 def buildType = buildTypes.getByName(lib.buildType ?: buildTypes.first().name)
                 def platform = platforms.getByName(lib.targetPlatform) as NativePlatform
 
                 prelibs.create(lib.name) { PrebuiltLibrary pl ->
-                    NativeLibBinary natLib = new NativeLibBinary(pl.name, headerFiles, linkFiles, runtimeFiles, platform, flavor, buildType, linkerLibs)
+                    NativeLibBinary natLib = new NativeLibBinary(pl.name, headerFiles, linkerFiles, matchedLibs, libNames, platform, flavor, buildType)
                     pl.binaries.add(natLib)
                     libs.each { pl.headers.srcDirs.addAll(it.headers.srcDirs) }
                 }
@@ -120,13 +121,15 @@ class NativeDepsPlugin implements Plugin<Project> {
                                 def nl = (repos.getByName('embeddedTools') as PrebuiltLibraries).getByName(lib).binaries.first()
                                 if (nl instanceof NativeLibBinary) {
                                     def natLib = nl as NativeLibBinary
-                                    natLib.linkerLibs.each { fc ->
-                                        bin.linker.args(*(fc.files.collect {
-                                            it.parentFile as File
-                                        }.unique().collectMany {
-                                            ["-L", it.absolutePath]
-                                        }))
+                                    def args = natLib.linkerFiles.files.collect { it.parentFile }.unique().collectMany { file ->
+                                        ["-L", file.absolutePath]
                                     }
+
+                                    args += natLib.libNames.collectMany { libName ->
+                                        ["-l", libName]
+                                    }
+
+                                    bin.linker.args.addAll(args)
                                 }
                             }
                         }

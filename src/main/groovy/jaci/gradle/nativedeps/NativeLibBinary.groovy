@@ -12,22 +12,23 @@ import org.gradle.nativeplatform.platform.NativePlatform
 class NativeLibBinary implements SharedLibraryBinary, StaticLibraryBinary {
 
     String name
-    FileCollection headerDirs, linkFiles, runtimeFiles
+    FileCollection headerDirs, linkerFiles, matchedLibraries
+    List<String> libNames
     NativePlatform targetPlatform
     Flavor flavor
     BuildType buildType
-    List<FileCollection> linkerLibs
 
-    NativeLibBinary(String name, FileCollection headerDirs, FileCollection linkFiles, FileCollection runtimeFiles,
-                    NativePlatform targetPlatform, Flavor flavor, BuildType buildType, List<FileCollection> linkerLibs) {
+    NativeLibBinary(String name, FileCollection headerDirs, FileCollection linkerFiles,
+                    FileCollection matchedLibraries, List<String> libNames,
+                    NativePlatform targetPlatform, Flavor flavor, BuildType buildType) {
         this.name = name
         this.headerDirs = headerDirs
-        this.linkFiles = linkFiles
-        this.runtimeFiles = runtimeFiles
         this.targetPlatform = targetPlatform
         this.flavor = flavor
         this.buildType = buildType
-        this.linkerLibs = linkerLibs
+        this.matchedLibraries = matchedLibraries
+        this.linkerFiles = linkerFiles
+        this.libNames = libNames
     }
 
     @Override
@@ -35,14 +36,22 @@ class NativeLibBinary implements SharedLibraryBinary, StaticLibraryBinary {
         return headerDirs
     }
 
+    FileCollection getLinkerFiles() {
+        return linkerFiles
+    }
+
+    List<String> getLibNames() {
+        return libNames
+    }
+
     @Override
     FileCollection getLinkFiles() {
-        return linkFiles
+        return matchedLibraries
     }
 
     @Override
     FileCollection getRuntimeFiles() {
-        return runtimeFiles
+        return matchedLibraries
     }
 
     @Override
@@ -65,7 +74,6 @@ class NativeLibBinary implements SharedLibraryBinary, StaticLibraryBinary {
         return name
     }
 
-    // We've overridden above
     @Override
     File getSharedLibraryFile() {
         return null
