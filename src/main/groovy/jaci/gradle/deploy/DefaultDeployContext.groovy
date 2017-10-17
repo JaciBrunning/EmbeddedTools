@@ -83,11 +83,6 @@ class DefaultDeployContext implements DeployContext {
     }
 
     @Override
-    void withSession(Closure closure) {
-        ClosureUtils.delegateCall(handler, closure, this)
-    }
-
-    @Override
     DeployContext subContext(String workingDir) {
         return new DefaultDeployContext(project, target, logger.push(), handler, PathUtils.combine(this.workingDir, workingDir))
     }

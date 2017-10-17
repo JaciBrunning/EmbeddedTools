@@ -22,8 +22,5 @@ interface DeployContext {
     // Send multiple files, and trigger cache checking only once
     void put(Set<File> files, cache)
 
-    // Gives a closure access to the ssh session
-    void withSession(Closure closure)
-
     DeployContext subContext(String workingDir)
 }
