@@ -1,5 +1,8 @@
 package jaci.gradle
 
+import groovy.transform.CompileStatic
+
+@CompileStatic
 class PathUtils {
     static String combine(String root, String relative) {
         normalize(relative == null ? root : join(root, relative))
@@ -14,7 +17,7 @@ class PathUtils {
     static String normalize(String filepath) {
         def strings = filepath.split("/") as List
         def s = [] as Stack
-        strings.forEach { str ->
+        strings.forEach { String str ->
             if (str.trim().equals("..")) {
                 s.pop()
             } else s.push(str)

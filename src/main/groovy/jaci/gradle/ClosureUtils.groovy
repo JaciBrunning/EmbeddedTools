@@ -1,5 +1,8 @@
 package jaci.gradle
 
+import groovy.transform.CompileStatic
+
+@CompileStatic
 class ClosureUtils {
 
     static Object delegateCall(Object object, Closure closure, Object... args) {

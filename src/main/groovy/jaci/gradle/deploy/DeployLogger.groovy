@@ -1,5 +1,8 @@
 package jaci.gradle.deploy
 
+import groovy.transform.CompileStatic
+
+@CompileStatic
 class DeployLogger {
     int indent
     String indentStr
