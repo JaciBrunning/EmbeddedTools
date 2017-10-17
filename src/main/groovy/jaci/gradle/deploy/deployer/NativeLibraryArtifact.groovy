@@ -6,8 +6,9 @@ import groovy.transform.CompileStatic
 class NativeLibraryArtifact extends FileCollectionArtifact {
     NativeLibraryArtifact(String name) {
         super(name)
-        cache = 'md5file'
+        library = name
     }
 
     String library = null
+    List<String> matchers = []
 }

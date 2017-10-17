@@ -4,13 +4,18 @@ import groovy.transform.CompileStatic
 import jaci.gradle.deploy.deployer.ArtifactBase
 import jaci.gradle.deploy.deployer.Deployer
 import jaci.gradle.deploy.deployer.NativeArtifact
+import jaci.gradle.deploy.deployer.NativeLibraryArtifact
 import jaci.gradle.deploy.target.RemoteTarget
+import jaci.gradle.nativedeps.NativeLib
 import jaci.gradle.nativedeps.NativeLibBinary
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.Task
 import org.gradle.api.artifacts.repositories.ArtifactRepository
+import org.gradle.api.file.FileCollection
+import org.gradle.api.file.FileTree
 import org.gradle.api.plugins.ExtensionContainer
+import org.gradle.api.tasks.util.PatternFilterable
 import org.gradle.language.nativeplatform.DependentSourceSet
 import org.gradle.model.ModelMap
 import org.gradle.model.Mutate
@@ -71,6 +76,21 @@ class DeployPlugin implements Plugin<Project> {
 //                                        }
 //                                    }
 //                                }
+                            }
+                        }
+                    } else if (artifact instanceof NativeLibraryArtifact) {
+                        NativeLibraryArtifact nla = artifact as NativeLibraryArtifact
+                        repos.withType(PrebuiltLibraries).all { PrebuiltLibraries repo ->
+                            repo.matching { PrebuiltLibrary pl -> pl.name == nla.library }.all { PrebuiltLibrary pl ->
+                                pl.binaries.all { NativeLibraryBinary bin ->
+                                    FileCollection sharedLibs = (bin instanceof NativeLibBinary) ? (bin as NativeLibBinary).runtimeLibraries : bin.runtimeFiles
+                                    FileTree deployedFileTree = sharedLibs.asFileTree
+                                    if (nla.matchers != null && !nla.matchers.empty) {
+                                        deployedFileTree = deployedFileTree.matching { PatternFilterable pat -> pat.include(nla.matchers) }
+                                    }
+
+                                    nla.files = deployedFileTree
+                                }
                             }
                         }
                     }

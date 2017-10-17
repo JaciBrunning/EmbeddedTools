@@ -56,8 +56,10 @@ deploy {
 
             nativeArtifact('my_program') {
                 targetPlatform = 'roborio'
-//                libraries = true
-//                libraryDir = '/usr/local/frc/lib'
+            }
+
+            nativeLibraryArtifact('wpilib') {
+                directory = '/usr/local/frc/lib'
             }
         }
         myOtherDeployer {
@@ -79,19 +81,19 @@ model {
         }
         hal(NativeLib) {
             maven "edu.wpi.first.wpilib:hal:2017.3.1"
-            libraryMatchers = ['**/*.so']
+            libraryMatchers = ["**/libHALAthena.so"]
         }
         ntcore(NativeLib) {
             maven "edu.wpi.first.wpilib.networktables.cpp:NetworkTables:3.1.7:arm@zip"
-            libraryMatchers = ['**/*.so']
+            libraryMatchers = ["**/libntcore.so"]
         }
         wpiutil(NativeLib) {
             maven "edu.wpi.first.wpilib:wpiutil:1.0.2:arm@zip"
-            libraryMatchers = ['**/*.so']
+            libraryMatchers = ["**/libwpiutil.so"]
         }
         cscore(NativeLib) {
             maven "edu.wpi.cscore.java:cscore:1.0.2:athena-uberzip@zip"
-            libraryMatchers = ['**/*.so']
+            libraryMatchers = ["**/libopencv*.so.3.1", "**/libcscore.so"]
         }
 
         wpilib(CombinedNativeLib) {
@@ -104,7 +106,12 @@ model {
 
             headerDirs = ["include"]
             staticMatchers = ["**/*.a"]
-            sharedMatchers = ["**/*.so", "**/*.so\\.*"]
+            sharedMatchers = ["**/libHALAthena.so",
+                              "**/libopencv*.so.3.1",
+                              "**/libcscore.so",
+                              "**/libwpilibc.so",
+                              "**/libntcore.so",
+                              "**/libwpiutil.so"]
         }
     }
 

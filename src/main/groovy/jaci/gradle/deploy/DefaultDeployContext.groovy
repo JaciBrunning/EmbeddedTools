@@ -67,14 +67,14 @@ class DefaultDeployContext implements DeployContext {
         }
 
         files.each { String dst, File src ->
-            logger.log("  -F-> ${src} -> ${dst} @ ${workingDir}")
+            logger.log("  -F-> ${project.rootDir.toURI().relativize(src.toURI()).getPath()} -> ${dst} @ ${workingDir}")
             handler.put(from: src, into: PathUtils.combine(workingDir(), dst))
         }
     }
 
     @Override
     void put(File source, String dest, Object cache) {
-        put_internal([dest: source], cache)
+        put_internal([(dest): source], cache)
     }
 
     @Override

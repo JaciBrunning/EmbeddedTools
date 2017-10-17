@@ -21,14 +21,23 @@ class CacheMethodMd5Sum implements CacheMethod {
     Set<String> needsUpdate(DeployContext context, Map<String, File> files) {
         def md = MessageDigest.getInstance("MD5")
         context.logger().silent(true)
-        def needs_update = files.findAll { String name, File file ->
+
+        def checksums_text = files.collect { String name, File file ->
             md.reset()
             md.update(Files.readAllBytes(file.toPath()))
             def local = md.digest().encodeHex().toString()
-            def remote = context.executeMaybe("md5sum ${name} 2> /dev/null || true").split(" ")[0] ?: ""
-            local != remote
-        }.keySet()
+            "${local}  ${name}"
+        }.join("\n")
+        def result = context.executeMaybe("echo '${checksums_text}' > _tmp.et.md5 && md5sum -b -c _tmp.et.md5 2> /dev/null; rm _tmp.et.md5")
+        def upToDate = result.split('\n').collect { String s ->
+            s.split(':')
+        }.findAll { String[] ls ->
+            ls.last().trim().equalsIgnoreCase('ok')
+        }.collect { String[] ls ->
+            ls.first()
+        }
+
         context.logger().silent(false)
-        return needs_update
+        return files.keySet().findAll { String name -> !upToDate.contains(name) }
     }
 }

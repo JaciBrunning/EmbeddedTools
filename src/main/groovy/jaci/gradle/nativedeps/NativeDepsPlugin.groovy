@@ -80,7 +80,7 @@ class NativeDepsPlugin implements Plugin<Project> {
                 PreemptiveDirectoryFileCollection headerFiles = new PreemptiveDirectoryFileCollection(rootTree, lib.headerDirs)
 
                 prelibs.create(libname) { PrebuiltLibrary pl ->
-                    NativeLibBinary natLib = new NativeLibBinary(pl.name, headerFiles, staticFiles + sharedFiles, matchedLibs, lib.libraryNames ?: [], platform, flavor, buildType)
+                    NativeLibBinary natLib = new NativeLibBinary(pl.name, headerFiles, staticFiles + sharedFiles, matchedLibs, lib.libraryNames ?: [], sharedFiles, platform, flavor, buildType)
                     pl.binaries.add(natLib)
                     pl.headers.srcDirs.addAll(headerFiles.preemptive)
                 }
@@ -94,13 +94,14 @@ class NativeDepsPlugin implements Plugin<Project> {
                 def linkerFiles = binaries.collect { it.linkerFiles }.inject { a, b -> a+b}
                 def matchedLibs = binaries.collect { it.matchedLibraries }.inject { a, b -> a+b }
                 def libNames = binaries.collect { it.libNames }.inject { a, b -> a+b }
+                def runtimeLibs = binaries.collect { it.runtimeLibraries }.inject { a, b -> a+b }
 
                 def flavor = flavors.getByName(lib.flavor ?: flavors.first().name)
                 def buildType = buildTypes.getByName(lib.buildType ?: buildTypes.first().name)
                 def platform = platforms.getByName(lib.targetPlatform) as NativePlatform
 
                 prelibs.create(lib.name) { PrebuiltLibrary pl ->
-                    NativeLibBinary natLib = new NativeLibBinary(pl.name, headerFiles, linkerFiles, matchedLibs, libNames, platform, flavor, buildType)
+                    NativeLibBinary natLib = new NativeLibBinary(pl.name, headerFiles, linkerFiles, matchedLibs, libNames, runtimeLibs, platform, flavor, buildType)
                     pl.binaries.add(natLib)
                     libs.each { pl.headers.srcDirs.addAll(it.headers.srcDirs) }
                 }

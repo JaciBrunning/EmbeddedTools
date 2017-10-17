@@ -12,6 +12,7 @@ interface NativeLib extends BaseLibSpec {
     void setStaticMatchers(List<String> matchers)
     List<String> getStaticMatchers()
 
+    // The shared matcher decides what libraries will be deployed
     void setSharedMatchers(List<String> matchers)
     List<String> getSharedMatchers()
 

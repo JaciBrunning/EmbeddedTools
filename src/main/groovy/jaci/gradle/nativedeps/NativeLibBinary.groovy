@@ -12,7 +12,7 @@ import org.gradle.nativeplatform.platform.NativePlatform
 class NativeLibBinary implements SharedLibraryBinary, StaticLibraryBinary {
 
     String name
-    FileCollection headerDirs, linkerFiles, matchedLibraries
+    FileCollection headerDirs, linkerFiles, matchedLibraries, runtimeLibraries
     List<String> libNames
     NativePlatform targetPlatform
     Flavor flavor
@@ -20,6 +20,7 @@ class NativeLibBinary implements SharedLibraryBinary, StaticLibraryBinary {
 
     NativeLibBinary(String name, FileCollection headerDirs, FileCollection linkerFiles,
                     FileCollection matchedLibraries, List<String> libNames,
+                    FileCollection runtimeLibraries,
                     NativePlatform targetPlatform, Flavor flavor, BuildType buildType) {
         this.name = name
         this.headerDirs = headerDirs
@@ -29,19 +30,7 @@ class NativeLibBinary implements SharedLibraryBinary, StaticLibraryBinary {
         this.matchedLibraries = matchedLibraries
         this.linkerFiles = linkerFiles
         this.libNames = libNames
-    }
-
-    @Override
-    FileCollection getHeaderDirs() {
-        return headerDirs
-    }
-
-    FileCollection getLinkerFiles() {
-        return linkerFiles
-    }
-
-    List<String> getLibNames() {
-        return libNames
+        this.runtimeLibraries = runtimeLibraries
     }
 
     @Override
