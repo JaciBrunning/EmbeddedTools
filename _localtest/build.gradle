@@ -56,8 +56,8 @@ deploy {
 
             nativeArtifact('my_program') {
                 targetPlatform = 'roborio'
-                libraries = true
-                libraryDir = '/usr/local/frc/lib'
+//                libraries = true
+//                libraryDir = '/usr/local/frc/lib'
             }
         }
         myOtherDeployer {

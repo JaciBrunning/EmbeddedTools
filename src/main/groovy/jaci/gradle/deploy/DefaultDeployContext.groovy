@@ -55,24 +55,31 @@ class DefaultDeployContext implements DeployContext {
         return _execute(command, [ignoreError: true])
     }
 
-    @Override
-    boolean put(File source, String dest, Object cache) {
+    void put_internal(Map<String, File> files, Object cache) {
         if (target.mkdirs) handler.execute("mkdir -p ${workingDir()}")
 
-        // TODO Check Cache
-        boolean toDeploy = true
-        boolean cacheUpdate = false
         if (!project.hasProperty('skip-cache') && cache != null && !(cache instanceof Boolean && cache == false)) {
             CacheMethod cacheMethod = CacheMethods.getMethod(cache)
             if (cacheMethod != null && cacheMethod.compatible(this)) {
-                cacheUpdate = toDeploy = cacheMethod.needsUpdate(this, source, dest)
+                Set<String> updateRequired = cacheMethod.needsUpdate(this, files)
+                files = files.findAll { String key, File value -> updateRequired.contains(key) }
             }
         }
-        if (toDeploy) {
-            logger.log("  -F->${cacheUpdate ? ' (OUT OF DATE)' : ''} ${source} -> ${dest} @ ${workingDir}")
-            handler.put(from: source, into: PathUtils.combine(workingDir(), dest))
+
+        files.each { String dst, File src ->
+            logger.log("  -F-> ${src} -> ${dst} @ ${workingDir}")
+            handler.put(from: src, into: PathUtils.combine(workingDir(), dst))
         }
-        return true
+    }
+
+    @Override
+    void put(File source, String dest, Object cache) {
+        put_internal([dest: source], cache)
+    }
+
+    @Override
+    void put(Set<File> files, Object cache) {
+        put_internal(files.collectEntries { File file ->  [(file.name): file] }, cache)
     }
 
     @Override

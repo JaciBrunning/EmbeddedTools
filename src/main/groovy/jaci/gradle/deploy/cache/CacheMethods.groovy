@@ -1,5 +1,8 @@
 package jaci.gradle.deploy.cache
 
+import groovy.transform.CompileStatic
+
+@CompileStatic
 class CacheMethods {
     static Map<String, CacheMethod> cacheMethods = [
             "md5sum": new CacheMethodMd5Sum(),

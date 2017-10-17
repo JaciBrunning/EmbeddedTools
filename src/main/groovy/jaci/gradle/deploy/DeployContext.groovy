@@ -17,7 +17,10 @@ interface DeployContext {
     String executeMaybe(String command)
 
     // Send a single file
-    boolean put(File source, String dest, cache)
+    void put(File source, String dest, cache)
+
+    // Send multiple files, and trigger cache checking only once
+    void put(Set<File> files, cache)
 
     // Gives a closure access to the ssh session
     void withSession(Closure closure)

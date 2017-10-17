@@ -47,30 +47,30 @@ class DeployPlugin implements Plugin<Project> {
                                     }
                                 }
 
-                                if (na.libraries) {
-                                    bin.inputs.withType(DependentSourceSet) { DependentSourceSet ss ->
-                                        ss.libs.each { lss ->
-                                            if (lss instanceof LinkedHashMap) {
-                                                def lib = lss['library'] as String
-//                                                def nl = (repos.getByName('embeddedTools') as PrebuiltLibraries).getByName(lib).binaries.first()
-                                                repos.matching { ArtifactRepository repo -> repo.name == 'embeddedTools' }.all { PrebuiltLibraries repo ->
-                                                    (repo as PrebuiltLibraries).matching { PrebuiltLibrary pl -> pl.name == lib }.all { PrebuiltLibrary pl ->
-                                                        pl.binaries.whenObjectAdded { NativeLibraryBinary nl ->
-                                                            if (nl instanceof NativeLibBinary) {
-                                                                def natLib = nl as NativeLibBinary
-                                                                na.libraryFiles = (na.libraryFiles == null ? natLib.runtimeFiles : na.libraryFiles + natLib.runtimeFiles)
-                                                            }
-                                                        }
-                                                    }
-                                                }
-//                                                if (nl instanceof NativeLibBinary) {
-//                                                    def natLib = nl as NativeLibBinary
-//                                                    na.libraryFiles = (na.libraryFiles == null ? natLib.runtimeFiles : na.libraryFiles + natLib.runtimeFiles)
+//                                if (na.libraries) {
+//                                    bin.inputs.withType(DependentSourceSet) { DependentSourceSet ss ->
+//                                        ss.libs.each { lss ->
+//                                            if (lss instanceof LinkedHashMap) {
+//                                                def lib = lss['library'] as String
+////                                                def nl = (repos.getByName('embeddedTools') as PrebuiltLibraries).getByName(lib).binaries.first()
+//                                                repos.matching { ArtifactRepository repo -> repo.name == 'embeddedTools' }.all { PrebuiltLibraries repo ->
+//                                                    (repo as PrebuiltLibraries).matching { PrebuiltLibrary pl -> pl.name == lib }.all { PrebuiltLibrary pl ->
+//                                                        pl.binaries.whenObjectAdded { NativeLibraryBinary nl ->
+//                                                            if (nl instanceof NativeLibBinary) {
+//                                                                def natLib = nl as NativeLibBinary
+//                                                                na.libraryFiles = (na.libraryFiles == null ? natLib.runtimeFiles : na.libraryFiles + natLib.runtimeFiles)
+//                                                            }
+//                                                        }
+//                                                    }
 //                                                }
-                                            }
-                                        }
-                                    }
-                                }
+////                                                if (nl instanceof NativeLibBinary) {
+////                                                    def natLib = nl as NativeLibBinary
+////                                                    na.libraryFiles = (na.libraryFiles == null ? natLib.runtimeFiles : na.libraryFiles + natLib.runtimeFiles)
+////                                                }
+//                                            }
+//                                        }
+//                                    }
+//                                }
                             }
                         }
                     }

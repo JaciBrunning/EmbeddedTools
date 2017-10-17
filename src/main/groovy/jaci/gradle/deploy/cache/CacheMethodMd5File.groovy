@@ -1,10 +1,14 @@
 package jaci.gradle.deploy.cache
 
+import groovy.json.JsonBuilder
+import groovy.json.JsonSlurper
+import groovy.transform.CompileStatic
 import jaci.gradle.deploy.DeployContext
 
 import java.nio.file.Files
 import java.security.MessageDigest
 
+@CompileStatic
 class CacheMethodMd5File implements CacheMethod {
     @Override
     boolean compatible(DeployContext context) {
@@ -12,20 +16,23 @@ class CacheMethodMd5File implements CacheMethod {
     }
 
     @Override
-    boolean needsUpdate(DeployContext context, File localFile, String file) {
+    Set<String> needsUpdate(DeployContext context, Map<String, File> files) {
         context.logger().silent(true)
-        def remote_md5 = context.executeMaybe("cat ${file}.md5 2> /dev/null || true")
+        def remote_cache = context.executeMaybe("cat cache.md5 2> /dev/null || echo '{}'")
+        def remote_md5 = new JsonSlurper().parseText(remote_cache)
 
         def md = MessageDigest.getInstance("MD5")
-        md.update(Files.readAllBytes(localFile.toPath()))
-        def local_md5 = md.digest().encodeHex().toString()
-        def needsUpdate = !remote_md5.equalsIgnoreCase(local_md5)
+        def local_md5 = files.collectEntries { String name, File file ->
+            md.reset()
+            md.update(Files.readAllBytes(file.toPath()))
+            [(name): md.digest().encodeHex().toString()]
+        }
 
-        if (needsUpdate) {
-            context.executeMaybe("echo ${local_md5} > ${file}.md5")
+        def needs_update = files.keySet().findAll { String name -> remote_md5[name] == null || remote_md5[name] != local_md5[name] }
+        if (needs_update.size() > 0) {
+            context.execute("echo '${new JsonBuilder(local_md5).toString()}' > cache.md5")
         }
         context.logger().silent(false)
-
-        return needsUpdate
+        return needs_update
     }
 }

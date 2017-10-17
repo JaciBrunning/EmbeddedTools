@@ -18,7 +18,7 @@ class CacheMethodDelegate implements CacheMethod {
     }
 
     @Override
-    boolean needsUpdate(DeployContext context, File localFile, String file) {
-        return ClosureUtils.delegateCall(context, closureDelegate, localFile, file)
+    Set<String> needsUpdate(DeployContext context, Map<String, File> files) {
+        return (Set<String>) ClosureUtils.delegateCall(context, closureDelegate, files)
     }
 }
