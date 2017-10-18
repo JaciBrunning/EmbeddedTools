@@ -16,9 +16,6 @@ class Deployer extends DeployableStep {
     List<String> targets    = []
     List<ArtifactBase> artifacts = []
 
-    // Calculated Values (from tasks)
-    List<String> _active = []       // Active targets
-
     def artifact(String name, Class<? extends ArtifactBase> type, final Closure config) {
         def artifact = type.newInstance(name)
         project.configure(artifact, config)

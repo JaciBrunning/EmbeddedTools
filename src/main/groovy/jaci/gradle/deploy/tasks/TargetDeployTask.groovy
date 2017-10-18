@@ -22,15 +22,15 @@ class TargetDeployTask extends DefaultTask {
 
     @TaskAction
     void deploy() {
-        if (target._active_address == null) {
-            throw new StopExecutionException()
-        }
+//        if (target._active_address == null) {
+//            throw new StopExecutionException()
+//        }
 
         def log = new DeployLogger(0)
         log.log("-> Target ${target.name}")
 
-        def activeDeployers = deployers.findAll { Deployer dep -> dep._active.contains(target.name) }
-        if (activeDeployers.size() > 0) {
+//        def activeDeployers = deployers.findAll { Deployer dep -> dep._active.contains(target.name) }
+//        if (activeDeployers.size() > 0) {
             // TODO
 //            EmbeddedTools.ssh.run {
 //                session(host: target._active_address, user: target.user, password: target.password, timeoutSec: target.timeout, knownHosts: AllowAnyHosts.instance) {
@@ -40,6 +40,6 @@ class TargetDeployTask extends DefaultTask {
 //                    }
 //                }
 //            }
-        }
+//        }
     }
 }

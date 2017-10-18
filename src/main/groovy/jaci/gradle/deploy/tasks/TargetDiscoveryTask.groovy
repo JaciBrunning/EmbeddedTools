@@ -2,25 +2,36 @@ package jaci.gradle.deploy.tasks
 
 import groovy.transform.CompileStatic
 import jaci.gradle.EmbeddedTools
+import jaci.gradle.WorkerStorage
 import jaci.gradle.deploy.target.RemoteTarget
+import jaci.gradle.transport.SshSessionController
+import org.gradle.api.Action
 import org.gradle.api.DefaultTask
 import org.gradle.api.tasks.Input
-import org.gradle.api.tasks.StopExecutionException
 import org.gradle.api.tasks.TaskAction
+import org.gradle.workers.IsolationMode
+import org.gradle.workers.WorkerConfiguration
+import org.gradle.workers.WorkerExecutor
+
+import javax.inject.Inject
 
 @CompileStatic
 class TargetDiscoveryTask extends DefaultTask {
+
+    final WorkerExecutor workerExecutor
+    static WorkerStorage<RemoteTarget>  targetStorage = WorkerStorage.obtain()
+    static WorkerStorage<String>        addressStorage = WorkerStorage.obtain()
+
     @Input
     RemoteTarget target
 
+    @Inject
+    TargetDiscoveryTask(WorkerExecutor workerExecutor) {
+        this.workerExecutor = workerExecutor
+    }
+
     @TaskAction
     void discoverTarget() {
-        // Check if we've already determined the target address
-        if (target._active_address != null) {
-            println "Target Address Already Determined! (${target._active_address})"
-            throw new StopExecutionException()
-        }
-
         // Ask for password if needed
         def password = target.password ?: ""
         if (target.promptPassword) {
@@ -39,52 +50,53 @@ class TargetDiscoveryTask extends DefaultTask {
         assert target.user != null
         assert target.timeout > 0
 
-        // TODO
-        if (target.async) {
-            // Try all targets at once. Max time: target.timeout
-            def found = []
-            println "-> Attempting Target Addresses ${target.addresses.join(', ')}"
-//            EmbeddedTools.silenceSsh()
-//            try {
-//                EmbeddedTools.ssh.run {
-//                    target.addresses.each { addr ->
-//                        session(host: addr, user: target.user, password: password, timeoutSec: target.timeout, knownHosts: AllowAnyHosts.instance) {
-//                            found << addr
-//                        }
-//                    }
-//                }
-//            } catch (all) { }
-//            EmbeddedTools.unsilenceSsh()
+        addressStorage.clear()
 
-            if (found.size() > 0)
-                println "-> Target(s) found at ${found.join(', ')}. Using ${found.last()}"
-
-            if (found.size() > 0)
-                target._active_address = found.last()
-        } else {
-            // Try targets sequentially. Max time: length(target.addresses) * target.timeout
-            target.addresses.any { addr ->
-                println "-> Attempting Target Address ${addr}"
-//                EmbeddedTools.silenceSsh()
-//                try {
-//                    EmbeddedTools.ssh.run {
-//                        session(host: addr, user: target.user, password: password, timeoutSec: target.timeout, knownHosts: AllowAnyHosts.instance) {
-//                            println "-> Target found at ${addr}"
-//                            target._active_address = addr
-//                        }
-//                    }
-//                } catch (all) { }
-//                EmbeddedTools.unsilenceSsh()
-                return target._active_address != null
-            }
+        def index = targetStorage.put(target)
+        target.addresses.each { String addr ->
+            workerExecutor.submit(DiscoverSingleTarget, ({ WorkerConfiguration config ->
+                config.isolationMode = IsolationMode.NONE
+                config.params addr, index
+            } as Action))
         }
+        workerExecutor.await()
 
-        // Print message about if we didn't find the target. Halt build if configured as such
-        if (target._active_address == null) {
+        if (addressStorage.empty) {
             if (target.failOnMissing)
                 throw new TargetNotFoundException("Target ${target.name} could not be located! Failing as ${target.name}.failOnMissing is true.")
             else
                 println "Target ${target.name} could not be located! Skipping target as ${target.name}.failOnMissing is false."
+        } else {
+            println "Using address ${activeAddress()} for target ${target.name}"
+        }
+    }
+
+    boolean isTargetActive() {
+        return !addressStorage.empty
+    }
+
+    String activeAddress() {
+        return addressStorage.first()       // First address to respond is usually the fastest address
+    }
+
+    static class DiscoverSingleTarget implements Runnable {
+        String host
+        int index
+
+        @Inject
+        DiscoverSingleTarget(String host, Integer index) {
+            this.index = index
+            this.host = host
+        }
+
+        @Override
+        void run() {
+            try {
+                def target = targetStorage.get(index)
+                def session = new SshSessionController(host, target.user, target.password, target.timeout)
+                println "Found ${host}!"
+                addressStorage.push(host)
+            } catch (all) { }
         }
     }
 

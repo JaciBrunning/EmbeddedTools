@@ -13,7 +13,6 @@ class RemoteTarget {
     }
 
     List<String> addresses  = []
-    boolean async           = true
     boolean mkdirs          = true
     String directory        = null     // Null = default user home
     String user             = null
@@ -21,9 +20,6 @@ class RemoteTarget {
     boolean promptPassword  = false
     int timeout             = 3
     boolean failOnMissing   = true
-
-    // Calculated Values (from tasks)
-    String _active_address  = null
 
     @Override
     String toString() {

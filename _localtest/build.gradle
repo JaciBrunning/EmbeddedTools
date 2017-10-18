@@ -128,16 +128,18 @@ model {
                 cppCompiler.withArguments { a -> a << '-std=c++11' }
                 linker.withArguments { a -> a << '-std=c++11' }
             }
+            path '/Users/jaci/.gradle/gradlerio/toolchains/bin'
         }
         gcc(Gcc) { }
         visualCpp(VisualCpp) { }
+        clang(Clang) { }
     }
 
     components {
         my_other_program(NativeLibrarySpec) {
-            targetPlatform "any-32"
-            targetPlatform "roborio"
-            targetPlatform "any-64"
+//            targetPlatform "any-32"
+//            targetPlatform "any-64"
+//            targetPlatform "roborio"
 
             sources.cpp {
                 source.srcDirs "src_c_lib"

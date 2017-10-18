@@ -48,20 +48,24 @@ class ToolchainsPlugin implements Plugin<Project> {
         void configureOptionalBuildables(BinaryContainer binaries, LanguageTransformContainer languageTransforms) {
             binaries.withType(NativeBinarySpec) { bin ->
                 def toolProvider = bin.toolChain.select(bin.targetPlatform)
-                def treg = toolProvider.class.getDeclaredField("toolRegistry")
-                treg.setAccessible(true)
-                def toolRegistry = treg.get(toolProvider)
-                treg.setAccessible(false)
+                try {
+                    def treg = toolProvider.class.getDeclaredField("toolRegistry")
+                    treg.setAccessible(true)
+                    def toolRegistry = treg.get(toolProvider)
+                    treg.setAccessible(false)
 
-                for (transform in languageTransforms) {
-                    if (transform.getSourceSetType().isInstance(bin.inputs[0])) {
-                        def tool_type_required = ToolchainsPlugin.LANG_TOOLS_MAP[transform.languageName]
-                        toolRegistry.tools.findAll { it.toolType == tool_type_required && !bin.toolChain.locate(it).isAvailable() }.forEach {
-                            println "No ${it.toolType.toolName} for Binary (${bin.displayName}) with Toolchain ${bin.toolChain.name} on Platform ${bin.targetPlatform.name}. Skipping build."
-                            bin.buildable = false
+                    for (transform in languageTransforms) {
+                        if (transform.getSourceSetType().isInstance(bin.inputs[0])) {
+                            def tool_type_required = ToolchainsPlugin.LANG_TOOLS_MAP[transform.languageName]
+                            toolRegistry.tools.findAll {
+                                it.toolType == tool_type_required && !bin.toolChain.locate(it).isAvailable()
+                            }.forEach {
+                                println "No ${it.toolType.toolName} for Binary (${bin.displayName}) with Toolchain ${bin.toolChain.name} on Platform ${bin.targetPlatform.name}. Skipping build."
+                                bin.buildable = false
+                            }
                         }
                     }
-                }
+                } catch (all) { }
             }
         }
 
