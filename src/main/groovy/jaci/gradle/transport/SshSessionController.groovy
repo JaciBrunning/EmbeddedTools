@@ -42,6 +42,7 @@ class SshSessionController {
 
     void put(List<File> sources, List<String> dests) {
         ChannelSftp sftp = session.openChannel('sftp') as ChannelSftp
+        sftp.connect()
         try {
             sources.eachWithIndex { File file, int idx ->
                 try {

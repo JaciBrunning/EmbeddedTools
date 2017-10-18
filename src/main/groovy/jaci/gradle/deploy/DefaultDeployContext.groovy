@@ -1,6 +1,7 @@
 package jaci.gradle.deploy
 
 import groovy.transform.CompileStatic
+import jaci.gradle.EmbeddedTools
 import jaci.gradle.PathUtils
 import jaci.gradle.deploy.cache.CacheMethod
 import jaci.gradle.deploy.cache.CacheMethods
@@ -52,7 +53,7 @@ class DefaultDeployContext implements DeployContext {
     void put_internal(Map<String, File> files, Object cache) {
         if (target.mkdirs) session.execute("mkdir -p ${workingDir()}")
 
-        if (!project.hasProperty('skip-cache') && cache != null && !(cache instanceof Boolean && cache == false)) {
+        if (!EmbeddedTools.isSkipCache(project) && cache != null && !(cache instanceof Boolean && cache == false)) {
             CacheMethod cacheMethod = CacheMethods.getMethod(cache)
             if (cacheMethod != null && cacheMethod.compatible(this)) {
                 Set<String> updateRequired = cacheMethod.needsUpdate(this, files)
@@ -61,7 +62,7 @@ class DefaultDeployContext implements DeployContext {
         }
 
         files.each { String dst, File src ->
-            logger.log("  -F-> ${project.rootDir.toURI().relativize(src.toURI()).getPath()} -> ${dst} @ ${workingDir}")
+            logger.log("  -F-> ${project.rootDir.toURI().relativize(src.toURI()).getPath()} -> ${dst} @ ${workingDir()}")
             session.put(src, PathUtils.combine(workingDir(), dst))
         }
     }

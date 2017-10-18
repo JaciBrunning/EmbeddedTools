@@ -52,4 +52,12 @@ class EmbeddedTools implements Plugin<Project> {
         }
         return password
     }
+
+    static boolean isDryRun(Project project) {
+        return project.hasProperty('deploy-dry')
+    }
+
+    static boolean isSkipCache(Project project) {
+        return project.hasProperty('deploy-dirty')
+    }
 }

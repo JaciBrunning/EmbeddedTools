@@ -43,7 +43,7 @@ deploy {
             predeploy << { execute 'echo \$(pwd)' }
             file = file('myfile.dat')
             filename = "test"
-            postdeploy << { executeMaybe 'cat test' }
+            postdeploy << { execute 'cat test.txt' }
         }
         fileCollectionArtifact('myJavaArtifact') {
             files = project.tasks.jar.outputs.files

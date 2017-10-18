@@ -6,6 +6,7 @@ import jaci.gradle.WorkerStorage
 import jaci.gradle.deploy.DefaultDeployContext
 import jaci.gradle.deploy.DeployContext
 import jaci.gradle.deploy.DeployLogger
+import jaci.gradle.deploy.DryDeployContext
 import jaci.gradle.deploy.target.RemoteTarget
 import jaci.gradle.transport.SshSessionController
 import org.gradle.api.Action
@@ -64,7 +65,7 @@ class TargetDiscoveryTask extends DefaultTask {
         def index = targetStorage.put(target)
         target.addresses.each { String addr ->
             // Submit some Workers on the Worker API to test addresses. This allows the task to run in parallel
-            workerExecutor.submit(DiscoverSingleTarget, ({ WorkerConfiguration config ->
+            workerExecutor.submit(DiscoverTargetWorker, ({ WorkerConfiguration config ->
                 config.isolationMode = IsolationMode.NONE
                 config.params addr, index
             } as Action))
@@ -76,12 +77,16 @@ class TargetDiscoveryTask extends DefaultTask {
             if (target.failOnMissing)
                 throw new TargetNotFoundException("Target ${target.name} could not be located! Failing as ${target.name}.failOnMissing is true.")
             else
-                println "Target ${target.name} could not be located! Skipping target as ${target.name}.failOnMissing is false."
+                log.log("Target ${target.name} could not be located! Skipping target as ${target.name}.failOnMissing is false.")
         } else {
-            println "Using address ${activeAddress()} for target ${target.name}"
+            log.log("Using address ${activeAddress()} for target ${target.name}")
 
             session = new SshSessionController(activeAddress(), target.user, target.password, target.timeout)
-            context = new DefaultDeployContext(project, target, log, session, target.directory)
+
+            if (EmbeddedTools.isDryRun(project))
+                context = new DryDeployContext(project, target, log, target.directory)
+            else
+                context = new DefaultDeployContext(project, target, log, session, target.directory)
         }
     }
 
@@ -93,12 +98,12 @@ class TargetDiscoveryTask extends DefaultTask {
         return addressStorage.sort { String addr -> target.addresses.indexOf(addr) }.first()        // Order based on what order addresses registered
     }
 
-    static class DiscoverSingleTarget implements Runnable {
+    static class DiscoverTargetWorker implements Runnable {
         String host
         int index
 
         @Inject
-        DiscoverSingleTarget(String host, Integer index) {
+        DiscoverTargetWorker(String host, Integer index) {
             this.index = index
             this.host = host
         }
