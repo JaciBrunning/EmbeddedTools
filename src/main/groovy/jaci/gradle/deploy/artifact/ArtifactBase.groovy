@@ -4,11 +4,12 @@ import groovy.transform.CompileStatic
 import groovy.transform.EqualsAndHashCode
 import jaci.gradle.ClosureUtils
 import jaci.gradle.deploy.DeployContext
+import org.gradle.api.Named
 import org.gradle.api.Project
 
 @CompileStatic
 @EqualsAndHashCode(includes = 'name')
-abstract class ArtifactBase {
+abstract class ArtifactBase implements Named {
     final String name
 
     ArtifactBase(String name) {
@@ -16,13 +17,14 @@ abstract class ArtifactBase {
     }
 
     // Closure Args: DeployContext
-    List<Closure> precheck        = []  // Called before onlyIF
+    List<Closure> precheck        = []  // Called before onlyIf
     Closure<Boolean> onlyIf       = null
-    List<Closure> predeploy       = []  // All called after onlyIf
-    List<Closure> postdeploy      = []
+    List<Closure> predeploy       = []  // Called after onlyIf but before artifact action
+    List<Closure> postdeploy      = []  // Called after artifact action
 
-    int order               = 50
     String directory        = null
+
+    List<String> targets    = []        // Targets to apply to
 
     void doDeploy(Project project, DeployContext ctx) {
         ctx = ctx.subContext(directory)

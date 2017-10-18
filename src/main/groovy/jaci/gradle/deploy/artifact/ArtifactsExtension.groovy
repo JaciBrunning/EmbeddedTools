@@ -2,19 +2,24 @@ package jaci.gradle.deploy.artifact
 
 import groovy.transform.CompileStatic
 import org.gradle.api.Project
+import org.gradle.api.internal.DefaultNamedDomainObjectSet
+import org.gradle.internal.reflect.DirectInstantiator
 
+// DefaultNamedDomainObjectSet applies the withType, matching, all and other methods
+// that are incredibly useful
 @CompileStatic
-class ArtifactsExtension extends HashMap<String, ArtifactBase> {
+class ArtifactsExtension extends DefaultNamedDomainObjectSet<ArtifactBase> {
     Project project
 
     ArtifactsExtension(Project project) {
+        super(ArtifactBase.class, DirectInstantiator.INSTANCE)
         this.project = project
     }
 
     def artifact(String name, Class<? extends ArtifactBase> type, final Closure config) {
         def artifact = type.newInstance(name)
         project.configure(artifact, config)
-        this[name] = artifact
+        this << (artifact)
     }
 
     def fileArtifact(String name, final Closure config) {

@@ -9,3 +9,4 @@ server_script/maven/
 server_script/tmp/
 .vscode
 .DS_Store
+out

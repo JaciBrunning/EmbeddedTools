@@ -57,6 +57,10 @@ deploy {
         nativeLibraryArtifact('wpilib') {
             directory = '/usr/local/frc/lib'
         }
+
+        all {
+            targets << 'roborio'
+        }
     }
 }
 
@@ -150,7 +154,8 @@ model {
 
 task testMe() {
     doLast {
-        println ""
+        println deploy.targets
+        println deploy.artifacts
     }
 }
 

@@ -2,10 +2,11 @@ package jaci.gradle.deploy.target
 
 import groovy.transform.CompileStatic
 import groovy.transform.EqualsAndHashCode
+import org.gradle.api.Named
 
 @CompileStatic
 @EqualsAndHashCode(includes = 'name')
-class RemoteTarget {
+class RemoteTarget implements Named {
     final String name
 
     RemoteTarget(String name) {
