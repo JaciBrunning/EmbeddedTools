@@ -1,4 +1,4 @@
-package jaci.gradle.deploy.deployer
+package jaci.gradle.deploy.artifact
 
 import groovy.transform.CompileStatic
 

@@ -32,38 +32,30 @@ repositories.maven { repo ->
 
 deploy {
     targets {
-        myTarget {
-            addresses << "172.22.11.2" << "roborio-5333-frc.local" << "10.53.33.2"
+        target('roborio') {
+            addresses << "roborio-5333-frc.local" << "10.53.33.2" << "172.22.11.2"
             user = 'admin'
             directory = '/home/lvuser'
         }
     }
-    deployers {
-        myDeployer {
-            targets << 'myTarget'
-
-            directory = 'mydep'
-            fileArtifact('myFileArtifact') {
-                predeploy << { execute 'echo \$(pwd)' }
-                file = file('myfile.dat')
-                filename = "test"
-                postdeploy << { executeMaybe 'cat test' }
-            }
-            fileCollectionArtifact('myJavaArtifact') {
-                files = tasks.jar.outputs.files
-                directory = 'myjavadir'
-            }
-
-            nativeArtifact('my_program') {
-                targetPlatform = 'roborio'
-            }
-
-            nativeLibraryArtifact('wpilib') {
-                directory = '/usr/local/frc/lib'
-            }
+    artifacts {
+        fileArtifact('myFileArtifact') {
+            predeploy << { execute 'echo \$(pwd)' }
+            file = file('myfile.dat')
+            filename = "test"
+            postdeploy << { executeMaybe 'cat test' }
         }
-        myOtherDeployer {
-            targets << 'myTarget' << 'myOtherTarget'
+        fileCollectionArtifact('myJavaArtifact') {
+            files = project.tasks.jar.outputs.files
+            directory = 'myjavadir'
+        }
+
+        nativeArtifact('my_program') {
+            targetPlatform = 'roborio'
+        }
+
+        nativeLibraryArtifact('wpilib') {
+            directory = '/usr/local/frc/lib'
         }
     }
 }
@@ -128,7 +120,7 @@ model {
                 cppCompiler.withArguments { a -> a << '-std=c++11' }
                 linker.withArguments { a -> a << '-std=c++11' }
             }
-            path '/Users/jaci/.gradle/gradlerio/toolchains/bin'
+//            path '/Users/jaci/.gradle/gradlerio/toolchains/bin'
         }
         gcc(Gcc) { }
         visualCpp(VisualCpp) { }

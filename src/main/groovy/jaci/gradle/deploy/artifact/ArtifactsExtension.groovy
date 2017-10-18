@@ -1,25 +1,20 @@
-package jaci.gradle.deploy.deployer
+package jaci.gradle.deploy.artifact
 
 import groovy.transform.CompileStatic
-import jaci.gradle.deploy.DeployContext
 import org.gradle.api.Project
 
 @CompileStatic
-class Deployer extends DeployableStep {
-
-    Deployer(String name) {
-        super(name)
-    }
-
+class ArtifactsExtension extends HashMap<String, ArtifactBase> {
     Project project
 
-    List<String> targets    = []
-    List<ArtifactBase> artifacts = []
+    ArtifactsExtension(Project project) {
+        this.project = project
+    }
 
     def artifact(String name, Class<? extends ArtifactBase> type, final Closure config) {
         def artifact = type.newInstance(name)
         project.configure(artifact, config)
-        artifacts.add(artifact)
+        this[name] = artifact
     }
 
     def fileArtifact(String name, final Closure config) {
@@ -40,11 +35,5 @@ class Deployer extends DeployableStep {
 
     def nativeLibraryArtifact(String name, final Closure config) {
         artifact(name, NativeLibraryArtifact, config)
-    }
-
-    @Override
-    void deploy(Project project, DeployContext ctx) {
-//        artifacts.toSorted { a, b -> a.getOrder() <=> b.getOrder() }.each { artifact -> artifact.doDeploy(project, ctx) }
-        // Artifacts to be handled by tasks
     }
 }

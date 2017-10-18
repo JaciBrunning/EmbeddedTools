@@ -1,4 +1,4 @@
-package jaci.gradle.deploy.deployer
+package jaci.gradle.deploy.artifact
 
 import groovy.transform.CompileStatic
 import groovy.transform.EqualsAndHashCode
@@ -8,10 +8,10 @@ import org.gradle.api.Project
 
 @CompileStatic
 @EqualsAndHashCode(includes = 'name')
-abstract class DeployableStep {
+abstract class ArtifactBase {
     final String name
 
-    DeployableStep(String name) {
+    ArtifactBase(String name) {
         this.name = name
     }
 

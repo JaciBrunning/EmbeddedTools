@@ -1,31 +1,36 @@
 package jaci.gradle.deploy
 
-import jaci.gradle.deploy.deployer.Deployer
-import jaci.gradle.deploy.target.RemoteTarget
-import jaci.gradle.deploy.tasks.TargetDiscoveryTask
+import jaci.gradle.deploy.artifact.ArtifactBase
+import jaci.gradle.deploy.artifact.ArtifactsExtension
+import jaci.gradle.deploy.target.TargetsExtension
 import org.gradle.api.NamedDomainObjectContainer
 import org.gradle.api.Project
 
 class DeployExtension {
-    NamedDomainObjectContainer<RemoteTarget> targets
-    NamedDomainObjectContainer<Deployer> deployers
+    TargetsExtension targets
+    ArtifactsExtension artifacts
 
-    DeployExtension(Project project, NamedDomainObjectContainer<RemoteTarget> targets, NamedDomainObjectContainer<Deployer> deployers) {
-        this.targets = targets
-        this.deployers = deployers
+    Project project
 
-        this.targets.all { RemoteTarget target ->
-            // Discover the Remote Target on the network
-            def discover = project.tasks.create("discover${target.name.capitalize()}".toString(), TargetDiscoveryTask) { TargetDiscoveryTask task ->
-                task.group = "EmbeddedTools"
-                task.description = "Determine the address(es) of target ${target.name.capitalize()}"
-                task.target = target
-            }
-        }
+    DeployExtension(Project project) {
+        this.project = project
+        targets = new TargetsExtension(project)
+        artifacts = new ArtifactsExtension(project)
 
-        this.deployers.all { Deployer deployer ->
-            deployer.project = project
-        }
+//        this.targets.all { RemoteTarget target ->
+//            // Discover the Remote Target on the network
+//            def discover = project.tasks.create("discover${target.name.capitalize()}".toString(), TargetDiscoveryTask) { TargetDiscoveryTask task ->
+//                task.group = "EmbeddedTools"
+//                task.description = "Determine the address(es) of target ${target.name.capitalize()}"
+//                task.target = target
+//            }
+//
+////            def deploy = project.tasks.create("deploy${target.name.capitalize()}".toString(), TargetDeployTask) { TargetDeployTask task ->
+////                task.group = "EmbeddedTools"
+////                task.description = "Deploy to target ${target.name.capitalize()}"
+////                task.dependsOn discover
+////            }
+//        }
 
         // Configures all deployers as active.
         // Runs runDeploy after configuration for all targets
@@ -42,11 +47,13 @@ class DeployExtension {
 //        }
     }
 
-    def targets(final Closure config) {
-        targets.configure(config)
+    def targets(final Closure closure) {
+        project.configure(targets, closure)
+//        targets.with(closure)
     }
 
-    def deployers(final Closure config) {
-        deployers.configure(config)
+    def artifacts(final Closure closure) {
+        project.configure(artifacts, closure)
+//        artifacts.with(closure)
     }
 }

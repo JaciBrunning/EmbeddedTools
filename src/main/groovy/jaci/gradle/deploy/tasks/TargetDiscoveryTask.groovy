@@ -3,12 +3,14 @@ package jaci.gradle.deploy.tasks
 import groovy.transform.CompileStatic
 import jaci.gradle.EmbeddedTools
 import jaci.gradle.WorkerStorage
+import jaci.gradle.deploy.DefaultDeployContext
+import jaci.gradle.deploy.DeployContext
+import jaci.gradle.deploy.DeployLogger
 import jaci.gradle.deploy.target.RemoteTarget
 import jaci.gradle.transport.SshSessionController
 import org.gradle.api.Action
 import org.gradle.api.DefaultTask
 import org.gradle.api.tasks.Input
-import org.gradle.api.tasks.StopExecutionException
 import org.gradle.api.tasks.TaskAction
 import org.gradle.workers.IsolationMode
 import org.gradle.workers.WorkerConfiguration
@@ -20,8 +22,12 @@ import javax.inject.Inject
 class TargetDiscoveryTask extends DefaultTask {
 
     final WorkerExecutor workerExecutor
-    static WorkerStorage<RemoteTarget>  targetStorage = WorkerStorage.obtain()
+    static WorkerStorage<RemoteTarget>  targetStorage  = WorkerStorage.obtain()
     static WorkerStorage<String>        addressStorage = WorkerStorage.obtain()
+
+    DeployLogger            log
+    SshSessionController    session
+    DeployContext           context
 
     @Input
     RemoteTarget target
@@ -33,13 +39,9 @@ class TargetDiscoveryTask extends DefaultTask {
 
     @TaskAction
     void discoverTarget() {
-        if (isTargetActive()) {
-            println "Target ${target.name} already found at ${activeAddress()}! Not checking again..."
-            // StopExecutionException doesn't halt the build, just stops this task from executing further, analogous
-            // to an early return.
-            throw new StopExecutionException()
-        }
         // Ask for password if needed
+        log = new DeployLogger(0)
+
         def password = target.password ?: ""
         if (target.promptPassword) {
             def tpassword = EmbeddedTools.promptPassword(target.user)
@@ -50,8 +52,7 @@ class TargetDiscoveryTask extends DefaultTask {
         target.password = password
         target.promptPassword = false
 
-        // TODO Better Logging
-        println("Discovering Target ${target.name}")
+        log.log("Discovering Target ${target.name}")
 
         // Assertions
         assert target.user != null
@@ -78,6 +79,9 @@ class TargetDiscoveryTask extends DefaultTask {
                 println "Target ${target.name} could not be located! Skipping target as ${target.name}.failOnMissing is false."
         } else {
             println "Using address ${activeAddress()} for target ${target.name}"
+
+            session = new SshSessionController(activeAddress(), target.user, target.password, target.timeout)
+            context = new DefaultDeployContext(project, target, log, session, target.directory)
         }
     }
 
@@ -86,7 +90,7 @@ class TargetDiscoveryTask extends DefaultTask {
     }
 
     String activeAddress() {
-        return addressStorage.first()       // First address to respond is usually the fastest address
+        return addressStorage.sort { String addr -> target.addresses.indexOf(addr) }.first()        // Order based on what order addresses registered
     }
 
     static class DiscoverSingleTarget implements Runnable {
@@ -105,6 +109,7 @@ class TargetDiscoveryTask extends DefaultTask {
                 def target = targetStorage.get(index)
                 def session = new SshSessionController(host, target.user, target.password, target.timeout)
                 println "Found ${host}!"
+                session.disconnect()
                 addressStorage.push(host)
             } catch (all) { }
         }
