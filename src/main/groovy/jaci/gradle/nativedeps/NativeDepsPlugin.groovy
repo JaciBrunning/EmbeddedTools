@@ -6,7 +6,6 @@ import org.gradle.api.Project
 import org.gradle.api.Task
 import org.gradle.api.file.FileTree
 import org.gradle.api.plugins.ExtensionContainer
-import org.gradle.internal.os.OperatingSystem
 import org.gradle.language.nativeplatform.DependentSourceSet
 import org.gradle.model.*
 import org.gradle.nativeplatform.*

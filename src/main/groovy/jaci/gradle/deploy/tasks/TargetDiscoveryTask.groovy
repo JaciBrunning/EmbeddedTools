@@ -8,6 +8,7 @@ import jaci.gradle.transport.SshSessionController
 import org.gradle.api.Action
 import org.gradle.api.DefaultTask
 import org.gradle.api.tasks.Input
+import org.gradle.api.tasks.StopExecutionException
 import org.gradle.api.tasks.TaskAction
 import org.gradle.workers.IsolationMode
 import org.gradle.workers.WorkerConfiguration
@@ -32,6 +33,12 @@ class TargetDiscoveryTask extends DefaultTask {
 
     @TaskAction
     void discoverTarget() {
+        if (isTargetActive()) {
+            println "Target ${target.name} already found at ${activeAddress()}! Not checking again..."
+            // StopExecutionException doesn't halt the build, just stops this task from executing further, analogous
+            // to an early return.
+            throw new StopExecutionException()
+        }
         // Ask for password if needed
         def password = target.password ?: ""
         if (target.promptPassword) {
@@ -50,15 +57,18 @@ class TargetDiscoveryTask extends DefaultTask {
         assert target.user != null
         assert target.timeout > 0
 
+        // Just in case
         addressStorage.clear()
 
         def index = targetStorage.put(target)
         target.addresses.each { String addr ->
+            // Submit some Workers on the Worker API to test addresses. This allows the task to run in parallel
             workerExecutor.submit(DiscoverSingleTarget, ({ WorkerConfiguration config ->
                 config.isolationMode = IsolationMode.NONE
                 config.params addr, index
             } as Action))
         }
+        // Wait for all workers to complete
         workerExecutor.await()
 
         if (addressStorage.empty) {

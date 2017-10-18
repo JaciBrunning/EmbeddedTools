@@ -44,6 +44,7 @@ class Deployer extends DeployableStep {
 
     @Override
     void deploy(Project project, DeployContext ctx) {
-        artifacts.toSorted { a, b -> a.getOrder() <=> b.getOrder() }.each { artifact -> artifact.doDeploy(project, ctx) }
+//        artifacts.toSorted { a, b -> a.getOrder() <=> b.getOrder() }.each { artifact -> artifact.doDeploy(project, ctx) }
+        // Artifacts to be handled by tasks
     }
 }

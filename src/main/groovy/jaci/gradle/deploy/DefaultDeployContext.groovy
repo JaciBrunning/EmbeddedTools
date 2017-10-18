@@ -1,7 +1,6 @@
 package jaci.gradle.deploy
 
 import groovy.transform.CompileStatic
-import jaci.gradle.ClosureUtils
 import jaci.gradle.PathUtils
 import jaci.gradle.deploy.cache.CacheMethod
 import jaci.gradle.deploy.cache.CacheMethods

@@ -3,7 +3,6 @@ package jaci.gradle.transport
 import com.jcraft.jsch.ChannelExec
 import com.jcraft.jsch.ChannelSftp
 import com.jcraft.jsch.Session
-import com.jcraft.jsch.UserInfo
 import groovy.transform.CompileStatic
 import jaci.gradle.EmbeddedTools
 

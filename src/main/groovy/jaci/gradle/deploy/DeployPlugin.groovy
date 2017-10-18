@@ -6,17 +6,14 @@ import jaci.gradle.deploy.deployer.Deployer
 import jaci.gradle.deploy.deployer.NativeArtifact
 import jaci.gradle.deploy.deployer.NativeLibraryArtifact
 import jaci.gradle.deploy.target.RemoteTarget
-import jaci.gradle.nativedeps.NativeLib
 import jaci.gradle.nativedeps.NativeLibBinary
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.Task
-import org.gradle.api.artifacts.repositories.ArtifactRepository
 import org.gradle.api.file.FileCollection
 import org.gradle.api.file.FileTree
 import org.gradle.api.plugins.ExtensionContainer
 import org.gradle.api.tasks.util.PatternFilterable
-import org.gradle.language.nativeplatform.DependentSourceSet
 import org.gradle.model.ModelMap
 import org.gradle.model.Mutate
 import org.gradle.model.RuleSource
@@ -51,31 +48,6 @@ class DeployPlugin implements Plugin<Project> {
                                         na.linkOut = task.outputs
                                     }
                                 }
-
-//                                if (na.libraries) {
-//                                    bin.inputs.withType(DependentSourceSet) { DependentSourceSet ss ->
-//                                        ss.libs.each { lss ->
-//                                            if (lss instanceof LinkedHashMap) {
-//                                                def lib = lss['library'] as String
-////                                                def nl = (repos.getByName('embeddedTools') as PrebuiltLibraries).getByName(lib).binaries.first()
-//                                                repos.matching { ArtifactRepository repo -> repo.name == 'embeddedTools' }.all { PrebuiltLibraries repo ->
-//                                                    (repo as PrebuiltLibraries).matching { PrebuiltLibrary pl -> pl.name == lib }.all { PrebuiltLibrary pl ->
-//                                                        pl.binaries.whenObjectAdded { NativeLibraryBinary nl ->
-//                                                            if (nl instanceof NativeLibBinary) {
-//                                                                def natLib = nl as NativeLibBinary
-//                                                                na.libraryFiles = (na.libraryFiles == null ? natLib.runtimeFiles : na.libraryFiles + natLib.runtimeFiles)
-//                                                            }
-//                                                        }
-//                                                    }
-//                                                }
-////                                                if (nl instanceof NativeLibBinary) {
-////                                                    def natLib = nl as NativeLibBinary
-////                                                    na.libraryFiles = (na.libraryFiles == null ? natLib.runtimeFiles : na.libraryFiles + natLib.runtimeFiles)
-////                                                }
-//                                            }
-//                                        }
-//                                    }
-//                                }
                             }
                         }
                     } else if (artifact instanceof NativeLibraryArtifact) {

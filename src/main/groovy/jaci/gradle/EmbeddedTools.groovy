@@ -5,10 +5,8 @@ import groovy.swing.SwingBuilder
 import jaci.gradle.deploy.DeployPlugin
 import jaci.gradle.nativedeps.NativeDepsPlugin
 import jaci.gradle.toolchains.ToolchainsPlugin
-import jaci.gradle.transport.SshSessionController
 import org.gradle.api.Plugin
 import org.gradle.api.Project
-import org.gradle.internal.logging.slf4j.OutputEventListenerBackedLoggerContext
 
 class EmbeddedTools implements Plugin<Project> {
 

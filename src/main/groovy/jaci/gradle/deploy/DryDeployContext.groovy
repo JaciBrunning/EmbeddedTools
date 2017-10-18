@@ -2,10 +2,7 @@ package jaci.gradle.deploy
 
 import groovy.transform.CompileStatic
 import jaci.gradle.PathUtils
-import jaci.gradle.deploy.cache.CacheMethod
-import jaci.gradle.deploy.cache.CacheMethods
 import jaci.gradle.deploy.target.RemoteTarget
-import jaci.gradle.transport.SshSessionController
 import org.gradle.api.Project
 
 @CompileStatic
