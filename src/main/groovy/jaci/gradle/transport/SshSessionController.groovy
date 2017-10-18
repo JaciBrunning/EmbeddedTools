@@ -25,7 +25,7 @@ class SshSessionController {
         session.connect(timeout*1000)
     }
 
-    synchronized String execute(String command) {
+    String execute(String command) {
         ChannelExec exec = session.openChannel('exec') as ChannelExec
         exec.command = command
         exec.pty = false
@@ -41,7 +41,7 @@ class SshSessionController {
         }
     }
 
-    synchronized void put(List<File> sources, List<String> dests) {
+    void put(List<File> sources, List<String> dests) {
         ChannelSftp sftp = session.openChannel('sftp') as ChannelSftp
         try {
             sources.eachWithIndex { File file, int idx ->
@@ -49,6 +49,15 @@ class SshSessionController {
                     sftp.put(file.absolutePath, dests[idx])
                 } catch (all) { }
             }
+        } finally {
+            sftp.disconnect()
+        }
+    }
+
+    void put(InputStream stream, String dest) {
+        ChannelSftp sftp = session.openChannel('sftp') as ChannelSftp
+        try {
+            sftp.put(stream, dest)
         } finally {
             sftp.disconnect()
         }
