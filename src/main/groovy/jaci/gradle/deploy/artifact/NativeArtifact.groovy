@@ -20,7 +20,6 @@ class NativeArtifact extends ArtifactBase implements Cacheable {
 
     String filename = null
 
-    // TODO: Make this work for Library Artifacts configured in Components
     @Override
     void deploy(Project project, DeployContext ctx) {
         File file = taskDependencies.findAll { it instanceof AbstractLinkTask }.collect { Task t -> t.outputs.files.files.first() }.first()
