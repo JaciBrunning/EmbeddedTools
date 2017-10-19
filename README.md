@@ -6,13 +6,13 @@ EmbeddedTools adds compiler and library rules to make writing native software ea
 For all projects, you can define deployment targets and artifacts. The deploy process works over SSH/SFTP and
 is extremely quick.
 
-Commands:  
-`gradlew deploy` will deploy all artifacts
-`gradlew deploy<artifact name>` will deploy only the specified artifact
+Commands:   
+`gradlew deploy` will deploy all artifacts  
+`gradlew deploy<artifact name>` will deploy only the specified artifact  
 
-Properties:  
-`gradlew deploy -Pdeploy-dirty` will skip the cache check and force redeployment of all files
-`gradlew deploy -Pdeploy-dry` will do a 'dry run' (will not connect or deploy to target, instead only printing to console)
+Properties:    
+`gradlew deploy -Pdeploy-dirty` will skip the cache check and force redeployment of all files  
+`gradlew deploy -Pdeploy-dry` will do a 'dry run' (will not connect or deploy to target, instead only printing to console)  
 
 ## Installing plugin
 Include the following in your `build.gradle`
