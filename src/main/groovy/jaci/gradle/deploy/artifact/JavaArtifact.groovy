@@ -15,6 +15,9 @@ class JavaArtifact extends FileCollectionArtifact {
     String jar
     String filename = null
 
+    // Set after deploy logic
+    File _jarfile
+
     void setJar(Object jarNotation) {
         this.jar = jarNotation
         dependsOn(jarNotation)
@@ -22,7 +25,7 @@ class JavaArtifact extends FileCollectionArtifact {
 
     @Override
     void deploy(Project project, DeployContext ctx) {
-        File file = taskDependencies.findAll { it instanceof Jar }.collect { Task t -> t.outputs.files.files.first() }.first()
-        ctx.put(file, (filename == null ? file.name : filename), cache)
+        _jarfile = taskDependencies.findAll { it instanceof Jar }.collect { Task t -> t.outputs.files.files.first() }.first()
+        ctx.put(_jarfile, (filename == null ? _jarfile.name : filename), cache)
     }
 }
