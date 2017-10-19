@@ -52,7 +52,7 @@ class DeployExtension {
         }
 
         project.tasks.create("deploy") { Task task ->
-            task.group = "GradleRIO"
+            task.group = "EmbeddedTools"
             task.description = "Deploy all artifacts on all targets"
             project.tasks.withType(ArtifactDeployTask).all { ArtifactDeployTask task2 ->
                 task.dependsOn(task2)
