@@ -48,10 +48,12 @@ deploy {
         fileCollectionArtifact('myJavaArtifact') {
             files = project.tasks.jar.outputs.files
             directory = 'myjavadir'
+            dependsOn(project.tasks.jar)
         }
 
         nativeArtifact('my_program') {
             targetPlatform = 'roborio'
+            after('myFileArtifact')
         }
 
         nativeLibraryArtifact('wpilib') {
@@ -124,7 +126,7 @@ model {
                 cppCompiler.withArguments { a -> a << '-std=c++11' }
                 linker.withArguments { a -> a << '-std=c++11' }
             }
-//            path '/Users/jaci/.gradle/gradlerio/toolchains/bin'
+            path '/Users/jaci/.gradle/gradlerio/toolchains/bin'
         }
         gcc(Gcc) { }
         visualCpp(VisualCpp) { }

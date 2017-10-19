@@ -40,6 +40,7 @@ class DeployPlugin implements Plugin<Project> {
                             if (spec.component.name == na.component && spec.targetPlatform.name == na.targetPlatform) {
                                 spec.tasks.withType(AbstractLinkTask) { AbstractLinkTask task ->
                                     na.linkOut = task.outputs
+                                    na.dependsOn(task)
                                 }
                             }
                         }

@@ -6,6 +6,7 @@ import jaci.gradle.deploy.target.RemoteTarget
 import jaci.gradle.deploy.target.TargetsExtension
 import jaci.gradle.deploy.tasks.ArtifactDeployTask
 import jaci.gradle.deploy.tasks.TargetDiscoveryTask
+import org.gradle.api.Action
 import org.gradle.api.DefaultTask
 import org.gradle.api.Project
 import org.gradle.api.Task
@@ -36,6 +37,16 @@ class DeployExtension {
                 project.tasks.withType(TargetDiscoveryTask).all { TargetDiscoveryTask task2 ->
                     artifact.targets.matching { it == task2.target.name }.all { String s ->
                         task.dependsOn(task2)
+                    }
+                }
+
+                artifact.dependencies.all { Object dep ->
+                    if (dep instanceof Closure) {
+                        task.dependsOn(dep.call(project))
+                    } else if (dep instanceof Action) {
+                        task.dependsOn(dep.execute(project))
+                    } else {
+                        task.dependsOn(dep)
                     }
                 }
             }
