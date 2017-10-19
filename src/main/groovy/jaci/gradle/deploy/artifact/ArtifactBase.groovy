@@ -65,9 +65,9 @@ abstract class ArtifactBase implements Named {
         }
 
         if (toRun) {
-            predeploy.forEach { Closure c -> ClosureUtils.delegateCall(ctx, c) }
+            predeploy.each { Closure c -> ClosureUtils.delegateCall(ctx, c) }
             deploy(project, ctx)
-            postdeploy.forEach { Closure c -> ClosureUtils.delegateCall(ctx, c) }
+            postdeploy.each { Closure c -> ClosureUtils.delegateCall(ctx, c) }
         }
         ctx.logger().log("")
     }
