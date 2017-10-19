@@ -1,19 +1,18 @@
 EmbeddedTools
 ====
+Compile and Deploy for Embedded Targets in both Java and C++. 
 
-Additions to the Gradle DSL for building and deploying to remote targets.
-
-Multiple targets can be supported, as well as multiple deployers.
-
-The plugin can be run with both Java and Native (C, C++, etc) projects, or neither if only files and commands are deployed. 
+EmbeddedTools adds compiler and library rules to make writing native software easier.
+For all projects, you can define deployment targets and artifacts. The deploy process works over SSH/SFTP and
+is extremely quick.
 
 Commands:  
-`gradlew deploy` will run the deploy steps for all deployers  
-`gradlew deploy<deployer>` will run the deploy steps for the `<deployer>` deployer on all targets
-`gradlew deploy<target>` will run the deploy steps for the `<target>` target on all deployers
+`gradlew deploy` will deploy all artifacts
+`gradlew deploy<artifact name>` will deploy only the specified artifact
 
 Properties:  
-`gradlew deploy -Pskip-cache` will skip the cache check and force redeployment of all files
+`gradlew deploy -Pdeploy-dirty` will skip the cache check and force redeployment of all files
+`gradlew deploy -Pdeploy-dry` will do a 'dry run' (will not connect or deploy to target, instead only printing to console)
 
 ## Installing plugin
 Include the following in your `build.gradle`
@@ -38,7 +37,7 @@ model {
     toolChains {
         crossGcc(CrossGcc) {
             target('crossArm') {
-                defineTools(it, "arm-prefix-", "-suffix")   // Defines tools for C, C++, Asm, Linkers and Archivers. Does not define Objective C/C++
+                defineTools(it, "arm-prefix-", "-suffix")   // Defines tools for C, C++, Asm, Linkers and Archivers. Does not define Objective C
             }
         }
     }
@@ -46,72 +45,70 @@ model {
 }
 ```
 
-## Model 
+## Spec 
 
 ```gradle
 import jaci.gradle.toolchains.*
 import jaci.gradle.nativedeps.*
 
-// DeployableStep properties //
-directory = 'mydir'     // Directory to use, relative to the scope prior
-order = 50              // The order of this element with other elements. Lower numbers first. Default: 50
-onlyIf = { execute('echo Hello') == 'Hello' }   // Only execute this step if the closure evaluates to true
-precheck = { execute('echo precheck') }         // Execute closure before onlyIf
-predeploy = { execute('echo predeploy') }       // Execute closure after onlyIf, but before deploy
-postdeploy = { execute('echo postdeploy') }     // Execute closure after deploy
-
-// DSL
+// DSL (all properties optional unless stated as required)
 deploy {
     targets {
-        myTarget {
-            addresses << "10.XX.XX.YY" << "myhost.local"    // Define the addresses used to search for this device
-            async = true                // Check all addresses simultaneously. Default: true
-            mkdirs = true               // Make directories during deploy. Default: true
-            directory = '.'             // Root directory to deploy to, relative to user home dir. Default: .
-            user = 'myuser'             // User to login as. Required.
-            password = '**'             // Password to use for login. Default: ''
-            promptPassword = true       // Optionally prompt for password. Overrides password field
-            timeout = 3                 // Timeout before declaring the target unreachable in seconds. Default: 3
-            failOnMissing = true        // Fail the build if the target can't be found. Default: true
+        target('myTarget') {
+            addresses << '172.22.11.2' << 'mydevice'        // Addresses to attempt to deploy to, in order of preference
+            mkdirs = true           // Make directories on the remote device when deploying. Default: true 
+            directory = 'mydir'     // The subdirectory on the target to deploy to. Default: SSH Default
+            user = 'myuser'         // User to login as. Required.
+            password = '***'        // Password to use. Default: blank
+            promptPassword = true   // Should EmbeddedTools prompt for a password? Default: false. Overrides password above.
+            timeout = 3             // Timeout to use when connecting to target. Default: 3 (seconds)
+            failOnMissing = true    // Should the build fail if the target can't be found? Default: true
         }
     }
-    deployers {
-        myDeployer {
-            targets << 'myTarget'       // Set the targets this deployer responds to
-            // Inherited from DeployableStep. See above. //
-            fileArtifact('myFileArtifact') {
-                // Inherited from DeployableStep. See above. //
-                file = file('myfile.dat')   // The file to deploy
-                filename = 'myfile2.dat'    // The filename to use. By default, it is the same name as file above
+    artifacts {
+        // COMMON PROPERTIES FOR ALL ARTIFACTS //
+        directory = 'mydir'                     // Subdirectory to use. Relative to target directory
+        targets << 'myTarget'                   // Targets to deploy to
 
-                cache = 'md5sum'            // Set the caching policy. Default: md5sum
-            }
+        precheck = { execute 'pwd' }            // Closure to execute before onlyIf
+        onlyIf = { execute 'echo Hi' == 'Hi' }  // Check closure for artifact. Will not deploy if evaluates to false
+        predeploy = { execute 'echo Pre' }      // After onlyIf, but before deploy logic
+        postdeploy = { execute 'echo Post' }    // After this artifact's deploy logic
 
-            fileCollectionArtifact('myFileCollectionArtifact') {
-                // Inherited from DeployableStep. See above. //
-                files = tasks.jar.outputs.files`    // Set the files to use (in this case, the output jar file). Responds to FileCollection (e.g. FileTree, ZipTree, etc)
-                
-                cache = 'md5sum'            // Set the caching policy. Default: md5sum
-            }
+        after('someOtherArtifact')              // Make this artifact depend on another artifact
+        dependsOn('someTask')                   // Make this artifact depend on a task
+        // END COMMON //
 
-            commandArtifact('myCommandArtifact') {
-                // Inherited from DeployableStep. See above. //
-                command = 'echo Hello'      // The command to run
-                ignoreError = true          // Ignore if the command fails? Default: false
-                // After the deploy task has run, you can access the 'result' property to obtain the command output.
-            }
+        fileArtifact('myFileArtifact') {
+            file = file('myFile')               // Set the file to deploy. Required.
+            filename = 'myFile.dat'             // Set the filename to deploy to. Default: same name as file
+        }
 
-            nativeArtifact('myNativeArtifact') {
-                component = 'my_component'  // The name of the Native Component (in the model space) to deploy
-                targetPlatform = 'crossArm' // The name of the Target Platform variant of the binary to deploy
+        fileCollectionArtifact('myFileCollectionArtifact') {
+            files = fileTree(dir: 'myDir')      // Set the filecollection (e.g. filetree, files, etc) to deploy. Required
+        }
 
-                filename = 'myfile'         // Set the filename for this artifact
-                cache = 'md5sum'            // Set the caching policy. Default: md5sum
+        commandArtifact('myCommandArtifact') {
+            command = 'echo Hello'              // The command to run. Required.
+            // Output will be stored in 'result' after execution
+        }
 
-                libraries = true            // Deploy native libraries? Default: false
-                libraryDir = 'somedir'      // Set the deploy directory for libraries
-                libcache = 'md5file'        // Set the caching policy. Default: md5file
-            }
+        javaArtifact('myJavaArtifact') {
+            jar = 'jar'                         // The jar (or Jar task) to deploy. Required. (usually 'jar')
+            filename = 'myjar.jar'              // Set the filename to deploy to. Default: same name as the generated jar
+            // Note: This artifact will automatically depend on the jar build task
+        }
+
+        nativeArtifact('myNativeArtifact') {
+            component = 'my_program'            // The name of the native component (model.components {}) to deploy. Required. Either shared library or executable
+            targetPlatform = 'crossGcc'         // The name of the native platform (model.platforms {})) to deploy.
+            filename = 'myProgram'              // Set the filename to deploy to. Default: same name as component generated file
+            // Note: This artifact will automatically depend on the native component link task
+        }
+
+        nativeLibraryArtifact('myNativeLibraryArtifact') {
+            library = 'mylib'                   // Name of library (model.libraries {}) to deploy. Required.
+            matchers << '**/*.so'               // Matcher of library files to deploy to target.
         }
     }
 }
@@ -128,9 +125,10 @@ model {
             file 'myfile.zip'                           // Select a zipfile including the headers and compiled library files
             maven 'mygroup:myartifact:myversion@zip'    // Select a maven artifact (zip file) including the headers and compiled library files
 
-            addLinkerArgs true                          // Add -L libraryDirectory for grouped .so files. Default: false
-            sharedMatchers << '**/*.so'                 // The search pattern for shared libraries
-            staticMatchers << '**/*.a'                  // The search pattern for static libraries
+            sharedMatchers << '**/*.so'                 // The search pattern for shared libraries (to be added as -L flag)
+            staticMatchers << '**/*.a'                  // The search pattern for static libraries (to be added as -L flag)
+            libraryMatchers << '**/*.so'                // The search pattern for libraries to be deployed (if added in artifact), and linked
+            libraryNames << 'customlib'                 // Manually add -l libraries.
             headerDirs << 'include'                     // The directories for headers of this library
         }
 
@@ -150,7 +148,7 @@ model {
     toolChains {
         crossGcc(CrossGcc) {
             target('crossArm') {
-                defineTools(it, "arm-prefix-", "-suffix")   // Defines tools for C, C++, Asm, Linkers and Archivers. Does not define Objective C/C++
+                defineTools(it, "arm-prefix-", "-suffix")   // Defines tools for C, C++, Asm, Linkers and Archivers. Does not define Objective C
             }
         }
     }
