@@ -33,6 +33,7 @@ abstract class ArtifactBase implements Named {
 
     DefaultDomainObjectSet<String>  targets         = new DefaultDomainObjectSet<>(String)
     DefaultDomainObjectSet<Object>  dependencies    = new DefaultDomainObjectSet<>(Object)
+    Set<Task> taskDependencies
 
     void dependsOn(Object task) {
         dependencies << task

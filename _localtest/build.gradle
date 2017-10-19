@@ -45,14 +45,14 @@ deploy {
             filename = "test"
             postdeploy << { execute 'cat test.txt' }
         }
-        fileCollectionArtifact('myJavaArtifact') {
+        javaArtifact('myJavaArtifact') {
             files = project.tasks.jar.outputs.files
             directory = 'myjavadir'
-            dependsOn(project.tasks.jar)
+            jar = 'jar'
         }
-
-        nativeArtifact('my_program') {
+        nativeArtifact('myNativeArtifact') {
             targetPlatform = 'roborio'
+            component = 'my_program'
             after('myFileArtifact')
         }
 
@@ -156,8 +156,7 @@ model {
 
 task testMe() {
     doLast {
-        println deploy.targets
-        println deploy.artifacts
+        println project.tasks.jar.class.superclass
     }
 }
 

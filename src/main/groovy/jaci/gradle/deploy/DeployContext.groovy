@@ -1,6 +1,8 @@
 package jaci.gradle.deploy
 
 import groovy.transform.CompileStatic
+import org.gradle.api.Project
+import org.gradle.api.Task
 
 @CompileStatic
 interface DeployContext {
@@ -9,6 +11,9 @@ interface DeployContext {
 
     // Get the working directory
     String workingDir()
+
+    // Get the project
+    Project project()
 
     // Run a command (execute)
     String execute(String command)

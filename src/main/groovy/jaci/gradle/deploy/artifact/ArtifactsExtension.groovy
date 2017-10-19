@@ -34,6 +34,10 @@ class ArtifactsExtension extends DefaultNamedDomainObjectSet<ArtifactBase> {
         artifact(name, CommandArtifact, config)
     }
 
+    def javaArtifact(String name, final Closure config) {
+        artifact(name, JavaArtifact, config)
+    }
+
     def nativeArtifact(String name, final Closure config) {
         artifact(name, NativeArtifact, config)
     }

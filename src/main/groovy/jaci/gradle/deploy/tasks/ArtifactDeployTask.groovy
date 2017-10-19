@@ -7,6 +7,7 @@ import jaci.gradle.deploy.artifact.ArtifactBase
 import org.gradle.api.Action
 import org.gradle.api.DefaultTask
 import org.gradle.api.Project
+import org.gradle.api.Task
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.TaskAction
 import org.gradle.workers.IsolationMode
@@ -48,6 +49,8 @@ class ArtifactDeployTask extends DefaultTask {
         }.collect {
             it as TargetDiscoveryTask
         }
+
+        artifact.taskDependencies = taskDependencies.getDependencies(this) as Set<Task>
 
         discoveries.each { TargetDiscoveryTask discover ->
             def index = deployerStorage.put(new DeployStorage(project, discover.context, artifact))

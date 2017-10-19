@@ -4,6 +4,7 @@ import groovy.transform.CompileStatic
 import jaci.gradle.PathUtils
 import jaci.gradle.deploy.target.RemoteTarget
 import org.gradle.api.Project
+import org.gradle.api.Task
 
 @CompileStatic
 class DryDeployContext implements DeployContext {
@@ -29,11 +30,16 @@ class DryDeployContext implements DeployContext {
         return workingDir
     }
 
+    @Override
+    Project project() {
+        return project
+    }
+
     String _execute(String command) {
         if (target.mkdirs) logger.log("  ~ mkdir -p ${workingDir()}")
 
         logger.log("  -C-> ${command} @ ${workingDir}")
-        logger.log( "    ~ " + [ "cd ${workingDir()}", command ].join(';'))
+        logger.log( "    ~ " + [ "cd ${workingDir()}", command ].join('; '))
         return ""
     }
 

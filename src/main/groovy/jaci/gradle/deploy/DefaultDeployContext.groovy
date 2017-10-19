@@ -8,6 +8,7 @@ import jaci.gradle.deploy.cache.CacheMethods
 import jaci.gradle.deploy.target.RemoteTarget
 import jaci.gradle.transport.SshSessionController
 import org.gradle.api.Project
+import org.gradle.api.Task
 
 @CompileStatic
 class DefaultDeployContext implements DeployContext {
@@ -33,6 +34,11 @@ class DefaultDeployContext implements DeployContext {
     @Override
     String workingDir() {
         return workingDir
+    }
+
+    @Override
+    Project project() {
+        return project
     }
 
     String _execute(String command) {

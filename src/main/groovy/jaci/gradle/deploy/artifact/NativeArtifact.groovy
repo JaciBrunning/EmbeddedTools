@@ -4,7 +4,9 @@ import groovy.transform.CompileStatic
 import jaci.gradle.deploy.DeployContext
 import jaci.gradle.deploy.cache.Cacheable
 import org.gradle.api.Project
+import org.gradle.api.Task
 import org.gradle.api.tasks.TaskOutputs
+import org.gradle.nativeplatform.tasks.AbstractLinkTask
 
 @CompileStatic
 class NativeArtifact extends ArtifactBase implements Cacheable {
@@ -18,12 +20,10 @@ class NativeArtifact extends ArtifactBase implements Cacheable {
 
     String filename = null
 
-    // Calculated Values
-    TaskOutputs linkOut = null
-
+    // TODO: Make this work for Library Artifacts configured in Components
     @Override
     void deploy(Project project, DeployContext ctx) {
-        File file = linkOut.files.files.first()
+        File file = taskDependencies.findAll { it instanceof AbstractLinkTask }.collect { Task t -> t.outputs.files.files.first() }.first()
         ctx.put(file, (filename == null ? file.name : filename), cache)
     }
 }
