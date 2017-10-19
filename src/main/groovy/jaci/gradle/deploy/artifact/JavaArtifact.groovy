@@ -4,7 +4,6 @@ import groovy.transform.CompileStatic
 import jaci.gradle.deploy.DeployContext
 import org.gradle.api.Project
 import org.gradle.api.Task
-import org.gradle.api.tasks.TaskOutputs
 import org.gradle.api.tasks.bundling.Jar
 
 @CompileStatic

@@ -11,8 +11,6 @@ import org.gradle.api.Named
 import org.gradle.api.Project
 import org.gradle.api.Task
 import org.gradle.api.internal.DefaultDomainObjectSet
-import org.gradle.api.tasks.TaskCollection
-import org.gradle.internal.impldep.org.bouncycastle.asn1.x509.Targets
 
 @CompileStatic
 @EqualsAndHashCode(includes = 'name')

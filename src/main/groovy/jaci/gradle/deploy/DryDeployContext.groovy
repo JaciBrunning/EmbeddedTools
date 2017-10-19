@@ -4,7 +4,6 @@ import groovy.transform.CompileStatic
 import jaci.gradle.PathUtils
 import jaci.gradle.deploy.target.RemoteTarget
 import org.gradle.api.Project
-import org.gradle.api.Task
 
 @CompileStatic
 class DryDeployContext implements DeployContext {

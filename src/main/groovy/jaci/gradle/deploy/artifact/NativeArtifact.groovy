@@ -5,7 +5,6 @@ import jaci.gradle.deploy.DeployContext
 import jaci.gradle.deploy.cache.Cacheable
 import org.gradle.api.Project
 import org.gradle.api.Task
-import org.gradle.api.tasks.TaskOutputs
 import org.gradle.nativeplatform.tasks.AbstractLinkTask
 
 @CompileStatic
