@@ -9,12 +9,14 @@ import org.gradle.api.Project
 class DryDeployContext implements DeployContext {
     String workingDir
     DeployLogger logger
+    String targetAddr
     RemoteTarget target
     Project project
 
-    DryDeployContext(Project project, RemoteTarget target, DeployLogger logger, String workingDir) {
+    DryDeployContext(Project project, RemoteTarget target, String targetAddr, DeployLogger logger, String workingDir) {
         this.workingDir = workingDir
         this.logger = logger
+        this.targetAddr = targetAddr
         this.target = target
         this.project = project
     }
@@ -22,6 +24,11 @@ class DryDeployContext implements DeployContext {
     @Override
     DeployLogger logger() {
         return logger
+    }
+
+    @Override
+    String selectedHost() {
+        return targetAddr
     }
 
     @Override
@@ -67,6 +74,6 @@ class DryDeployContext implements DeployContext {
 
     @Override
     DeployContext subContext(String workingDir) {
-        return new DryDeployContext(project, target, logger.push(), PathUtils.combine(this.workingDir, workingDir))
+        return new DryDeployContext(project, target, targetAddr, logger.push(), PathUtils.combine(this.workingDir, workingDir))
     }
 }

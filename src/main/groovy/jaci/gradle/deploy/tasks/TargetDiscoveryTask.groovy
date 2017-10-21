@@ -46,7 +46,7 @@ class TargetDiscoveryTask extends DefaultTask {
         if (EmbeddedTools.isDryRun(project)) {
             log.log("Dry Run! Using ${target.addresses.first()} for target ${target.name}")
             addressStorage << target.addresses.first()
-            context = new DryDeployContext(project, target, log, target.directory)
+            context = new DryDeployContext(project, target, target.addresses.first(), log, target.directory)
             if (!EmbeddedTools.isInstantDryRun(project)) {
                 log.log("-> Simulating timeout delay ${target.timeout}s (disable with -Pdeploy-dry-instant)")
                 // Worker API allows parallel execution. Timeout delay is good for testing parallel execution of
@@ -96,7 +96,7 @@ class TargetDiscoveryTask extends DefaultTask {
                 log.log("Using address ${activeAddress()} for target ${target.name}")
 
                 session = new SshSessionController(activeAddress(), target.user, target.password, target.timeout)
-                context = new DefaultDeployContext(project, target, log, session, target.directory)
+                context = new DefaultDeployContext(project, target, activeAddress(), log, session, target.directory)
             }
         }
     }

@@ -8,6 +8,9 @@ interface DeployContext {
     // Get the deploy logger
     DeployLogger logger()
 
+    // Get the selected hostname (from discover task)
+    String selectedHost()
+
     // Get the working directory
     String workingDir()
 

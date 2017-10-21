@@ -14,13 +14,15 @@ class DefaultDeployContext implements DeployContext {
     String workingDir
     SshSessionController session
     DeployLogger logger
+    String targetAddr
     RemoteTarget target
     Project project
 
-    DefaultDeployContext(Project project, RemoteTarget target, DeployLogger logger, SshSessionController session, String workingDir) {
+    DefaultDeployContext(Project project, RemoteTarget target, String targetAddr, DeployLogger logger, SshSessionController session, String workingDir) {
         this.workingDir = workingDir
         this.session = session
         this.logger = logger
+        this.targetAddr = targetAddr
         this.target = target
         this.project = project
     }
@@ -28,6 +30,11 @@ class DefaultDeployContext implements DeployContext {
     @Override
     DeployLogger logger() {
         return logger
+    }
+
+    @Override
+    String selectedHost() {
+        return targetAddr
     }
 
     @Override
@@ -84,6 +91,6 @@ class DefaultDeployContext implements DeployContext {
 
     @Override
     DeployContext subContext(String workingDir) {
-        return new DefaultDeployContext(project, target, logger.push(), session, PathUtils.combine(this.workingDir, workingDir))
+        return new DefaultDeployContext(project, target, targetAddr, logger.push(), session, PathUtils.combine(this.workingDir, workingDir))
     }
 }
