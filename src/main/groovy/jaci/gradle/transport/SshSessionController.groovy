@@ -5,6 +5,7 @@ import com.jcraft.jsch.ChannelSftp
 import com.jcraft.jsch.Session
 import groovy.transform.CompileStatic
 import jaci.gradle.EmbeddedTools
+import org.slf4j.LoggerFactory
 
 @CompileStatic
 class SshSessionController {
@@ -47,7 +48,14 @@ class SshSessionController {
             sources.eachWithIndex { File file, int idx ->
                 try {
                     sftp.put(file.absolutePath, dests[idx])
-                } catch (all) { }
+                } catch (Exception e) {
+                    def s = new StringWriter()
+                    def pw = new PrintWriter(s)
+                    e.printStackTrace(pw)
+                    def log = LoggerFactory.getLogger('embedded_tools')
+                    log.debug("Could not deploy ${file.absolutePath}...")
+                    log.debug(s.toString())
+                }
             }
         } finally {
             sftp.disconnect()
