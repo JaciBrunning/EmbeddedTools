@@ -16,6 +16,7 @@ import org.gradle.api.tasks.TaskAction
 import org.gradle.workers.IsolationMode
 import org.gradle.workers.WorkerConfiguration
 import org.gradle.workers.WorkerExecutor
+import org.slf4j.LoggerFactory
 
 import javax.inject.Inject
 
@@ -127,7 +128,14 @@ class TargetDiscoveryTask extends DefaultTask {
                 println "Found ${host}!"
                 session.disconnect()
                 addressStorage.push(host)
-            } catch (all) { }
+            } catch (Exception e) {
+                def s = new StringWriter()
+                def pw = new PrintWriter(s)
+                e.printStackTrace(pw)
+                def log = LoggerFactory.getLogger('embedded_tools')
+                log.debug("Could not reach ${host}...")
+                log.debug(s.toString())
+            }
         }
     }
 
