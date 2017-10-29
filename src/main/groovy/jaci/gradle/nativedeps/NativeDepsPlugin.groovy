@@ -1,6 +1,7 @@
 package jaci.gradle.nativedeps
 
 import jaci.gradle.EmbeddedTools
+import jaci.gradle.SortUtils
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.Task
@@ -85,9 +86,18 @@ class NativeDepsPlugin implements Plugin<Project> {
                 }
             }
 
+            List<SortUtils.TopoMember<CombinedNativeLib>> unsorted = []
             spec.withType(CombinedNativeLib).each { lib ->
+                def member = new SortUtils.TopoMember<CombinedNativeLib>()
+                member.name = lib.name
+                member.dependsOn = lib.libs
+                member.extra = lib
+                unsorted << member
+            }
+            List<SortUtils.TopoMember<CombinedNativeLib>> sorted = SortUtils.topoSort(unsorted)
+            sorted.each { SortUtils.TopoMember<CombinedNativeLib> member ->
+                CombinedNativeLib lib = member.extra
                 def libs = lib.libs.collect { prelibs.getByName(it) }
-
                 def binaries = libs.collect { it.binaries.first() as NativeLibBinary }
                 def headerFiles = binaries.collect { it.headerDirs }.inject { a, b -> a+b }
                 def linkerFiles = binaries.collect { it.linkerFiles }.inject { a, b -> a+b}
