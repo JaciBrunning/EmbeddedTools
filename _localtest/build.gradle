@@ -4,9 +4,7 @@ buildscript {
         jcenter()
     }
     dependencies {
-        classpath('org.hidetake:groovy-ssh:2.9.0') {
-            exclude module: 'groovy-all'
-        }
+        classpath 'com.jcraft:jsch:0.1.53'
         classpath group: "jaci.gradle", name: "EmbeddedTools", version: "+" 
     }
 }

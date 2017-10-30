@@ -19,6 +19,7 @@ import org.gradle.workers.WorkerExecutor
 import org.slf4j.LoggerFactory
 
 import javax.inject.Inject
+import java.util.concurrent.TimeUnit
 
 @CompileStatic
 class TargetDiscoveryTask extends DefaultTask {
@@ -124,10 +125,31 @@ class TargetDiscoveryTask extends DefaultTask {
         void run() {
             try {
                 def target = targetStorage.get(index)
-                def session = new SshSessionController(host, target.user, target.password, target.timeout)
-                println "Found ${host}!"
-                session.disconnect()
-                addressStorage.push(host)
+                def thread = new Thread({
+                    def log = LoggerFactory.getLogger('embedded_tools')
+                    try {
+                        def session = new SshSessionController(host, target.user, target.password, target.timeout)
+                        log.info("Found ${host}!")
+                        session.disconnect()
+                        addressStorage.push(host)
+                        target.latch.countDown()
+                    } catch (InterruptedException e) {
+                        Thread.currentThread().interrupt()
+                    } catch (Exception e) {
+                        def s = new StringWriter()
+                        def pw = new PrintWriter(s)
+                        e.printStackTrace(pw)
+                        log.debug("[i] Could not reach ${host}...")
+                        log.debug(s.toString())
+                    }
+                })
+                thread.start()
+                if (target.discoverInstant) {
+                    target.latch.await(target.timeout + 500, TimeUnit.MILLISECONDS) // Add 500 to account for Thread spinup
+                    thread.interrupt()
+                } else {
+                    thread.join()
+                }
             } catch (Exception e) {
                 def s = new StringWriter()
                 def pw = new PrintWriter(s)

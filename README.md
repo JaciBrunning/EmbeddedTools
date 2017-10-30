@@ -57,6 +57,7 @@ deploy {
         target('myTarget') {
             addresses << '172.22.11.2' << 'mydevice'        // Addresses to attempt to deploy to, in order of preference
             mkdirs = true           // Make directories on the remote device when deploying. Default: true 
+            discoverInstant = true  // Instantly stop the discovery process when the first target is found (faster). Default: true
             directory = 'mydir'     // The subdirectory on the target to deploy to. Default: SSH Default
             user = 'myuser'         // User to login as. Required.
             password = '***'        // Password to use. Default: blank
