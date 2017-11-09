@@ -123,17 +123,32 @@ class TargetDiscoveryTask extends DefaultTask {
 
         @Override
         void run() {
+            def log = LoggerFactory.getLogger('embedded_tools')
             try {
                 def target = targetStorage.get(index)
                 def thread = new Thread({
-                    def log = LoggerFactory.getLogger('embedded_tools')
                     try {
+                        log.debug("Trying address ${host}")
+                        String originalHost = host
+                        boolean updated = false
+                        for (InetAddress addr : InetAddress.getAllByName(host)) {
+                            if (!addr.isMulticastAddress() && (target.ipv6 || addr instanceof Inet4Address)) {
+                                log.info("Resolved ${host} -> ${addr.getHostAddress()}")
+                                host = addr.getHostAddress()
+                                updated = true
+                                break;
+                            }
+                        }
+                        if (!updated) {
+                            log.debug("No resolution, using raw host address ${host}")
+                        }
                         def session = new SshSessionController(host, target.user, target.password, target.timeout)
-                        log.info("Found ${host}!")
+                        log.info("Found ${host}! (${originalHost})")
                         session.disconnect()
                         addressStorage.push(host)
                         target.latch.countDown()
                     } catch (InterruptedException e) {
+                        log.debug("${host} discovery thread interrupted")
                         Thread.currentThread().interrupt()
                     } catch (Exception e) {
                         def s = new StringWriter()
@@ -145,8 +160,9 @@ class TargetDiscoveryTask extends DefaultTask {
                 })
                 thread.start()
                 if (target.discoverInstant) {
-                    target.latch.await(target.timeout + 500, TimeUnit.MILLISECONDS) // Add 500 to account for Thread spinup
+                    target.latch.await(target.timeout*1000 + 500, TimeUnit.MILLISECONDS) // Add 500 to account for Thread spinup
                     thread.interrupt()
+                    log.debug("Interrupting discovery thread ${host}...")
                 } else {
                     thread.join()
                 }
@@ -154,7 +170,6 @@ class TargetDiscoveryTask extends DefaultTask {
                 def s = new StringWriter()
                 def pw = new PrintWriter(s)
                 e.printStackTrace(pw)
-                def log = LoggerFactory.getLogger('embedded_tools')
                 log.debug("Could not reach ${host}...")
                 log.debug(s.toString())
             }

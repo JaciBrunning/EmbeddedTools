@@ -17,6 +17,7 @@ class RemoteTarget implements Named {
 
     List<String> addresses  = []
     boolean mkdirs          = true
+    boolean ipv6            = false    // Enable IPv6 resolution? (experimental)
     boolean discoverInstant = true
     String directory        = null     // Null = default user home
     String user             = null
