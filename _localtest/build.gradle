@@ -118,8 +118,9 @@ model {
     }
 
     toolChains {
-        roborioGcc(CrossGcc) {
-            target('roborio') {
+        roborioGcc(Gcc) {
+            setTargets('roborio')
+            eachPlatform {
                 defineTools(it, "arm-frc-linux-gnueabi-", '')
                 cppCompiler.withArguments { a -> a << '-std=c++11' }
                 linker.withArguments { a -> a << '-std=c++11' }
@@ -163,5 +164,5 @@ jar {
 }
 
 task wrapper(type: Wrapper) {
-    gradleVersion = '4.2'
+    gradleVersion = '4.4'
 }
