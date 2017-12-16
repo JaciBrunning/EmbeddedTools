@@ -128,18 +128,24 @@ class NativeDepsPlugin implements Plugin<Project> {
                         def lib = lss['library'] as String
                         tasks.withType(AbstractLinkTask) { task ->
                             task.doFirst() {
-                                def nl = (repos.getByName('embeddedTools') as PrebuiltLibraries).getByName(lib).binaries.first()
-                                if (nl instanceof NativeLibBinary) {
-                                    def natLib = nl as NativeLibBinary
-                                    def args = natLib.linkerFiles.files.collect { it.parentFile }.unique().collectMany { file ->
-                                        ["-L", file.absolutePath]
-                                    }
+                                def repo = repos.getByName('embeddedTools') as PrebuiltLibraries
+                                def ll = repo.findByName(lib)
+                                if (ll != null) {
+                                    def nl = ll.binaries.first()
+                                    if (nl instanceof NativeLibBinary) {
+                                        def natLib = nl as NativeLibBinary
+                                        def args = natLib.linkerFiles.files.collect {
+                                            it.parentFile
+                                        }.unique().collectMany { file ->
+                                            ["-L", file.absolutePath]
+                                        }
 
-                                    args += natLib.libNames.collectMany { libName ->
-                                        ["-l", libName]
-                                    }
+                                        args += natLib.libNames.collectMany { libName ->
+                                            ["-l", libName]
+                                        }
 
-                                    bin.linker.args.addAll(args)
+                                        bin.linker.args.addAll(args)
+                                    }
                                 }
                             }
                         }
