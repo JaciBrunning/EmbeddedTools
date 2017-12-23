@@ -35,7 +35,7 @@ class NativeLibBinary implements SharedLibraryBinary, StaticLibraryBinary {
 
     @Override
     FileCollection getLinkFiles() {
-        return matchedLibraries
+        return linkerFiles
     }
 
     @Override

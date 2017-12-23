@@ -61,7 +61,7 @@ abstract class ArtifactBase implements Named {
         if (onlyIf != null) {
             ctx.logger().log(" -> OnlyIf Check")
             toRun = ClosureUtils.delegateCall(ctx, onlyIf) || EmbeddedTools.isDryRun(project)
-            ctx.logger().log(" -> ${EmbeddedTools.isDryRun(project) ? 'DRY' : toRun ? 'SUCCESS' : 'FAILED'}")
+            ctx.logger().log(" -> ${EmbeddedTools.isDryRun(project) ? 'DRY' : toRun ? 'OnlyIf triggered' : 'OnlyIf not triggered'}")
         }
 
         if (toRun) {

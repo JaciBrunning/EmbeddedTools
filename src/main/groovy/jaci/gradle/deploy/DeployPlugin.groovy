@@ -49,13 +49,15 @@ class DeployPlugin implements Plugin<Project> {
                     repos.withType(PrebuiltLibraries).all { PrebuiltLibraries repo ->
                         repo.matching { PrebuiltLibrary pl -> pl.name == nla.library }.all { PrebuiltLibrary pl ->
                             pl.binaries.all { NativeLibraryBinary bin ->
-                                FileCollection sharedLibs = (bin instanceof NativeLibBinary) ? (bin as NativeLibBinary).runtimeLibraries : bin.runtimeFiles
-                                FileTree deployedFileTree = sharedLibs.asFileTree
-                                if (nla.matchers != null && !nla.matchers.empty) {
-                                    deployedFileTree = deployedFileTree.matching { PatternFilterable pat -> pat.include(nla.matchers) }
-                                }
+                                if (nla.targetPlatform == null || bin.targetPlatform.name.equalsIgnoreCase(nla.targetPlatform)) {
+                                    FileCollection sharedLibs = (bin instanceof NativeLibBinary) ? (bin as NativeLibBinary).runtimeLibraries : bin.runtimeFiles
+                                    FileTree deployedFileTree = sharedLibs.asFileTree
+                                    if (nla.matchers != null && !nla.matchers.empty) {
+                                        deployedFileTree = deployedFileTree.matching { PatternFilterable pat -> pat.include(nla.matchers) }
+                                    }
 
-                                nla.files = deployedFileTree
+                                    nla.files = deployedFileTree
+                                }
                             }
                         }
                     }

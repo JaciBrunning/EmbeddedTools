@@ -55,15 +55,23 @@ class NativeDepsPlugin implements Plugin<Project> {
             Project project = extensions.getByType(EmbeddedTools.ProjectWrapper).project
 
             spec.withType(NativeLib).each { lib ->
-                def libname = lib.name
+                def binname = lib.name
+                def libname = lib.mainLibraryName ?: lib.name
                 FileTree rootTree, sharedFiles, staticFiles, matchedLibs
 
                 def flavor = flavors.getByName(lib.flavor ?: flavors.first().name)
                 def buildType = buildTypes.getByName(lib.buildType ?: buildTypes.first().name)
-                def platform = platforms.getByName(lib.targetPlatform) as NativePlatform
+                def tPlatforms = []
+                if (lib.targetPlatforms != null && lib.targetPlatforms.size() > 0) {
+                    lib.targetPlatforms.each { String p ->
+                        tPlatforms << platforms.getByName(p) as NativePlatform
+                    }
+                } else {
+                    tPlatforms = [platforms.getByName(lib.targetPlatform) as NativePlatform]
+                }
 
                 if (lib.getMaven() != null) {
-                    def cfg = project.configurations.getByName("native_${libname}")
+                    def cfg = project.configurations.getByName("native_${binname}")
 
                     rootTree = project.zipTree(cfg.dependencies.collectMany { cfg.files(it) }.first())
                 } else if (lib.getFile().isDirectory()) {
@@ -79,10 +87,20 @@ class NativeDepsPlugin implements Plugin<Project> {
 
                 PreemptiveDirectoryFileCollection headerFiles = new PreemptiveDirectoryFileCollection(rootTree, lib.headerDirs)
 
-                prelibs.create(libname) { PrebuiltLibrary pl ->
-                    NativeLibBinary natLib = new NativeLibBinary(pl.name, headerFiles, staticFiles + sharedFiles, matchedLibs, lib.libraryNames ?: [], sharedFiles, platform, flavor, buildType)
-                    pl.binaries.add(natLib)
-                    pl.headers.srcDirs.addAll(headerFiles.preemptive)
+                def configClosure = { PrebuiltLibrary p ->
+                    tPlatforms.each { NativePlatform platform ->
+                        def suffix = tPlatforms.size() == 1 ? "" : "_${platform.name}"
+                        NativeLibBinary natLib = new NativeLibBinary(binname + suffix, headerFiles, staticFiles + sharedFiles, matchedLibs, lib.libraryNames ?: [], sharedFiles, platform, flavor, buildType)
+                        p.binaries.add(natLib)
+                    }
+                    p.headers.srcDirs.addAll(headerFiles.preemptive)
+                }
+
+                def pl = prelibs.findByName(libname)
+                if (pl == null) {
+                    prelibs.create(libname) { PrebuiltLibrary p -> configClosure.call(p) }
+                } else {
+                    pl.with(configClosure)
                 }
             }
 
@@ -97,22 +115,44 @@ class NativeDepsPlugin implements Plugin<Project> {
             List<SortUtils.TopoMember<CombinedNativeLib>> sorted = SortUtils.topoSort(unsorted)
             sorted.each { SortUtils.TopoMember<CombinedNativeLib> member ->
                 CombinedNativeLib lib = member.extra
+                def binname = lib.name
+                def libname = lib.mainLibraryName ?: lib.name
+
+                def tPlatforms = []
+                if (lib.targetPlatforms != null && lib.targetPlatforms.size() > 0) {
+                    lib.targetPlatforms.each { String p ->
+                        tPlatforms << platforms.getByName(p) as NativePlatform
+                    }
+                } else {
+                    tPlatforms = [platforms.getByName(lib.targetPlatform) as NativePlatform]
+                }
+
                 def libs = lib.libs.collect { prelibs.getByName(it) }
-                def binaries = libs.collect { it.binaries.first() as NativeLibBinary }
-                def headerFiles = binaries.collect { it.headerDirs }.inject { a, b -> a+b }
-                def linkerFiles = binaries.collect { it.linkerFiles }.inject { a, b -> a+b}
-                def matchedLibs = binaries.collect { it.matchedLibraries }.inject { a, b -> a+b }
-                def libNames = binaries.collect { it.libNames }.inject { a, b -> a+b }
-                def runtimeLibs = binaries.collect { it.runtimeLibraries }.inject { a, b -> a+b }
 
-                def flavor = flavors.getByName(lib.flavor ?: flavors.first().name)
-                def buildType = buildTypes.getByName(lib.buildType ?: buildTypes.first().name)
-                def platform = platforms.getByName(lib.targetPlatform) as NativePlatform
+                tPlatforms.each { NativePlatform platform ->
+                    def binaries = libs.collectMany { it.binaries.findAll { it.targetPlatform.name.equals(platform.name) && it instanceof NativeLibBinary }.asList() as List<NativeLibBinary > } as List<NativeLibBinary >
+                    def headerFiles = binaries.collect { it.headerDirs }.inject { a, b -> a+b }
+                    def linkerFiles = binaries.collect { it.linkerFiles }.inject { a, b -> a+b}
+                    def matchedLibs = binaries.collect { it.matchedLibraries }.inject { a, b -> a+b }
+                    def libNames = binaries.collect { it.libNames }.inject { a, b -> a+b }
+                    def runtimeLibs = binaries.collect { it.runtimeLibraries }.inject { a, b -> a+b }
 
-                prelibs.create(lib.name) { PrebuiltLibrary pl ->
-                    NativeLibBinary natLib = new NativeLibBinary(pl.name, headerFiles, linkerFiles, matchedLibs, libNames, runtimeLibs, platform, flavor, buildType)
-                    pl.binaries.add(natLib)
-                    libs.each { pl.headers.srcDirs.addAll(it.headers.srcDirs) }
+                    def flavor = flavors.getByName(lib.flavor ?: flavors.first().name)
+                    def buildType = buildTypes.getByName(lib.buildType ?: buildTypes.first().name)
+
+                    def configClosure = { PrebuiltLibrary p ->
+                        def suffix = tPlatforms.size() == 1 ? "" : "_${platform.name}"
+                        NativeLibBinary natLib = new NativeLibBinary(binname + suffix, headerFiles, linkerFiles, matchedLibs, libNames, runtimeLibs, platform, flavor, buildType)
+                        p.binaries.add(natLib)
+                        libs.each { p.headers.srcDirs.addAll(it.headers.srcDirs) }
+                    }
+
+                    def pl = prelibs.findByName(libname)
+                    if (pl == null) {
+                        prelibs.create(binname) { PrebuiltLibrary p -> configClosure.call(p) }
+                    } else {
+                        pl.with(configClosure)
+                    }
                 }
             }
         }
@@ -134,17 +174,19 @@ class NativeDepsPlugin implements Plugin<Project> {
                                     def nl = ll.binaries.first()
                                     if (nl instanceof NativeLibBinary) {
                                         def natLib = nl as NativeLibBinary
-                                        def args = natLib.linkerFiles.files.collect {
-                                            it.parentFile
-                                        }.unique().collectMany { file ->
-                                            ["-L", file.absolutePath]
-                                        }
+                                        if (natLib.targetPlatform.name.equals(bin.targetPlatform.name)) {
+                                            def args = natLib.linkerFiles.files.collect {
+                                                it.parentFile
+                                            }.unique().collectMany { file ->
+                                                ["-L", file.absolutePath]
+                                            }
 
-                                        args += natLib.libNames.collectMany { libName ->
-                                            ["-l", libName]
-                                        }
+                                            args += natLib.libNames.collectMany { libName ->
+                                                ["-l", libName]
+                                            }
 
-                                        bin.linker.args.addAll(args)
+                                            bin.linker.args.addAll(args)
+                                        }
                                     }
                                 }
                             }

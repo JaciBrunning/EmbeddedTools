@@ -9,14 +9,15 @@ interface NativeLib extends BaseLibSpec {
     void setHeaderDirs(List<String> dirs)
     List<String> getHeaderDirs()
 
+    // Static Libraries. Be careful, both static and shared libraries are linked
     void setStaticMatchers(List<String> matchers)
     List<String> getStaticMatchers()
 
-    // The shared matcher decides what libraries will be deployed
+    // Shared Libraries. Be careful, both static and shared libraries are linked
     void setSharedMatchers(List<String> matchers)
     List<String> getSharedMatchers()
 
-    // Library matchers determine what gets passed to the linker as a direct library
+    // Libraries that should be deployed + used at runtime (including install)
     void setLibraryMatchers(List<String> matchers)
     List<String> getLibraryMatchers()
 

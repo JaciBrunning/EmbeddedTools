@@ -10,5 +10,6 @@ class NativeLibraryArtifact extends FileCollectionArtifact {
     }
 
     String library = null
+    String targetPlatform = null
     List<String> matchers = []
 }
