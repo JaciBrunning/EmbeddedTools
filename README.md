@@ -126,8 +126,9 @@ model {
     }
 
     toolChains {
-        crossGcc(CrossGcc) {
-            target('crossArm') {
+        crossGcc(Gcc) {
+            setTargets('crossArm')
+            eachPlatform {
                 defineTools(it, "arm-prefix-", "-suffix")   // Defines tools for C, C++, Asm, Linkers and Archivers. Does not define Objective C
             }
         }
