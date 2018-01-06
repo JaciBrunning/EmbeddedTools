@@ -24,9 +24,19 @@ import java.util.concurrent.TimeUnit
 @CompileStatic
 class TargetDiscoveryTask extends DefaultTask {
 
+    private static class AddressStorage {
+        String address
+        String target
+
+        AddressStorage(String addr, String target) {
+            this.address = addr;
+            this.target = target;
+        }
+    }
+
     final WorkerExecutor workerExecutor
-    static WorkerStorage<RemoteTarget>  targetStorage  = WorkerStorage.obtain()
-    static WorkerStorage<String>        addressStorage = WorkerStorage.obtain()
+    static WorkerStorage<RemoteTarget>   targetStorage  = WorkerStorage.obtain()
+    static WorkerStorage<AddressStorage> addressStorage = WorkerStorage.obtain()
 
     DeployLogger            log
     SshSessionController    session
@@ -40,6 +50,10 @@ class TargetDiscoveryTask extends DefaultTask {
         this.workerExecutor = workerExecutor
     }
 
+    String targetFullName() {
+        return "${project}:${target.name}"
+    }
+
     @TaskAction
     void discoverTarget() {
         // Ask for password if needed
@@ -47,7 +61,7 @@ class TargetDiscoveryTask extends DefaultTask {
 
         if (EmbeddedTools.isDryRun(project)) {
             log.log("Dry Run! Using ${target.addresses.first()} for target ${target.name}")
-            addressStorage << target.addresses.first()
+            addressStorage << new AddressStorage(target.addresses.first(), targetFullName())
             context = new DryDeployContext(project, target, target.addresses.first(), log, target.directory)
             if (!EmbeddedTools.isInstantDryRun(project)) {
                 log.log("-> Simulating timeout delay ${target.timeout}s (disable with -Pdeploy-dry-instant)")
@@ -75,21 +89,18 @@ class TargetDiscoveryTask extends DefaultTask {
             assert target.user != null
             assert target.timeout > 0
 
-            // Just in case
-            addressStorage.clear()
-
             def index = targetStorage.put(target)
             target.addresses.each { String addr ->
                 // Submit some Workers on the Worker API to test addresses. This allows the task to run in parallel
                 workerExecutor.submit(DiscoverTargetWorker, ({ WorkerConfiguration config ->
                     config.isolationMode = IsolationMode.NONE
-                    config.params addr, index
+                    config.params addr, targetFullName(), index
                 } as Action))
             }
             // Wait for all workers to complete
             workerExecutor.await()
 
-            if (addressStorage.empty) {
+            if (addressStorage.findAll { it.target.equals(targetFullName()) }.empty) {
                 if (target.failOnMissing)
                     throw new TargetNotFoundException("Target ${target.name} could not be located! Failing as ${target.name}.failOnMissing is true.")
                 else
@@ -97,28 +108,30 @@ class TargetDiscoveryTask extends DefaultTask {
             } else {
                 log.log("Using address ${activeAddress()} for target ${target.name}")
 
-                session = new SshSessionController(activeAddress(), target.user, target.password, target.timeout)
-                context = new DefaultDeployContext(project, target, activeAddress(), log, session, target.directory)
+                session = new SshSessionController(activeAddress().address, target.user, target.password, target.timeout)
+                context = new DefaultDeployContext(project, target, activeAddress().address, log, session, target.directory)
             }
         }
     }
 
     boolean isTargetActive() {
-        return !addressStorage.empty
+        return !addressStorage.findAll { it.target.equals(targetFullName()) }.empty
     }
 
-    String activeAddress() {
-        return addressStorage.sort { String addr -> target.addresses.indexOf(addr) }.first()        // Order based on what order addresses registered
+    AddressStorage activeAddress() {
+        return addressStorage.findAll { it.target.equals(targetFullName()) }.sort { AddressStorage addrStor -> target.addresses.indexOf(addrStor.address) }.first()        // Order based on what order addresses registered
     }
 
     static class DiscoverTargetWorker implements Runnable {
         String host
+        String fullTargetName
         int index
 
         @Inject
-        DiscoverTargetWorker(String host, Integer index) {
+        DiscoverTargetWorker(String host, String fullTargetName, Integer index) {
             this.index = index
             this.host = host
+            this.fullTargetName = fullTargetName
         }
 
         @Override
@@ -145,7 +158,7 @@ class TargetDiscoveryTask extends DefaultTask {
                         def session = new SshSessionController(host, target.user, target.password, target.timeout)
                         log.info("Found ${host}! (${originalHost})")
                         session.disconnect()
-                        addressStorage.push(host)
+                        addressStorage.push(new AddressStorage(host, fullTargetName))
                         target.latch.countDown()
                     } catch (InterruptedException e) {
                         log.debug("${host} discovery thread interrupted")
