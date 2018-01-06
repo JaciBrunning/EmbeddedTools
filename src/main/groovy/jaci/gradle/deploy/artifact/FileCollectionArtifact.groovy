@@ -16,6 +16,6 @@ class FileCollectionArtifact extends ArtifactBase implements Cacheable {
 
     @Override
     void deploy(Project project, DeployContext ctx) {
-        ctx.put(files.files, cache)
+        if (files != null) ctx.put(files.files, cache)
     }
 }
