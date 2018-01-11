@@ -106,7 +106,7 @@ class TargetDiscoveryTask extends DefaultTask {
                 else
                     log.log("Target ${target.name} could not be located! Skipping target as ${target.name}.failOnMissing is false.")
             } else {
-                log.log("Using address ${activeAddress()} for target ${target.name}")
+                log.log("Using address ${activeAddress().address} for target ${target.name}")
 
                 session = new SshSessionController(activeAddress().address, target.user, target.password, target.timeout)
                 context = new DefaultDeployContext(project, target, activeAddress().address, log, session, target.directory)
