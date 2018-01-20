@@ -50,10 +50,10 @@ deploy {
         directory = 'mydir'                     // Subdirectory to use. Relative to target directory
         targets << 'myTarget'                   // Targets to deploy to
 
-        precheck = { execute 'pwd' }            // Closure to execute before onlyIf
+        precheck << { execute 'pwd' }            // Closure to execute before onlyIf
         onlyIf = { execute 'echo Hi' == 'Hi' }  // Check closure for artifact. Will not deploy if evaluates to false
-        predeploy = { execute 'echo Pre' }      // After onlyIf, but before deploy logic
-        postdeploy = { execute 'echo Post' }    // After this artifact's deploy logic
+        predeploy << { execute 'echo Pre' }      // After onlyIf, but before deploy logic
+        postdeploy << { execute 'echo Post' }    // After this artifact's deploy logic
 
         after('someOtherArtifact')              // Make this artifact depend on another artifact
         dependsOn('someTask')                   // Make this artifact depend on a task
