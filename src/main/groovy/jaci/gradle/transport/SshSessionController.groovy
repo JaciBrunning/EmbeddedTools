@@ -13,7 +13,10 @@ class SshSessionController {
     Session session
 
     SshSessionController(String host, String user, String password, int timeout) {
-        session = EmbeddedTools.jsch.getSession(user, host, 22)
+        def splitHost = host.split(":")
+        def hostname = splitHost[0]
+        def port = splitHost.length > 1 ? Integer.parseInt(splitHost[1]) : 22
+        session = EmbeddedTools.jsch.getSession(user, host, port)
         session.setPassword(password)
 
         Properties config = new Properties();
