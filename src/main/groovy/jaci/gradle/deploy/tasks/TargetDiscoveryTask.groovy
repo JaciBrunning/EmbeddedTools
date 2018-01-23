@@ -142,11 +142,14 @@ class TargetDiscoveryTask extends DefaultTask {
                 def thread = new Thread({
                     try {
                         log.debug("Trying address ${host}")
+                        def splitHost = host.split(":")
+                        def hostname = splitHost[0]
+
                         String originalHost = host
                         boolean updated = false
-                        for (InetAddress addr : InetAddress.getAllByName(host)) {
+                        for (InetAddress addr : InetAddress.getAllByName(hostname)) {
                             if (!addr.isMulticastAddress() && (target.ipv6 || addr instanceof Inet4Address)) {
-                                log.info("Resolved ${host} -> ${addr.getHostAddress()}")
+                                log.info("Resolved ${hostname} -> ${addr.getHostAddress()}")
                                 host = addr.getHostAddress()
                                 updated = true
                                 break;
