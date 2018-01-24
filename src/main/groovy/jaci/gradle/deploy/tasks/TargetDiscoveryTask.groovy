@@ -26,10 +26,12 @@ class TargetDiscoveryTask extends DefaultTask {
 
     private static class AddressStorage {
         String address
+        int port
         String target
 
-        AddressStorage(String addr, String target) {
+        AddressStorage(String addr, int port, String target) {
             this.address = addr;
+            this.port = port
             this.target = target;
         }
     }
@@ -61,7 +63,7 @@ class TargetDiscoveryTask extends DefaultTask {
 
         if (EmbeddedTools.isDryRun(project)) {
             log.log("Dry Run! Using ${target.addresses.first()} for target ${target.name}")
-            addressStorage << new AddressStorage(target.addresses.first(), targetFullName())
+            addressStorage << new AddressStorage(target.addresses.first(), 22, targetFullName())
             context = new DryDeployContext(project, target, target.addresses.first(), log, target.directory)
             if (!EmbeddedTools.isInstantDryRun(project)) {
                 log.log("-> Simulating timeout delay ${target.timeout}s (disable with -Pdeploy-dry-instant)")
@@ -106,9 +108,9 @@ class TargetDiscoveryTask extends DefaultTask {
                 else
                     log.log("Target ${target.name} could not be located! Skipping target as ${target.name}.failOnMissing is false.")
             } else {
-                log.log("Using address ${activeAddress().address} for target ${target.name}")
+                log.log("Using address ${activeAddress().address}:${activeAddress().port} for target ${target.name}")
 
-                session = new SshSessionController(activeAddress().address, target.user, target.password, target.timeout)
+                session = new SshSessionController(activeAddress().address, activeAddress().port, target.user, target.password, target.timeout)
                 context = new DefaultDeployContext(project, target, activeAddress().address, log, session, target.directory)
             }
         }
@@ -144,6 +146,7 @@ class TargetDiscoveryTask extends DefaultTask {
                         log.debug("Trying address ${host}")
                         def splitHost = host.split(":")
                         def hostname = splitHost[0]
+                        def port = splitHost.length > 1 ? Integer.parseInt(splitHost[1]) : 22
 
                         String originalHost = host
                         boolean updated = false
@@ -158,10 +161,11 @@ class TargetDiscoveryTask extends DefaultTask {
                         if (!updated) {
                             log.debug("No resolution, using raw host address ${host}")
                         }
-                        def session = new SshSessionController(host, target.user, target.password, target.timeout)
+                        log.debug("Using HOST=${host} PORT=${port}")
+                        def session = new SshSessionController(host, port, target.user, target.password, target.timeout)
                         log.info("Found ${host}! (${originalHost})")
                         session.disconnect()
-                        addressStorage.push(new AddressStorage(host, fullTargetName))
+                        addressStorage.push(new AddressStorage(host, port, fullTargetName))
                         target.latch.countDown()
                     } catch (InterruptedException e) {
                         log.debug("${host} discovery thread interrupted")
