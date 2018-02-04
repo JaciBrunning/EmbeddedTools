@@ -178,7 +178,9 @@ class NativeDepsPlugin implements Plugin<Project> {
                                             def args = natLib.linkerFiles.files.collect {
                                                 it.parentFile
                                             }.unique().collectMany { file ->
-                                                ["-L", file.absolutePath]
+                                                nl.targetPlatform.operatingSystem.windows ?
+                                                        [ "/LIBPATH:${file.absolutePath}".toString() ]
+                                                        : ["-L", file.absolutePath]
                                             }
 
                                             args += natLib.libNames.collectMany { libName ->
