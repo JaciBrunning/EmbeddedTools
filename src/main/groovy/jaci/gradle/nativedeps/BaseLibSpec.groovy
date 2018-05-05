@@ -8,10 +8,10 @@ import org.gradle.model.Managed
 @CompileStatic
 interface BaseLibSpec extends Named {
     // Overrides the 'named' status for this object.
-    // This doesn't have to be unique, in the case it is not,
-    // it will be added to an existing PrebuiltLibrary
-    void setMainLibraryName(String libraryName)
-    String getMainLibraryName()
+    // This is primarily used for cases where there are more
+    // than one version of a library, for different platforms
+    void setLibraryName(String libraryName)
+    String getLibraryName()
 
     void setTargetPlatform(String platforms)
     String getTargetPlatform()

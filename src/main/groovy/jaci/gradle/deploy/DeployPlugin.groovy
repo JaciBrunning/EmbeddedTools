@@ -3,19 +3,14 @@ package jaci.gradle.deploy
 import groovy.transform.CompileStatic
 import jaci.gradle.deploy.artifact.ArtifactBase
 import jaci.gradle.deploy.artifact.NativeArtifact
-import jaci.gradle.deploy.artifact.NativeLibraryArtifact
-import jaci.gradle.nativedeps.NativeLibBinary
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.Task
-import org.gradle.api.file.FileCollection
-import org.gradle.api.file.FileTree
 import org.gradle.api.plugins.ExtensionContainer
-import org.gradle.api.tasks.util.PatternFilterable
 import org.gradle.model.ModelMap
 import org.gradle.model.Mutate
 import org.gradle.model.RuleSource
-import org.gradle.nativeplatform.*
+import org.gradle.nativeplatform.NativeBinarySpec
 import org.gradle.nativeplatform.tasks.AbstractLinkTask
 import org.gradle.platform.base.BinaryContainer
 
@@ -29,7 +24,7 @@ class DeployPlugin implements Plugin<Project> {
 
     static class DeployRules extends RuleSource {
         @Mutate
-        void createBinariesTasks(final ModelMap<Task> tasks, final Repositories repos, final ExtensionContainer ext, final BinaryContainer binaries) {
+        void createBinariesTasks(final ModelMap<Task> tasks, final ExtensionContainer ext, final BinaryContainer binaries) {
             ext.getByType(DeployExtension).artifacts.each { ArtifactBase artifact ->
                 if (artifact instanceof NativeArtifact) {
                     NativeArtifact na = artifact as NativeArtifact
@@ -40,23 +35,6 @@ class DeployPlugin implements Plugin<Project> {
                             if (spec.component.name == na.component && spec.targetPlatform.name == na.targetPlatform) {
                                 spec.tasks.withType(AbstractLinkTask) { AbstractLinkTask task ->
                                     na.dependsOn(task)
-                                }
-                            }
-                        }
-                    }
-                } else if (artifact instanceof NativeLibraryArtifact) {
-                    NativeLibraryArtifact nla = artifact as NativeLibraryArtifact
-                    repos.withType(PrebuiltLibraries).all { PrebuiltLibraries repo ->
-                        repo.matching { PrebuiltLibrary pl -> pl.name == nla.library }.all { PrebuiltLibrary pl ->
-                            pl.binaries.all { NativeLibraryBinary bin ->
-                                if (nla.targetPlatform == null || bin.targetPlatform.name.equalsIgnoreCase(nla.targetPlatform)) {
-                                    FileCollection sharedLibs = (bin instanceof NativeLibBinary) ? (bin as NativeLibBinary).runtimeLibraries : bin.runtimeFiles
-                                    FileTree deployedFileTree = sharedLibs.asFileTree
-                                    if (nla.matchers != null && !nla.matchers.empty) {
-                                        deployedFileTree = deployedFileTree.matching { PatternFilterable pat -> pat.include(nla.matchers) }
-                                    }
-
-                                    nla.files = deployedFileTree
                                 }
                             }
                         }

@@ -85,29 +85,29 @@ model {
     libraries {
         wpilibc(NativeLib) {
             maven "edu.wpi.first.wpilibc:athena:2017.3.1"
-            libraryNames = ['wpi']
+            systemLibs = ['wpi']
         }
         hal(NativeLib) {
             maven "edu.wpi.first.wpilib:hal:2017.3.1"
-            libraryMatchers = ["**/libHALAthena.so"]
+            dynamicMatchers = ["**/libHALAthena.so"]
         }
         ntcore(NativeLib) {
             maven "edu.wpi.first.wpilib.networktables.cpp:NetworkTables:3.1.7:arm@zip"
-            libraryMatchers = ["**/libntcore.so"]
+            dynamicMatchers = ["**/libntcore.so"]
         }
         wpiutil(NativeLib) {
             maven "edu.wpi.first.wpilib:wpiutil:1.0.2:arm@zip"
-            libraryMatchers = ["**/libwpiutil.so"]
+            dynamicMatchers = ["**/libwpiutil.so"]
         }
         cscore(NativeLib) {
             maven "edu.wpi.cscore.java:cscore:1.0.2:athena-uberzip@zip"
-            libraryMatchers = ["**/libopencv*.so.3.1", "**/libcscore.so"]
+            dynamicMatchers = ["**/libopencv*.so.3.1", "**/libcscore.so"]
         }
 
-        wpilib(CombinedNativeLib) {
-            targetPlatform = 'roborio'
-            libs << "wpilibc" << "hal" << "ntcore" << "wpiutil" << "cscore"
-        }
+//        wpilib(CombinedNativeLib) {
+//            targetPlatform = 'roborio'
+//            libs << "wpilibc" << "hal" << "ntcore" << "wpiutil" << "cscore"
+//        }
 
         withType(NativeLib) {
             targetPlatform = 'roborio'
@@ -134,10 +134,10 @@ model {
             setTargets('roborio')
             eachPlatform {
                 defineTools(it, "arm-frc-linux-gnueabi-", '')
-                cppCompiler.withArguments { a -> a << '-std=c++11' }
-                linker.withArguments { a -> a << '-std=c++11' }
+                cppCompiler.withArguments { a -> a << '-std=c++11' << '--sysroot' << '' }
+                linker.withArguments { a -> a << '-std=c++11' << '--sysroot' << '' }
             }
-            path '/Users/jaci/.gradle/gradlerio/toolchains/bin'
+            path ''
         }
         gcc(Gcc) { }
         visualCpp(VisualCpp) { }
@@ -155,19 +155,16 @@ model {
             }
         }
         my_program(NativeExecutableSpec) {
-            // targetPlatform "roborio"
+            targetPlatform "roborio"
 
             sources.cpp {
+                println it.class
                 source.srcDirs "src_c"
-                lib library: "wpilib"
+//                lib library: "wpilib"
             }
-        }
-    }
-}
 
-task testMe() {
-    doLast {
-        println project.tasks.jar.class.superclass
+            useLibrary(it, "wpilibc", "hal", "ntcore", "wpiutil", "cscore")
+        }
     }
 }
 
@@ -176,5 +173,5 @@ jar {
 }
 
 task wrapper(type: Wrapper) {
-    gradleVersion = '4.4'
+    gradleVersion = '4.7'
 }

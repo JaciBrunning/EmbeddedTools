@@ -9,21 +9,25 @@ interface NativeLib extends BaseLibSpec {
     void setHeaderDirs(List<String> dirs)
     List<String> getHeaderDirs()
 
-    // Static Libraries. Be careful, both static and shared libraries are linked
+    void setSourceDirs(List<String> dirs)
+    List<String> getSourceDirs()
+
+    // Static Libraries to be linked during compile time
     void setStaticMatchers(List<String> matchers)
     List<String> getStaticMatchers()
 
-    // Shared Libraries. Be careful, both static and shared libraries are linked
+    // Shared Libraries to be linked during compile time
     void setSharedMatchers(List<String> matchers)
     List<String> getSharedMatchers()
 
-    // Libraries that should be deployed + used at runtime (including install)
-    void setLibraryMatchers(List<String> matchers)
-    List<String> getLibraryMatchers()
+    // Libraries that aren't linked during compile time, but still necessary for the
+    // program to run (loose dynamic deps)
+    void setDynamicMatchers(List<String> matchers)
+    List<String> getDynamicMatchers()
 
     // Library names determine what gets sent to the linker as a -l flag (good for system libraries / grouped .so)
-    void setLibraryNames(List<String> libnames)
-    List<String> getLibraryNames()
+    void setSystemLibs(List<String> libnames)
+    List<String> getSystemLibs()
 
     void setMaven(String dependencyNotation)
     String getMaven()

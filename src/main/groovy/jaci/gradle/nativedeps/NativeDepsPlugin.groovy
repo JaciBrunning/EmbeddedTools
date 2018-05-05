@@ -1,5 +1,6 @@
 package jaci.gradle.nativedeps
 
+import groovy.transform.CompileStatic
 import jaci.gradle.EmbeddedTools
 import jaci.gradle.SortUtils
 import org.gradle.api.Plugin
@@ -7,18 +8,29 @@ import org.gradle.api.Project
 import org.gradle.api.Task
 import org.gradle.api.file.FileTree
 import org.gradle.api.plugins.ExtensionContainer
-import org.gradle.language.nativeplatform.DependentSourceSet
+import org.gradle.api.tasks.util.PatternFilterable
 import org.gradle.model.*
 import org.gradle.nativeplatform.*
 import org.gradle.nativeplatform.platform.NativePlatform
-import org.gradle.nativeplatform.tasks.AbstractLinkTask
 import org.gradle.platform.base.BinaryTasks
 import org.gradle.platform.base.PlatformContainer
 
+@CompileStatic
 class NativeDepsPlugin implements Plugin<Project> {
 
     @Override
-    void apply(Project project) { }
+    void apply(Project project) {
+        DependencySpecExtension dse = project.extensions.create("ETDependencySpecs", DependencySpecExtension, project)
+
+        project.extensions.add("useLibrary", { TargetedNativeComponent component, String... names ->
+            component.binaries.withType(NativeBinarySpec).all { NativeBinarySpec bin ->
+                names.each { String name ->
+                    DelegatedDependencySet set = new DelegatedDependencySet(project, name, bin)
+                    bin.lib(set)
+                }
+            }
+        })
+    }
 
     static class NativeDepsRules extends RuleSource {
         @Model("libraries")
@@ -50,21 +62,20 @@ class NativeDepsPlugin implements Plugin<Project> {
             // Add the library bindings, so we can access them from the native component configuration.
             // This must be different from addMavenDeps since by now, the dependencies of the project are 'locked'
             // and set as read-only.
-
-            PrebuiltLibraries prelibs = repos.maybeCreate('embeddedTools', PrebuiltLibraries)
             Project project = extensions.getByType(EmbeddedTools.ProjectWrapper).project
+            DependencySpecExtension dse = extensions.getByType(DependencySpecExtension)
 
             spec.withType(NativeLib).each { lib ->
                 def binname = lib.name
-                def libname = lib.mainLibraryName ?: lib.name
-                FileTree rootTree, sharedFiles, staticFiles, matchedLibs
+                def libname = lib.libraryName ?: lib.name
+                FileTree rootTree, sharedFiles, staticFiles, dynamicFiles
 
-                def flavor = flavors.getByName(lib.flavor ?: flavors.first().name)
-                def buildType = buildTypes.getByName(lib.buildType ?: buildTypes.first().name)
-                def tPlatforms = []
+                def flavor = lib.flavor == null ? null as Flavor : flavors.findByName(lib.flavor)
+                def buildType = lib.buildType == null ? null as BuildType : buildTypes.findByName(lib.buildType)
+                def tPlatforms = [] as List<NativePlatform>
                 if (lib.targetPlatforms != null && lib.targetPlatforms.size() > 0) {
                     lib.targetPlatforms.each { String p ->
-                        tPlatforms << platforms.getByName(p) as NativePlatform
+                        tPlatforms.add(platforms.getByName(p) as NativePlatform)
                     }
                 } else {
                     tPlatforms = [platforms.getByName(lib.targetPlatform) as NativePlatform]
@@ -73,7 +84,7 @@ class NativeDepsPlugin implements Plugin<Project> {
                 if (lib.getMaven() != null) {
                     def cfg = project.configurations.getByName("native_${binname}")
 
-                    rootTree = project.zipTree(cfg.dependencies.collectMany { cfg.files(it) }.first())
+                    rootTree = project.zipTree(cfg.dependencies.collectMany { cfg.files(it) as Collection }.first())
                 } else if (lib.getFile().isDirectory()) {
                     rootTree = project.fileTree(lib.getFile())
                 } else {
@@ -81,27 +92,28 @@ class NativeDepsPlugin implements Plugin<Project> {
                     rootTree = project.zipTree(lib.getFile())
                 }
 
-                sharedFiles = rootTree.matching { pat -> pat.include(lib.sharedMatchers  ?: ['<<EMBEDDEDTOOLS_NOMATCH>>']) }
-                staticFiles = rootTree.matching { pat -> pat.include(lib.staticMatchers  ?: ['<<EMBEDDEDTOOLS_NOMATCH>>']) }
-                matchedLibs = rootTree.matching { pat -> pat.include(lib.libraryMatchers ?: ['<<EMBEDDEDTOOLS_NOMATCH>>']) }
+                sharedFiles = rootTree.matching { PatternFilterable pat -> pat.include(lib.sharedMatchers  ?: ['<<EMBEDDEDTOOLS_NOMATCH>>']) }
+                staticFiles = rootTree.matching { PatternFilterable pat -> pat.include(lib.staticMatchers  ?: ['<<EMBEDDEDTOOLS_NOMATCH>>']) }
+                dynamicFiles = rootTree.matching { PatternFilterable pat -> pat.include(lib.dynamicMatchers ?: ['<<EMBEDDEDTOOLS_NOMATCH>>']) }
 
                 PreemptiveDirectoryFileCollection headerFiles = new PreemptiveDirectoryFileCollection(rootTree, lib.headerDirs)
 
-                def configClosure = { PrebuiltLibrary p ->
-                    tPlatforms.each { NativePlatform platform ->
-                        def suffix = tPlatforms.size() == 1 ? "" : "_${platform.name}"
-                        NativeLibBinary natLib = new NativeLibBinary(binname + suffix, headerFiles, staticFiles + sharedFiles, matchedLibs, lib.libraryNames ?: [], sharedFiles, platform, flavor, buildType)
-                        p.binaries.add(natLib)
-                    }
-                    p.headers.srcDirs.addAll(headerFiles.preemptive)
+                tPlatforms.each { NativePlatform platform ->
+                    ETNativeDepSet depSet = new ETNativeDepSet(
+                        project,
+                        libname,
+                        headerFiles,
+                        staticFiles,
+                        sharedFiles,
+                        dynamicFiles,
+                        lib.systemLibs ?: [] as List<String>,
+                        platform,
+                        flavor,
+                        buildType
+                    )
+                    dse.sets.add(depSet)
                 }
-
-                def pl = prelibs.findByName(libname)
-                if (pl == null) {
-                    prelibs.create(libname) { PrebuiltLibrary p -> configClosure.call(p) }
-                } else {
-                    pl.with(configClosure)
-                }
+                null
             }
 
             List<SortUtils.TopoMember<CombinedNativeLib>> unsorted = []
@@ -112,88 +124,56 @@ class NativeDepsPlugin implements Plugin<Project> {
                 member.extra = lib
                 unsorted << member
             }
+
             List<SortUtils.TopoMember<CombinedNativeLib>> sorted = SortUtils.topoSort(unsorted)
             sorted.each { SortUtils.TopoMember<CombinedNativeLib> member ->
                 CombinedNativeLib lib = member.extra
-                def binname = lib.name
-                def libname = lib.mainLibraryName ?: lib.name
+                def libname = lib.libraryName ?: lib.name
 
-                def tPlatforms = []
+                def flavor = lib.flavor == null ? null as Flavor : flavors.findByName(lib.flavor)
+                def buildType = lib.buildType == null ? null as BuildType : buildTypes.findByName(lib.buildType)
+                def tPlatforms = [] as List<NativePlatform>
                 if (lib.targetPlatforms != null && lib.targetPlatforms.size() > 0) {
                     lib.targetPlatforms.each { String p ->
-                        tPlatforms << platforms.getByName(p) as NativePlatform
+                        tPlatforms.add(platforms.getByName(p) as NativePlatform)
                     }
                 } else {
                     tPlatforms = [platforms.getByName(lib.targetPlatform) as NativePlatform]
                 }
 
-                def libs = lib.libs.collect { prelibs.getByName(it) }
-
                 tPlatforms.each { NativePlatform platform ->
-                    def binaries = libs.collectMany { it.binaries.findAll { it.targetPlatform.name.equals(platform.name) && it instanceof NativeLibBinary }.asList() as List<NativeLibBinary > } as List<NativeLibBinary >
-                    def headerFiles = binaries.collect { it.headerDirs }.inject { a, b -> a+b }
-                    def linkerFiles = binaries.collect { it.linkerFiles }.inject { a, b -> a+b}
-                    def matchedLibs = binaries.collect { it.matchedLibraries }.inject { a, b -> a+b }
-                    def libNames = binaries.collect { it.libNames }.inject { a, b -> a+b }
-                    def runtimeLibs = binaries.collect { it.runtimeLibraries }.inject { a, b -> a+b }
+                    def libs = lib.libs.collect { dse.find(it, flavor, buildType, platform) }
+                    def headers = libs.collect { it.headers }.inject { a, b -> a+b }
+                    def staticFiles = libs.collect { it.staticLibs }.inject { a, b -> a+b }
+                    def sharedFiles = libs.collect { it.sharedLibs }.inject { a, b -> a+b }
+                    def dynamicFiles = libs.collect { it.dynamicLibs }.inject { a, b -> a+b }
+                    def systemLibs = libs.collectMany { it.systemLibs as Collection } as List<String>
 
-                    def flavor = flavors.getByName(lib.flavor ?: flavors.first().name)
-                    def buildType = buildTypes.getByName(lib.buildType ?: buildTypes.first().name)
-
-                    def configClosure = { PrebuiltLibrary p ->
-                        def suffix = tPlatforms.size() == 1 ? "" : "_${platform.name}"
-                        NativeLibBinary natLib = new NativeLibBinary(binname + suffix, headerFiles, linkerFiles, matchedLibs, libNames, runtimeLibs, platform, flavor, buildType)
-                        p.binaries.add(natLib)
-                        libs.each { p.headers.srcDirs.addAll(it.headers.srcDirs) }
-                    }
-
-                    def pl = prelibs.findByName(libname)
-                    if (pl == null) {
-                        prelibs.create(binname) { PrebuiltLibrary p -> configClosure.call(p) }
-                    } else {
-                        pl.with(configClosure)
-                    }
+                    ETNativeDepSet depSet = new ETNativeDepSet(
+                        project,
+                        libname,
+                        headers,
+                        staticFiles,
+                        sharedFiles,
+                        dynamicFiles,
+                        systemLibs,
+                        platform,
+                        flavor,
+                        buildType
+                    )
+                    dse.sets.add(depSet)
                 }
             }
         }
 
         @BinaryTasks
         void addLinkerArgs(ModelMap<Task> tasks, final Repositories repos, final NativeBinarySpec bin) {
-            // Add the linker args (-L) for those that have been configured as such. This has to be done here
-            // since we're interacting with the binary linking tasks, and as such, the repositories and libraries
-            // must be locked to read only by now, else we get a cyclic dependency
-            bin.inputs.withType(DependentSourceSet) { ss ->
-                ss.libs.each { lss ->
-                    if (lss instanceof LinkedHashMap) {
-                        def lib = lss['library'] as String
-                        tasks.withType(AbstractLinkTask) { task ->
-                            task.doFirst() {
-                                def repo = repos.getByName('embeddedTools') as PrebuiltLibraries
-                                def ll = repo.findByName(lib)
-                                if (ll != null) {
-                                    def nl = ll.binaries.first()
-                                    if (nl instanceof NativeLibBinary) {
-                                        def natLib = nl as NativeLibBinary
-                                        if (natLib.targetPlatform.name.equals(bin.targetPlatform.name)) {
-                                            def args = natLib.linkerFiles.files.collect {
-                                                it.parentFile
-                                            }.unique().collectMany { file ->
-                                                nl.targetPlatform.operatingSystem.windows ?
-                                                        [ "/LIBPATH:${file.absolutePath}".toString() ]
-                                                        : ["-L", file.absolutePath]
-                                            }
-
-                                            args += natLib.libNames.collectMany { libName ->
-                                                ["-l", libName]
-                                            }
-
-                                            bin.linker.args.addAll(args)
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
+            bin.libs.each { NativeDependencySet set ->
+                if (set instanceof ETNativeDepSet) {
+                    def etnds = set as ETNativeDepSet
+                    bin.linker.args.addAll(etnds.getSystemLibs().collectMany { name ->
+                        [ "-l", name ]
+                    })
                 }
             }
         }
