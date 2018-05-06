@@ -20,7 +20,7 @@ class DelegatedDependencySet implements NativeDependencySet {
     }
 
     // TODO: Error message on missing, FileCollection functions below will throw NPE currently
-    NativeDependencySet get() {
+    ETNativeDepSet get() {
         return project.extensions.getByType(DependencySpecExtension).find(name, binary)
     }
 
@@ -37,5 +37,9 @@ class DelegatedDependencySet implements NativeDependencySet {
     @Override
     FileCollection getRuntimeFiles() {
         return get().getRuntimeFiles()
+    }
+
+    FileCollection getSourceFiles() {
+        return get().getSources()
     }
 }

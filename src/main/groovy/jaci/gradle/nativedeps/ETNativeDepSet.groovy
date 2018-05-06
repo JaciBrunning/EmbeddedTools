@@ -13,19 +13,21 @@ public class ETNativeDepSet implements NativeDependencySet {
 
     Project         project
     String          name
-    FileCollection  headers, staticLibs, sharedLibs, dynamicLibs
+    FileCollection  headers, sources, staticLibs, sharedLibs, dynamicLibs
     List<String>    systemLibs
     NativePlatform  targetPlatform
     Flavor          flavor
     BuildType       buildType
 
-    public ETNativeDepSet(Project project, String name, FileCollection headers,
+    public ETNativeDepSet(Project project, String name,
+                          FileCollection headers, FileCollection sources,
                           FileCollection staticLibs, FileCollection sharedLibs,
                           FileCollection dynamicLibs, List<String> systemLibs,
                           NativePlatform targetPlatform, Flavor flavor, BuildType buildType) {
         this.project = project
         this.name = name
         this.headers = headers
+        this.sources = sources
         this.staticLibs = staticLibs
         this.sharedLibs = sharedLibs
         this.dynamicLibs = dynamicLibs
@@ -47,7 +49,7 @@ public class ETNativeDepSet implements NativeDependencySet {
 
     @Override
     FileCollection getRuntimeFiles() {
-        return dynamicLibs // TODO: hmm?
+        return dynamicLibs
     }
 
     boolean appliesTo(Flavor flav, BuildType btype, NativePlatform plat) {

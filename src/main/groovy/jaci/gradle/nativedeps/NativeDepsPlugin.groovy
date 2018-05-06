@@ -96,13 +96,15 @@ class NativeDepsPlugin implements Plugin<Project> {
                 staticFiles = rootTree.matching { PatternFilterable pat -> pat.include(lib.staticMatchers  ?: ['<<EMBEDDEDTOOLS_NOMATCH>>']) }
                 dynamicFiles = rootTree.matching { PatternFilterable pat -> pat.include(lib.dynamicMatchers ?: ['<<EMBEDDEDTOOLS_NOMATCH>>']) }
 
-                PreemptiveDirectoryFileCollection headerFiles = new PreemptiveDirectoryFileCollection(rootTree, lib.headerDirs)
+                def headerFiles = new PreemptiveDirectoryFileCollection(rootTree, lib.headerDirs ?: [] as List<String>)
+                def sourceFiles = new PreemptiveDirectoryFileCollection(rootTree, lib.sourceDirs ?: [] as List<String>)
 
                 tPlatforms.each { NativePlatform platform ->
                     ETNativeDepSet depSet = new ETNativeDepSet(
                         project,
                         libname,
                         headerFiles,
+                        sourceFiles,
                         staticFiles,
                         sharedFiles,
                         dynamicFiles,
@@ -144,6 +146,7 @@ class NativeDepsPlugin implements Plugin<Project> {
                 tPlatforms.each { NativePlatform platform ->
                     def libs = lib.libs.collect { dse.find(it, flavor, buildType, platform) }
                     def headers = libs.collect { it.headers }.inject { a, b -> a+b }
+                    def sources = libs.collect { it.sources }.inject { a, b -> a+b }
                     def staticFiles = libs.collect { it.staticLibs }.inject { a, b -> a+b }
                     def sharedFiles = libs.collect { it.sharedLibs }.inject { a, b -> a+b }
                     def dynamicFiles = libs.collect { it.dynamicLibs }.inject { a, b -> a+b }
@@ -153,6 +156,7 @@ class NativeDepsPlugin implements Plugin<Project> {
                         project,
                         libname,
                         headers,
+                        sources,
                         staticFiles,
                         sharedFiles,
                         dynamicFiles,
