@@ -1,6 +1,7 @@
 package jaci.gradle.deploy
 
 import groovy.transform.CompileStatic
+import jaci.gradle.deploy.target.RemoteTarget
 import org.gradle.api.Project
 
 @CompileStatic
@@ -13,6 +14,9 @@ interface DeployContext {
 
     // Get the working directory
     String workingDir()
+
+    // Get the target
+    RemoteTarget remoteTarget()
 
     // Get the project
     Project project()

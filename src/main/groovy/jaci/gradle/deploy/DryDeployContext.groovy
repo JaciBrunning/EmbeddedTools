@@ -37,6 +37,11 @@ class DryDeployContext implements DeployContext {
     }
 
     @Override
+    RemoteTarget remoteTarget() {
+        return target
+    }
+
+    @Override
     Project project() {
         return project
     }
