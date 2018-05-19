@@ -24,7 +24,9 @@ class NativeArtifact extends ArtifactBase implements Cacheable {
 
     @Override
     void deploy(Project project, DeployContext ctx) {
-        _nativefile = taskDependencies.findAll { it instanceof AbstractLinkTask }.collect { Task t -> t.outputs.files.files.first() }.first()
+        _nativefile = taskDependencies.findAll { it instanceof AbstractLinkTask }.collect { Task t ->
+            t.outputs.files.files.findAll { File f -> f.isFile() }.first()
+        }.first()
         ctx.put(_nativefile, (filename == null ? _nativefile.name : filename), cache)
     }
 }
