@@ -12,6 +12,7 @@ import jaci.gradle.transport.SshSessionController
 import org.gradle.api.Action
 import org.gradle.api.DefaultTask
 import org.gradle.api.tasks.Input
+import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.TaskAction
 import org.gradle.workers.IsolationMode
 import org.gradle.workers.WorkerConfiguration
@@ -36,12 +37,16 @@ class TargetDiscoveryTask extends DefaultTask {
         }
     }
 
+    @Internal
     final WorkerExecutor workerExecutor
     static WorkerStorage<RemoteTarget>   targetStorage  = WorkerStorage.obtain()
     static WorkerStorage<AddressStorage> addressStorage = WorkerStorage.obtain()
 
+    @Internal
     DeployLogger            log
+    @Internal
     SshSessionController    session
+    @Internal
     DeployContext           context
 
     @Input
@@ -116,6 +121,7 @@ class TargetDiscoveryTask extends DefaultTask {
         }
     }
 
+    @Internal
     boolean isTargetActive() {
         return !addressStorage.findAll { it.target.equals(targetFullName()) }.empty
     }

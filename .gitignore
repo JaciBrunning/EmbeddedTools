@@ -10,3 +10,7 @@ server_script/tmp/
 .vscode
 .DS_Store
 out
+bin/
+.settings/
+.project
+.classpath
