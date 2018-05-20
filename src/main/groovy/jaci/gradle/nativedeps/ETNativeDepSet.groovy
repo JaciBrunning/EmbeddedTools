@@ -49,7 +49,9 @@ public class ETNativeDepSet implements NativeDependencySet {
 
     @Override
     FileCollection getRuntimeFiles() {
-        return dynamicLibs
+        return project.files {
+            return dynamicLibs.files
+        }
     }
 
     boolean appliesTo(Flavor flav, BuildType btype, NativePlatform plat) {
