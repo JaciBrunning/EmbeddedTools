@@ -35,6 +35,7 @@ deploy {
             user = 'admin'
             directory = '/home/lvuser'
             failOnMissing = false
+            maxChannels = 6
         }
         target('rpi') {
             addresses << "pi_5333:5801"
@@ -70,6 +71,12 @@ deploy {
             command = "echo Hello World"
             targets << 'rpi'
         }
+
+        // To simulate large, concurrent deploys
+        for (int i = 0; i < 10; i++)
+            commandArtifact("noise${i}") {
+                command = "sleep 5"
+            }
 
         all {
             targets << 'roborio'

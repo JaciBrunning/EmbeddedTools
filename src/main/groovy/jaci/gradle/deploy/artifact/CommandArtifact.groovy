@@ -13,6 +13,7 @@ class CommandArtifact extends ArtifactBase {
     String command = null
 
     String result = null
+    boolean wait = false
 
     @Override
     void deploy(Project project, DeployContext ctx) {
