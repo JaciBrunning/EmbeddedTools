@@ -25,6 +25,7 @@ class RemoteTarget implements Named {
     boolean promptPassword  = false
     int timeout             = 3
     boolean failOnMissing   = true
+    int maxConcurrentChannels = 1
 
     // Internal
     CountDownLatch latch = new CountDownLatch(1)

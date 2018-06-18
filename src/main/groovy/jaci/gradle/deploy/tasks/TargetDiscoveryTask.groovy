@@ -110,7 +110,7 @@ class TargetDiscoveryTask extends DefaultTask {
             } else {
                 log.log("Using address ${activeAddress().address}:${activeAddress().port} for target ${target.name}")
 
-                session = new SshSessionController(activeAddress().address, activeAddress().port, target.user, target.password, target.timeout)
+                session = new SshSessionController(activeAddress().address, activeAddress().port, target.user, target.password, target.timeout, target.maxConcurrentChannels)
                 context = new DefaultDeployContext(project, target, activeAddress().address, log, session, target.directory)
             }
         }

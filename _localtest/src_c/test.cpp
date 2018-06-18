@@ -1,10 +1,3 @@
-//#include <iostream>
-//
-//int main() {
-//    std::cout << "Hello World\n";
-//    return 0;
-//}
-
 #include "WPILib.h"
 
 #include <iostream>
@@ -36,3 +29,7 @@ public:
 };
 
 START_ROBOT_CLASS(Robot)
+
+// int main() {
+//     std::cout << "Hello World" << std::endl;
+// }

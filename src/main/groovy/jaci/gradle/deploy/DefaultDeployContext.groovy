@@ -9,6 +9,8 @@ import jaci.gradle.deploy.target.RemoteTarget
 import jaci.gradle.transport.SshSessionController
 import org.gradle.api.Project
 
+import java.util.concurrent.Semaphore
+
 @CompileStatic
 class DefaultDeployContext implements DeployContext {
     String workingDir

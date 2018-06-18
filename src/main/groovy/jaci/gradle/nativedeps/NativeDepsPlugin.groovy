@@ -7,11 +7,13 @@ import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.Task
 import org.gradle.api.file.FileTree
+import org.gradle.api.internal.provider.DefaultProvider
 import org.gradle.api.plugins.ExtensionContainer
 import org.gradle.api.tasks.util.PatternFilterable
 import org.gradle.model.*
 import org.gradle.nativeplatform.*
 import org.gradle.nativeplatform.platform.NativePlatform
+import org.gradle.nativeplatform.tasks.AbstractLinkTask
 import org.gradle.platform.base.BinaryTasks
 import org.gradle.platform.base.PlatformContainer
 
@@ -174,10 +176,16 @@ class NativeDepsPlugin implements Plugin<Project> {
         void addLinkerArgs(ModelMap<Task> tasks, final Repositories repos, final NativeBinarySpec bin) {
             bin.libs.each { NativeDependencySet set ->
                 if (set instanceof ETNativeDepSet) {
-                    def etnds = set as ETNativeDepSet
-                    bin.linker.args.addAll(etnds.getSystemLibs().collectMany { name ->
-                        [ "-l", name ]
+                    bin.linker.args.addAll((set as ETNativeDepSet).getSystemLibs().collectMany { name ->
+                        [ "-l", name ] as Collection<String>
                     })
+                } else if (set instanceof DelegatedDependencySet) {
+                    def dds = set as DelegatedDependencySet
+                    tasks.withType(AbstractLinkTask) { AbstractLinkTask linkTask ->
+                        linkTask.linkerArgs.addAll(new DefaultProvider<List<String>>({
+                            dds.get().getSystemLibs().collectMany { name -> ["-l", name] as Collection<String> }
+                        }))
+                    }
                 }
             }
         }
