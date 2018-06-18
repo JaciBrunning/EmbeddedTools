@@ -3,6 +3,7 @@ package jaci.gradle.nativedeps
 import groovy.transform.CompileStatic
 import jaci.gradle.EmbeddedTools
 import jaci.gradle.SortUtils
+import org.gradle.api.GradleException
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.Task
@@ -10,6 +11,7 @@ import org.gradle.api.file.FileTree
 import org.gradle.api.internal.provider.DefaultProvider
 import org.gradle.api.plugins.ExtensionContainer
 import org.gradle.api.tasks.util.PatternFilterable
+import org.gradle.language.base.LanguageSourceSet
 import org.gradle.model.*
 import org.gradle.nativeplatform.*
 import org.gradle.nativeplatform.platform.NativePlatform
@@ -24,12 +26,25 @@ class NativeDepsPlugin implements Plugin<Project> {
     void apply(Project project) {
         DependencySpecExtension dse = project.extensions.create("ETDependencySpecs", DependencySpecExtension, project)
 
-        project.extensions.add("useLibrary", { TargetedNativeComponent component, String... names ->
-            component.binaries.withType(NativeBinarySpec).all { NativeBinarySpec bin ->
+        project.extensions.add("useLibrary", { Object closureArg, String... names ->
+            if (closureArg in TargetedNativeComponent) {
+                TargetedNativeComponent component = (TargetedNativeComponent)closureArg
+                component.binaries.withType(NativeBinarySpec).all { NativeBinarySpec bin ->
+                    names.each { String name ->
+                        DelegatedDependencySet set = new DelegatedDependencySet(project, name, bin)
+                        bin.lib(set)
+                    }
+                }
+            } else if (closureArg in NativeBinarySpec) {
+                NativeBinarySpec bin = (NativeBinarySpec)closureArg
                 names.each { String name ->
                     DelegatedDependencySet set = new DelegatedDependencySet(project, name, bin)
                     bin.lib(set)
                 }
+            } else if (closureArg in LanguageSourceSet) {
+                throw new GradleException('The useLibrary command needs to be placed directly in the component. Move it outside of the sources declaration.')
+            } else {
+                throw new GradleException('Unknown type, You put this declaration in a weird place...')
             }
         })
     }
