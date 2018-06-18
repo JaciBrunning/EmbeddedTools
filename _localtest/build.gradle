@@ -73,10 +73,10 @@ deploy {
         }
 
         // To simulate large, concurrent deploys
-        for (int i = 0; i < 10; i++)
-            commandArtifact("noise${i}") {
-                command = "sleep 5"
-            }
+        // for (int i = 0; i < 10; i++)
+        //     commandArtifact("noise${i}") {
+        //         command = "sleep 5"
+        //     }
 
         all {
             targets << 'roborio'
