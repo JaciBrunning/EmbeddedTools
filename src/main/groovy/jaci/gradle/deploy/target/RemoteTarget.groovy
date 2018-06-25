@@ -2,7 +2,14 @@ package jaci.gradle.deploy.target
 
 import groovy.transform.CompileStatic
 import groovy.transform.EqualsAndHashCode
+import jaci.gradle.ClosureUtils
+import jaci.gradle.EmbeddedTools
+import jaci.gradle.deploy.DeployContext
+import jaci.gradle.deploy.tasks.TargetDiscoveryTask
+import jaci.gradle.transport.SshSessionController
+import org.apache.log4j.Logger
 import org.gradle.api.Named
+import org.gradle.api.Project
 
 import java.util.concurrent.CountDownLatch
 
@@ -13,6 +20,7 @@ class RemoteTarget implements Named {
 
     RemoteTarget(String name) {
         this.name = name
+        log = Logger.getLogger(toString())
     }
 
     List<String> addresses  = []
@@ -27,11 +35,31 @@ class RemoteTarget implements Named {
     boolean failOnMissing   = true
     int maxChannels = 1
 
+    List<Closure> precheck  = []  // Called before onlyIf
+    Closure<Boolean> onlyIf = null  // Delegate: DeployContext
+
+    Logger log
+
     // Internal
     CountDownLatch latch = new CountDownLatch(1)
 
     @Override
     String toString() {
         return "RemoteTarget[${name}]".toString()
+    }
+
+    boolean toConnect(DeployContext ctx) {
+        log.debug("Precheck....")
+        precheck.forEach { Closure c -> ClosureUtils.delegateCall(ctx, c) }
+
+        if (onlyIf instanceof Closure) {
+            log.debug("OnlyIf...")
+            boolean toConnect = ClosureUtils.delegateCall(ctx, onlyIf)
+            if (!toConnect) {
+                log.debug("OnlyIf check failed! Not connecting...")
+                return false
+            }
+        }
+        return true
     }
 }

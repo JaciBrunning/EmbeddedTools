@@ -20,7 +20,7 @@ dependencies {
 
 group = "jaci.gradle"
 archivesBaseName = "EmbeddedTools"
-version = "2018.06.18" // YYYY.MM.DD(revision)
+version = "2018.06.25" // YYYY.MM.DD(revision)
 
 pluginBundle {
     website = 'https://github.com/JacisNonsense/EmbeddedTools'

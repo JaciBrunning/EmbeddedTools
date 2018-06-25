@@ -1,6 +1,7 @@
 package jaci.gradle.deploy.tasks
 
 import groovy.transform.CompileStatic
+import groovy.transform.InheritConstructors
 import jaci.gradle.EmbeddedTools
 import jaci.gradle.WorkerStorage
 import jaci.gradle.deploy.DefaultDeployContext
@@ -9,15 +10,16 @@ import jaci.gradle.deploy.DeployLogger
 import jaci.gradle.deploy.DryDeployContext
 import jaci.gradle.deploy.target.RemoteTarget
 import jaci.gradle.transport.SshSessionController
+import org.apache.log4j.Logger
 import org.gradle.api.Action
 import org.gradle.api.DefaultTask
+import org.gradle.api.Project
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.TaskAction
 import org.gradle.workers.IsolationMode
 import org.gradle.workers.WorkerConfiguration
 import org.gradle.workers.WorkerExecutor
-import org.slf4j.LoggerFactory
 
 import javax.inject.Inject
 import java.util.concurrent.TimeUnit
@@ -25,29 +27,43 @@ import java.util.concurrent.TimeUnit
 @CompileStatic
 class TargetDiscoveryTask extends DefaultTask {
 
-    private static class AddressStorage {
-        String address
-        int port
-        String target
+    @Internal
+    final WorkerExecutor workerExecutor
 
-        AddressStorage(String addr, int port, String target) {
-            this.address = addr;
-            this.port = port
-            this.target = target;
-        }
+    // Project and TargetStorage are sent TO the workers, containing information
+    // about the project and the target
+    @Internal
+    private static WorkerStorage<ProjectStorage> projectStorage = WorkerStorage.obtain()
+    @Internal
+    private static WorkerStorage<RemoteTarget>   targetStorage  = WorkerStorage.obtain()
+
+    // Address storage is returned FROM the workers, containing all the successful
+    // targets reached.
+    @Internal
+    private static WorkerStorage<AddressStorage> addressStorage = WorkerStorage.obtain()
+    // Failure storage is returned FROM the workers, containing all the exceptions
+    // that have lead to failed discoveries of targets.
+    @Internal
+    private static WorkerStorage<TargetFailedException> failureStorage = WorkerStorage.obtain()
+
+    @Internal
+    private static int storageRefcount = 0;
+
+    public static void clearStorage() {
+        projectStorage.clear()
+        targetStorage.clear()
+        addressStorage.clear()
+        failureStorage.clear()
     }
 
     @Internal
-    final WorkerExecutor workerExecutor
-    static WorkerStorage<RemoteTarget>   targetStorage  = WorkerStorage.obtain()
-    static WorkerStorage<AddressStorage> addressStorage = WorkerStorage.obtain()
-
+    private DeployLogger log
     @Internal
-    DeployLogger            log
+    Logger classLogger
     @Internal
-    SshSessionController    session
+    private DeployContext context
     @Internal
-    DeployContext           context
+    private boolean isActive
 
     @Input
     RemoteTarget target
@@ -57,28 +73,34 @@ class TargetDiscoveryTask extends DefaultTask {
         this.workerExecutor = workerExecutor
     }
 
-    String targetFullName() {
-        return "${project}:${target.name}"
+    public static enum DiscoveryState {
+        NOT_RESOLVED("Not Resolved", 0),
+        RESOLVED("Not Connected", 1),
+        CONNECTED("Connected but Invalid", 2),
+        VERIFIED("Valid", 3);
+
+        String stateLocalized
+        int priority
+        DiscoveryState(String local, int pri) {
+            this.stateLocalized = local
+            this.priority = pri
+        }
+    };
+
+    public DeployContext getContext() {
+        return context;
     }
 
     @TaskAction
     void discoverTarget() {
         // Ask for password if needed
         log = new DeployLogger(0)
+        classLogger = Logger.getLogger("TargetDiscoveryTask[${target.name}]")
 
         if (EmbeddedTools.isDryRun(project)) {
             log.log("Dry Run! Using ${target.addresses.first()} for target ${target.name}")
-            addressStorage << new AddressStorage(target.addresses.first(), 22, targetFullName())
             context = new DryDeployContext(project, target, target.addresses.first(), log, target.directory)
-            if (!EmbeddedTools.isInstantDryRun(project)) {
-                log.log("-> Simulating timeout delay ${target.timeout}s (disable with -Pdeploy-dry-instant)")
-                // Worker API allows parallel execution. Timeout delay is good for testing parallel execution of
-                // larger projects
-                workerExecutor.submit(SimulatedTimeoutWorker, ({ WorkerConfiguration config ->
-                    config.isolationMode = IsolationMode.NONE
-                    config.params target.timeout
-                }) as Action)
-            }
+            isActive = true
         } else {
             def password = target.password ?: ""
             if (target.promptPassword) {
@@ -96,129 +118,281 @@ class TargetDiscoveryTask extends DefaultTask {
             assert target.user != null
             assert target.timeout > 0
 
-            def index = targetStorage.put(target)
+            storageRefcount++
+            classLogger.debug("Storage Refcount Obtained: ${storageRefcount}")
+
+            // Push project and target info into storage
+            def projIndex = projectStorage.put(new ProjectStorage(project, log))
+            def targIndex = targetStorage.put(target)
+
+            // Submit some Workers on the Worker API to test addresses. This allows the task to run in parallel
+            classLogger.debug("Submitting workers...")
             target.addresses.each { String addr ->
-                // Submit some Workers on the Worker API to test addresses. This allows the task to run in parallel
                 workerExecutor.submit(DiscoverTargetWorker, ({ WorkerConfiguration config ->
                     config.isolationMode = IsolationMode.NONE
-                    config.params addr, targetFullName(), index
+                    config.params addr, targIndex, projIndex
                 } as Action))
             }
             // Wait for all workers to complete
+            classLogger.debug("Awaiting workers...")
             workerExecutor.await()
+            classLogger.debug("Workers done!")
 
-            if (addressStorage.findAll { it.target.equals(targetFullName()) }.empty) {
-                if (target.failOnMissing)
-                    throw new TargetNotFoundException("Target ${target.name} could not be located! Failing as ${target.name}.failOnMissing is true.")
-                else
-                    log.log("Target ${target.name} could not be located! Skipping target as ${target.name}.failOnMissing is false.")
+            boolean targetReachable = !addressStorage.findAll {
+                it.target.equals(target)
+            }.isEmpty()
+
+            classLogger.debug("Reachable = ${targetReachable}")
+            if (!targetReachable) {
+                isActive = false
+                printFailures()
             } else {
-                log.log("Using address ${activeAddress().address}:${activeAddress().port} for target ${target.name}")
+                def active = activeAddress()
 
-                session = new SshSessionController(activeAddress().address, activeAddress().port, target.user, target.password, target.timeout, target.maxChannels)
-                context = new DefaultDeployContext(project, target, activeAddress().address, log, session, target.directory)
+                log.log("Using address ${active.address}:${active.port} for target ${target.name}")
+                context = active.ctx
+                isActive = true
+            }
+
+            // Let the refcounts clear before we end this task
+            storageRefcount--
+            classLogger.debug("Storage Refcount Released: ${storageRefcount}")
+            if (storageRefcount <= 0) {
+                classLogger.info("Clearing discovery storage (refcount=0)")
+                clearStorage()
+            }
+
+            if (!targetReachable) {
+                String failureMessage = "Target ${target.name} could not be found! See above for more details."
+                if (target.failOnMissing)
+                    throw new TargetNotFoundException(failureMessage)
+                else
+                    log.log(failureMessage)
             }
         }
     }
 
-    @Internal
-    boolean isTargetActive() {
-        return !addressStorage.findAll { it.target.equals(targetFullName()) }.empty
+    void printFailures() {
+        def failures = getFailures()
+        def enumMap = new HashMap<DiscoveryState, List<TargetFailedException>>()
+        // Sort failures into state buckets
+        failures.each { TargetFailedException e ->
+            if (!enumMap.containsKey(e.state))
+                enumMap.put(e.state, [] as List)
+            enumMap.get(e.state).add(e)
+        }
+
+        // Sort and iterate by state priority
+        boolean printFull = true
+        enumMap.keySet().sort { a -> -a.priority }.each { DiscoveryState state ->
+            List<TargetFailedException> fails = enumMap[state]
+            if (!printFull) {
+                log.log("${fails.size()} other address(es) ${state.stateLocalized}. Run with -Pdeploy-more-addr or --info for more details")
+            } else {
+                fails.each { TargetFailedException failed ->
+                    log.log("Address ${failed.host}: ${state.stateLocalized}. Reason: ${failed.cause.class.simpleName}")
+                    log.push().with {
+                        log(failed.cause.message)
+                    }
+                }
+            }
+
+            printFull = project.hasProperty("deploy-more-addr") || classLogger.isInfoEnabled()
+        }
+        log.log("") // Blank line
     }
 
-    AddressStorage activeAddress() {
-        return addressStorage.findAll { it.target.equals(targetFullName()) }.sort { AddressStorage addrStor -> target.addresses.indexOf(addrStor.address) }.first()        // Order based on what order addresses registered
+    public boolean isTargetActive() {
+        return isActive
+    }
+
+    @Internal
+    private AddressStorage activeAddress() {
+        return addressStorage.findAll {
+            it.target.equals(target)
+        }.sort { AddressStorage addrStor ->
+            target.addresses.indexOf(addrStor.address)
+        }.first()        // Order based on what order addresses registered
+    }
+
+    @Internal
+    private List<TargetFailedException> getFailures() {
+        return failureStorage.findAll {
+            it.target.equals(target)
+        }
     }
 
     static class DiscoverTargetWorker implements Runnable {
         String host
-        String fullTargetName
-        int index
+        int targetIndex, projectIndex
+
+        Logger log
+        DiscoveryState state
 
         @Inject
-        DiscoverTargetWorker(String host, String fullTargetName, Integer index) {
-            this.index = index
+        DiscoverTargetWorker(String host, Integer targetIndex, Integer projectIndex) {
+            this.targetIndex = targetIndex
+            this.projectIndex = projectIndex
             this.host = host
-            this.fullTargetName = fullTargetName
+            log = Logger.getLogger("DiscoverTargetWorker[" + host + "]")
         }
 
         @Override
         void run() {
-            def log = LoggerFactory.getLogger('embedded_tools')
-            try {
-                def target = targetStorage.get(index)
-                def thread = new Thread({
-                    try {
-                        log.debug("Trying address ${host}")
-                        def splitHost = host.split(":")
-                        def hostname = splitHost[0]
-                        def port = splitHost.length > 1 ? Integer.parseInt(splitHost[1]) : 22
+            def target = targetStorage.get(targetIndex)
+            def projectContainer = projectStorage.get(projectIndex)
+            def thread = new Thread({ discover(target, projectContainer) });
+            thread.start()
 
-                        String originalHost = host
-                        boolean updated = false
-                        for (InetAddress addr : InetAddress.getAllByName(hostname)) {
-                            if (!addr.isMulticastAddress() && (target.ipv6 || addr instanceof Inet4Address)) {
-                                log.info("Resolved ${hostname} -> ${addr.getHostAddress()}")
-                                host = addr.getHostAddress()
-                                updated = true
-                                break;
-                            }
-                        }
-                        if (!updated) {
-                            log.debug("No resolution, using raw host address ${host}")
-                        }
-                        log.debug("Using HOST=${host} PORT=${port}")
-                        def session = new SshSessionController(host, port, target.user, target.password, target.timeout)
-                        log.info("Found ${host}! (${originalHost})")
-                        session.disconnect()
-                        addressStorage.push(new AddressStorage(host, port, fullTargetName))
-                        target.latch.countDown()
-                    } catch (InterruptedException e) {
-                        log.debug("${host} discovery thread interrupted")
-                        Thread.currentThread().interrupt()
-                    } catch (Exception e) {
-                        def s = new StringWriter()
-                        def pw = new PrintWriter(s)
-                        e.printStackTrace(pw)
-                        log.debug("[i] Could not reach ${host}...")
-                        log.debug(s.toString())
-                    }
-                })
-                thread.start()
+            try {
+                // If a valid address is found, all other discovery threads should be halted.
                 if (target.discoverInstant) {
-                    target.latch.await(target.timeout*1000 + 500, TimeUnit.MILLISECONDS) // Add 500 to account for Thread spinup
-                    thread.interrupt()
-                    log.debug("Interrupting discovery thread ${host}...")
+                    // Add 500 to account for Thread spinup (address resolution etc)
+                    boolean timedOut = !target.latch.await(target.timeout * 1000 + 500, TimeUnit.MILLISECONDS)
+                    boolean threadAlive = thread.isAlive()
+
+                    // Either latch has triggered, or we've reached timeout, so kill the thread
+                    if (threadAlive) {
+                        thread.interrupt()
+                        log.info("Interrupting discovery thread (${timedOut ? "Timed Out" : "Other Address Found"})")
+
+                        if (timedOut) {
+                            def tEx = new TargetFailedException(target, host, state, new InterruptedException("Connection Timed Out"))
+                            failureStorage.push(tEx)
+                        }
+                    } else {
+                        log.info("Discovery thread finished early (likely errored)")
+                    }
                 } else {
                     thread.join()
                 }
             } catch (Exception e) {
+                log.info("Unknown exception in thread management")
+
                 def s = new StringWriter()
                 def pw = new PrintWriter(s)
                 e.printStackTrace(pw)
-                log.debug("Could not reach ${host}...")
-                log.debug(s.toString())
+                log.info(s.toString())
             }
         }
-    }
 
-    static class SimulatedTimeoutWorker implements Runnable {
-        int timeout
+        void discover(RemoteTarget target, ProjectStorage projStore) throws TargetFailedException {
+            state = DiscoveryState.NOT_RESOLVED
 
-        @Inject
-        SimulatedTimeoutWorker(Integer timeout) {
-            this.timeout = timeout
+            try {
+                log.info("Discovery thread started")
+
+                // Split host into host:port, using 22 as the default port if none provided
+                def splitHost = host.split(":")
+                def hostname = splitHost[0]
+                def port = splitHost.length > 1 ? Integer.parseInt(splitHost[1]) : 22
+                log.info("Parsed Host: HOST = ${hostname}, PORT = ${port}")
+
+                def resolvedHost = resolveHostname(hostname, target.ipv6)
+                state = DiscoveryState.RESOLVED
+
+                // Attempt to connect to host via SSH
+                def session = new SshSessionController(resolvedHost, port, target.user, target.password, target.timeout)
+                log.info("Found ${resolvedHost}! (${host})")
+                state = DiscoveryState.CONNECTED
+
+                // Ensure the target succeeds in its connection tests
+                def ctx = new DefaultDeployContext(projStore.project, target, resolvedHost, projStore.deployLogger, session, target.directory)
+                def toConnect = target.toConnect(ctx)
+                if (!toConnect) {
+                    throw new TargetVerificationException("Target failed toConnect (onlyIf) check!")
+                }
+                state = DiscoveryState.VERIFIED
+
+                // Target is valid, put it in the storage
+                log.info("Target valid, putting in address storage...")
+                addressStorage.push(new AddressStorage(host, port, target, ctx))
+                log.info("Signalling Countdown")
+                target.latch.countDown()
+            } catch (InterruptedException ignored) {
+                log.info("Thread interrupted!")
+                Thread.currentThread().interrupt()
+            } catch (Throwable e) {
+                // Put this error into the failureStorage so it can be echo'd by the main thread
+                // (workers can't print to stdout)
+                def tEx = new TargetFailedException(target, host, state, e)
+                failureStorage.push(tEx)
+                log.info("Throwable caught in discovery thread")
+
+                def s = new StringWriter()
+                def pw = new PrintWriter(s)
+                tEx.printStackTrace(pw)
+                log.info(s.toString())
+            }
         }
 
-        @Override
-        void run() {
-            Thread.sleep(timeout * 1000)
+        String resolveHostname(String hostname, boolean allowIpv6) {
+            String resolvedHost = hostname
+            boolean hasResolved = false
+            for (InetAddress addr : InetAddress.getAllByName(hostname)) {
+                if (!addr.isMulticastAddress()) {
+                    if (!allowIpv6 && addr instanceof Inet6Address) {
+                        log.info("Resolved address ${addr.getHostAddress()} ignored! (IPv6)")
+                    } else {
+                        log.info("Resolved ${addr.getHostAddress()}")
+                        resolvedHost = addr.getHostAddress()
+                        hasResolved = true
+                        break;
+                    }
+                }
+            }
+            if (!hasResolved) {
+                log.info("No host resolution! Using original...")
+            }
+            return resolvedHost
         }
     }
 
-    class TargetNotFoundException extends RuntimeException {
-        TargetNotFoundException(String msg) {
-            super(msg)
+    @CompileStatic
+    public static class TargetFailedException extends RuntimeException {
+        RemoteTarget target
+        String host
+        DiscoveryState state
+
+        public TargetFailedException(RemoteTarget target, String host, DiscoveryState state, Throwable cause) {
+            super(cause)
+            this.target = target
+            this.host = host
+            this.state = state
+        }
+    }
+
+    @CompileStatic
+    @InheritConstructors
+    public static class TargetNotFoundException extends RuntimeException { }
+
+    @CompileStatic
+    @InheritConstructors
+    public static class TargetVerificationException extends RuntimeException { }
+
+    @CompileStatic
+    private static class AddressStorage {
+        String address
+        int port
+        RemoteTarget target
+        DeployContext ctx
+
+        AddressStorage(String addr, int port, RemoteTarget target, DeployContext ctx) {
+            this.address = addr;
+            this.port = port
+            this.target = target;
+            this.ctx = ctx;
+        }
+    }
+
+    @CompileStatic
+    private static class ProjectStorage {
+        Project project
+        DeployLogger deployLogger
+
+        ProjectStorage(Project project, DeployLogger log) {
+            this.project = project
+            this.deployLogger = log
         }
     }
 }

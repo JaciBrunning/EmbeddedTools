@@ -32,9 +32,15 @@ class ArtifactDeployTask extends DefaultTask {
         }
     }
 
+    // TODO: clear deployerstorage on build finished
     @Internal
     final WorkerExecutor workerExecutor
-    static WorkerStorage<DeployStorage> deployerStorage  = WorkerStorage.obtain()
+    @Internal
+    private static WorkerStorage<DeployStorage> deployerStorage  = WorkerStorage.obtain()
+
+    public static void clearStorage() {
+        deployerStorage.clear()
+    }
 
     @Input
     ArtifactBase artifact
@@ -55,7 +61,7 @@ class ArtifactDeployTask extends DefaultTask {
         artifact.taskDependencies = taskDependencies.getDependencies(this) as Set<Task>
 
         discoveries.each { TargetDiscoveryTask discover ->
-            def index = deployerStorage.put(new DeployStorage(project, discover.context, artifact))
+            def index = deployerStorage.put(new DeployStorage(project, discover.getContext(), artifact))
             workerExecutor.submit(DeployArtifactWorker, ({ WorkerConfiguration config ->
                 config.isolationMode = IsolationMode.NONE
                 config.params index

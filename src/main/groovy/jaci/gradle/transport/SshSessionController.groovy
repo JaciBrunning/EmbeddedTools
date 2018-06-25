@@ -20,7 +20,7 @@ class SshSessionController {
 
     // TODO Add semaphore locking profiling to build scan
     SshSessionController(String host, int port, String user, String password, int timeout, int maxConcurrent=1) {
-        log = Logger.getLogger("SshSessionController " + user + "@" + host + ":" + port)
+        log = Logger.getLogger("SshSessionController[" + user + "@" + host + ":" + port + "]")
         session = EmbeddedTools.jsch.getSession(user, host, port)
         session.setPassword(password)
 
