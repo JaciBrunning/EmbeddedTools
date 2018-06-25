@@ -1,6 +1,7 @@
 package jaci.gradle.deploy
 
 import groovy.transform.CompileStatic
+import jaci.gradle.IndentedLogger
 import jaci.gradle.EmbeddedTools
 import jaci.gradle.PathUtils
 import jaci.gradle.deploy.cache.CacheMethod
@@ -9,18 +10,16 @@ import jaci.gradle.deploy.target.RemoteTarget
 import jaci.gradle.transport.SshSessionController
 import org.gradle.api.Project
 
-import java.util.concurrent.Semaphore
-
 @CompileStatic
 class DefaultDeployContext implements DeployContext {
     String workingDir
     SshSessionController session
-    DeployLogger logger
+    IndentedLogger logger
     String targetAddr
     RemoteTarget target
     Project project
 
-    DefaultDeployContext(Project project, RemoteTarget target, String targetAddr, DeployLogger logger, SshSessionController session, String workingDir) {
+    DefaultDeployContext(Project project, RemoteTarget target, String targetAddr, IndentedLogger logger, SshSessionController session, String workingDir) {
         this.workingDir = workingDir
         this.session = session
         this.logger = logger
@@ -30,7 +29,7 @@ class DefaultDeployContext implements DeployContext {
     }
 
     @Override
-    DeployLogger logger() {
+    IndentedLogger logger() {
         return logger
     }
 

@@ -6,7 +6,7 @@ import jaci.gradle.EmbeddedTools
 import jaci.gradle.WorkerStorage
 import jaci.gradle.deploy.DefaultDeployContext
 import jaci.gradle.deploy.DeployContext
-import jaci.gradle.deploy.DeployLogger
+import jaci.gradle.IndentedLogger
 import jaci.gradle.deploy.DryDeployContext
 import jaci.gradle.deploy.target.RemoteTarget
 import jaci.gradle.transport.SshSessionController
@@ -57,7 +57,7 @@ class TargetDiscoveryTask extends DefaultTask {
     }
 
     @Internal
-    private DeployLogger log
+    private IndentedLogger log
     @Internal
     Logger classLogger
     @Internal
@@ -94,7 +94,7 @@ class TargetDiscoveryTask extends DefaultTask {
     @TaskAction
     void discoverTarget() {
         // Ask for password if needed
-        log = new DeployLogger(0)
+        log = new IndentedLogger(services, 0)
         classLogger = Logger.getLogger("TargetDiscoveryTask[${target.name}]")
 
         if (EmbeddedTools.isDryRun(project)) {
@@ -187,19 +187,21 @@ class TargetDiscoveryTask extends DefaultTask {
         enumMap.keySet().sort { a -> -a.priority }.each { DiscoveryState state ->
             List<TargetFailedException> fails = enumMap[state]
             if (!printFull) {
-                log.log("${fails.size()} other address(es) ${state.stateLocalized}. Run with -Pdeploy-more-addr or --info for more details")
+                log.log("${fails.size()} other address(es) ${state.stateLocalized}.")
             } else {
                 fails.each { TargetFailedException failed ->
-                    log.log("Address ${failed.host}: ${state.stateLocalized}. Reason: ${failed.cause.class.simpleName}")
+                    log.logErrorHead("Address ${failed.host}: ${state.stateLocalized}.")
                     log.push().with {
-                        log(failed.cause.message)
+                        logError("Reason: ${failed.cause.class.simpleName}")
+                        logError(failed.cause.message)
                     }
                 }
+                log.log("")
             }
 
             printFull = project.hasProperty("deploy-more-addr") || classLogger.isInfoEnabled()
         }
-        log.log("") // Blank line
+        log.log("Run with -Pdeploy-more-addr or --info for more details") // Blank line
     }
 
     public boolean isTargetActive() {
@@ -388,9 +390,9 @@ class TargetDiscoveryTask extends DefaultTask {
     @CompileStatic
     private static class ProjectStorage {
         Project project
-        DeployLogger deployLogger
+        IndentedLogger deployLogger
 
-        ProjectStorage(Project project, DeployLogger log) {
+        ProjectStorage(Project project, IndentedLogger log) {
             this.project = project
             this.deployLogger = log
         }

@@ -34,7 +34,7 @@ deploy {
             addresses << "roborio-5333-frc.local" << "10.53.33.2" << "172.22.11.2"
             user = 'admin'
             directory = '/home/lvuser'
-            failOnMissing = false
+            failOnMissing = true
             maxChannels = 6
         }
         target('rpi') {

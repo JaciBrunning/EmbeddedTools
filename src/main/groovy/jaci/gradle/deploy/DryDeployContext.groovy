@@ -1,6 +1,7 @@
 package jaci.gradle.deploy
 
 import groovy.transform.CompileStatic
+import jaci.gradle.IndentedLogger
 import jaci.gradle.PathUtils
 import jaci.gradle.deploy.target.RemoteTarget
 import org.gradle.api.Project
@@ -8,12 +9,12 @@ import org.gradle.api.Project
 @CompileStatic
 class DryDeployContext implements DeployContext {
     String workingDir
-    DeployLogger logger
+    IndentedLogger logger
     String targetAddr
     RemoteTarget target
     Project project
 
-    DryDeployContext(Project project, RemoteTarget target, String targetAddr, DeployLogger logger, String workingDir) {
+    DryDeployContext(Project project, RemoteTarget target, String targetAddr, IndentedLogger logger, String workingDir) {
         this.workingDir = workingDir
         this.logger = logger
         this.targetAddr = targetAddr
@@ -22,7 +23,7 @@ class DryDeployContext implements DeployContext {
     }
 
     @Override
-    DeployLogger logger() {
+    IndentedLogger logger() {
         return logger
     }
 
