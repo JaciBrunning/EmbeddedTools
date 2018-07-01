@@ -40,6 +40,6 @@ class DelegatedDependencySet implements NativeDependencySet {
     }
 
     FileCollection getSourceFiles() {
-        return get().getSources()
+        return get().getSourceRoots()
     }
 }

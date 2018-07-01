@@ -5,7 +5,7 @@ buildscript {
     }
     dependencies {
         classpath 'com.jcraft:jsch:0.1.53'
-        classpath group: "jaci.gradle", name: "EmbeddedTools", version: "+" 
+        classpath group: "jaci.gradle", name: "EmbeddedTools", version: "+"
     }
 }
 
@@ -205,6 +205,6 @@ jar {
     from configurations.compile.collect { it.isDirectory() ? it : zipTree(it) }
 }
 
-task wrapper(type: Wrapper) {
-    gradleVersion = '4.7'
+wrapper {
+    gradleVersion = '4.8.1'
 }
