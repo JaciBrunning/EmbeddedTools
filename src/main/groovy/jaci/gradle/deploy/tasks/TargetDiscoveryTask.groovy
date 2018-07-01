@@ -6,7 +6,7 @@ import jaci.gradle.EmbeddedTools
 import jaci.gradle.WorkerStorage
 import jaci.gradle.deploy.DefaultDeployContext
 import jaci.gradle.deploy.DeployContext
-import jaci.gradle.IndentedLogger
+import jaci.gradle.ETLogger
 import jaci.gradle.deploy.DryDeployContext
 import jaci.gradle.deploy.target.RemoteTarget
 import jaci.gradle.transport.SshSessionController
@@ -57,9 +57,7 @@ class TargetDiscoveryTask extends DefaultTask {
     }
 
     @Internal
-    private IndentedLogger log
-    @Internal
-    Logger classLogger
+    private ETLogger log
     @Internal
     private DeployContext context
     @Internal
@@ -94,8 +92,7 @@ class TargetDiscoveryTask extends DefaultTask {
     @TaskAction
     void discoverTarget() {
         // Ask for password if needed
-        log = new IndentedLogger(services, 0)
-        classLogger = Logger.getLogger("TargetDiscoveryTask[${target.name}]")
+        log = new ETLogger("TargetDiscoveryTask[${target.name}]", services)
 
         if (EmbeddedTools.isDryRun(project)) {
             log.log("Dry Run! Using ${target.addresses.first()} for target ${target.name}")
@@ -119,14 +116,14 @@ class TargetDiscoveryTask extends DefaultTask {
             assert target.timeout > 0
 
             storageRefcount++
-            classLogger.debug("Storage Refcount Obtained: ${storageRefcount}")
+            log.debug("Storage Refcount Obtained: ${storageRefcount}")
 
             // Push project and target info into storage
             def projIndex = projectStorage.put(new ProjectStorage(project, log))
             def targIndex = targetStorage.put(target)
 
             // Submit some Workers on the Worker API to test addresses. This allows the task to run in parallel
-            classLogger.debug("Submitting workers...")
+            log.debug("Submitting workers...")
             target.addresses.each { String addr ->
                 workerExecutor.submit(DiscoverTargetWorker, ({ WorkerConfiguration config ->
                     config.isolationMode = IsolationMode.NONE
@@ -134,15 +131,15 @@ class TargetDiscoveryTask extends DefaultTask {
                 } as Action))
             }
             // Wait for all workers to complete
-            classLogger.debug("Awaiting workers...")
+            log.debug("Awaiting workers...")
             workerExecutor.await()
-            classLogger.debug("Workers done!")
+            log.debug("Workers done!")
 
             boolean targetReachable = !addressStorage.findAll {
                 it.target.equals(target)
             }.isEmpty()
 
-            classLogger.debug("Reachable = ${targetReachable}")
+            log.debug("Reachable = ${targetReachable}")
             if (!targetReachable) {
                 isActive = false
                 printFailures()
@@ -156,9 +153,9 @@ class TargetDiscoveryTask extends DefaultTask {
 
             // Let the refcounts clear before we end this task
             storageRefcount--
-            classLogger.debug("Storage Refcount Released: ${storageRefcount}")
+            log.debug("Storage Refcount Released: ${storageRefcount}")
             if (storageRefcount <= 0) {
-                classLogger.info("Clearing discovery storage (refcount=0)")
+                log.info("Clearing discovery storage (refcount=0)")
                 clearStorage()
             }
 
@@ -199,7 +196,7 @@ class TargetDiscoveryTask extends DefaultTask {
                 log.log("")
             }
 
-            printFull = project.hasProperty("deploy-more-addr") || classLogger.isInfoEnabled()
+            printFull = project.hasProperty("deploy-more-addr") || log.backingLogger().isInfoEnabled()
         }
         log.log("Run with -Pdeploy-more-addr or --info for more details") // Blank line
     }
@@ -390,9 +387,9 @@ class TargetDiscoveryTask extends DefaultTask {
     @CompileStatic
     private static class ProjectStorage {
         Project project
-        IndentedLogger deployLogger
+        ETLogger deployLogger
 
-        ProjectStorage(Project project, IndentedLogger log) {
+        ProjectStorage(Project project, ETLogger log) {
             this.project = project
             this.deployLogger = log
         }

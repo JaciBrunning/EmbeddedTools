@@ -1,5 +1,6 @@
 package jaci.gradle.toolchains
 
+import org.apache.log4j.Logger
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.language.base.internal.registry.LanguageTransformContainer
@@ -13,7 +14,7 @@ import org.gradle.platform.base.BinaryContainer
 class ToolchainsPlugin implements Plugin<Project> {
     void apply(Project project) {
         project.getPluginManager().apply(NativeComponentPlugin.class)
-        
+
         project.ext.defineTools = { target, prefix, suffix ->
             target.cppCompiler.executable       = prefix + target.cppCompiler.executable + suffix
             target.cCompiler.executable         = prefix + target.cCompiler.executable + suffix

@@ -81,7 +81,7 @@ class NativeDepsPlugin implements Plugin<Project> {
         }
 
         @Mutate
-        void addNativeLibraries(ModelMap<Task> tasks, final Repositories repos,
+        void addNativeLibraries(ModelMap<Task> tasks,
                                 final NativeDepsSpec spec, final ExtensionContainer extensions,
                                 final FlavorContainer flavors, final BuildTypeContainer buildTypes, final PlatformContainer platforms) {
 
@@ -197,7 +197,7 @@ class NativeDepsPlugin implements Plugin<Project> {
         }
 
         @BinaryTasks
-        void addLinkerArgs(ModelMap<Task> tasks, final Repositories repos, final NativeBinarySpec bin) {
+        void addLinkerArgs(ModelMap<Task> tasks, final NativeBinarySpec bin) {
             bin.libs.each { NativeDependencySet set ->
                 if (set instanceof ETNativeDepSet) {
                     bin.linker.args.addAll((set as ETNativeDepSet).getSystemLibs().collectMany { name ->

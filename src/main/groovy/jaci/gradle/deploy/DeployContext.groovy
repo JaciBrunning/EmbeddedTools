@@ -1,14 +1,14 @@
 package jaci.gradle.deploy
 
 import groovy.transform.CompileStatic
-import jaci.gradle.IndentedLogger
+import jaci.gradle.ETLogger
 import jaci.gradle.deploy.target.RemoteTarget
 import org.gradle.api.Project
 
 @CompileStatic
 interface DeployContext {
     // Get the deploy logger
-    IndentedLogger logger()
+    ETLogger logger()
 
     // Get the selected hostname (from discover task)
     String selectedHost()
