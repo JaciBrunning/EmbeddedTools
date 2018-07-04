@@ -24,6 +24,11 @@ dependencies {
     testCompile('org.objenesis:objenesis:1.2')
 }
 
+buildScan {
+    licenseAgreementUrl = 'https://gradle.com/terms-of-service'
+    licenseAgree = 'yes'
+}
+
 group = "jaci.gradle"
 archivesBaseName = "EmbeddedTools"
 version = "2018.07.03" // YYYY.MM.DD(revision)
