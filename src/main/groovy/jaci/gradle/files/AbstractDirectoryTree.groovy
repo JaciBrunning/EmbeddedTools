@@ -1,15 +1,12 @@
 package jaci.gradle.files
 
 import groovy.transform.CompileStatic
-import org.gradle.api.file.FileTree
 
 @CompileStatic
-abstract class AbstractDirectoryTree {
+abstract class AbstractDirectoryTree implements IDirectoryTree {
 
-    abstract Set<File> getDirectories()
-
-    AbstractDirectoryTree plus(AbstractDirectoryTree other) {
-        return new CombinedDirectoryTree().add(this).add(other)
+    IDirectoryTree plus(IDirectoryTree other) {
+        return new CombinedDirectoryTree(this, other)
     }
 
 }

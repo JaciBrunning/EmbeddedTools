@@ -1,6 +1,5 @@
 package jaci.gradle.toolchains
 
-import org.apache.log4j.Logger
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.language.base.internal.registry.LanguageTransformContainer

@@ -7,9 +7,9 @@ class SortUtils {
 
     static class TopoMember<T> {
         String name
-        List<String> dependsOn
-        T extra
-        int mark = 0
+        List<String> dependsOn = []
+        T extra = null
+        protected int mark = 0
     }
 
     static class CyclicDependencyException extends RuntimeException {
@@ -19,8 +19,8 @@ class SortUtils {
     }
 
     static <T> List<TopoMember<T>> topoSort(List<TopoMember<T>> members) {
-        List<TopoMember> unmarked = members
-        List<TopoMember> sorted = []
+        List<TopoMember<T>> unmarked = members
+        List<TopoMember<T>> sorted = []
         while ((unmarked = unmarked.findAll { TopoMember member -> member.mark == 0 }).size() > 0) {
             _visit(unmarked.first(), members, sorted)
         }

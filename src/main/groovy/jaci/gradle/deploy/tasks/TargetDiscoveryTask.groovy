@@ -2,12 +2,12 @@ package jaci.gradle.deploy.tasks
 
 import groovy.transform.CompileStatic
 import groovy.transform.InheritConstructors
+import jaci.gradle.ETLogger
 import jaci.gradle.EmbeddedTools
 import jaci.gradle.WorkerStorage
-import jaci.gradle.deploy.DefaultDeployContext
 import jaci.gradle.deploy.DeployContext
-import jaci.gradle.ETLogger
 import jaci.gradle.deploy.DryDeployContext
+import jaci.gradle.deploy.SshDeployContext
 import jaci.gradle.deploy.target.RemoteTarget
 import jaci.gradle.transport.SshSessionController
 import org.apache.log4j.Logger
@@ -296,7 +296,7 @@ class TargetDiscoveryTask extends DefaultTask {
                 state = DiscoveryState.CONNECTED
 
                 // Ensure the target succeeds in its connection tests
-                def ctx = new DefaultDeployContext(projStore.project, target, resolvedHost, projStore.deployLogger, session, target.directory)
+                def ctx = new SshDeployContext(projStore.project, target, resolvedHost, projStore.deployLogger, session, target.directory)
                 def toConnect = target.toConnect(ctx)
                 if (!toConnect) {
                     throw new TargetVerificationException("Target failed toConnect (onlyIf) check!")

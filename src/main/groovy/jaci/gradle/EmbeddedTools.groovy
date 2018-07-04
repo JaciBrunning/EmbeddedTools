@@ -5,7 +5,6 @@ import groovy.swing.SwingBuilder
 import jaci.gradle.deploy.DeployPlugin
 import jaci.gradle.nativedeps.NativeDepsPlugin
 import jaci.gradle.toolchains.ToolchainsPlugin
-import org.apache.log4j.Logger
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.internal.project.ProjectInternal

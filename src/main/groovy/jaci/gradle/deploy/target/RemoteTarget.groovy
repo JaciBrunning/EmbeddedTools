@@ -3,13 +3,9 @@ package jaci.gradle.deploy.target
 import groovy.transform.CompileStatic
 import groovy.transform.EqualsAndHashCode
 import jaci.gradle.ClosureUtils
-import jaci.gradle.EmbeddedTools
 import jaci.gradle.deploy.DeployContext
-import jaci.gradle.deploy.tasks.TargetDiscoveryTask
-import jaci.gradle.transport.SshSessionController
 import org.apache.log4j.Logger
 import org.gradle.api.Named
-import org.gradle.api.Project
 
 import java.util.concurrent.CountDownLatch
 

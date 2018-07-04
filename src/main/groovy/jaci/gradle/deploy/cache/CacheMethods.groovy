@@ -7,7 +7,7 @@ class CacheMethods {
     static Map<String, CacheMethod> cacheMethods = [
             "md5sum": new CacheMethodMd5Sum(),
             "md5file" : new CacheMethodMd5File()
-    ]
+    ] as Map<String, CacheMethod>
 
     static CacheMethod getMethod(Object cache) {
         if (cache instanceof CacheMethod)

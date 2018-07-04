@@ -6,7 +6,6 @@ import com.jcraft.jsch.Session
 import groovy.transform.CompileStatic
 import jaci.gradle.EmbeddedTools
 import org.apache.log4j.Logger
-import org.slf4j.LoggerFactory
 
 import java.util.concurrent.Semaphore
 
@@ -38,7 +37,7 @@ class SshSessionController {
         semI = 0
     }
 
-    int acquire() {
+    private int acquire() {
         int sem = semI++;
         log.debug("Acquiring Semaphore " + sem + " (" + semaphore.availablePermits() + " available)")
         long before = System.currentTimeMillis()
@@ -48,7 +47,7 @@ class SshSessionController {
         return sem
     }
 
-    void release(int sem) {
+    private void release(int sem) {
         semaphore.release()
         log.debug("Semaphore " + sem + " released")
     }
