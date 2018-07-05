@@ -5,9 +5,9 @@ import groovy.transform.InheritConstructors
 import jaci.gradle.ETLogger
 import jaci.gradle.EmbeddedTools
 import jaci.gradle.WorkerStorage
-import jaci.gradle.deploy.DeployContext
-import jaci.gradle.deploy.DryDeployContext
-import jaci.gradle.deploy.SshDeployContext
+import jaci.gradle.deploy.context.DeployContext
+import jaci.gradle.deploy.context.DryDeployContext
+import jaci.gradle.deploy.context.SshDeployContext
 import jaci.gradle.deploy.target.RemoteTarget
 import jaci.gradle.transport.SshSessionController
 import org.apache.log4j.Logger

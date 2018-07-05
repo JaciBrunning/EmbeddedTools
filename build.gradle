@@ -4,6 +4,7 @@ plugins {
     id 'groovy'
     id 'maven-publish'
     id "idea"
+    id 'com.gradle.build-scan' version '1.15'
 }
 
 repositories {
@@ -25,13 +26,13 @@ dependencies {
 }
 
 buildScan {
-    licenseAgreementUrl = 'https://gradle.com/terms-of-service'
-    licenseAgree = 'yes'
+    termsOfServiceUrl = 'https://gradle.com/terms-of-service'
+    termsOfServiceAgree = 'yes'
 }
 
 group = "jaci.gradle"
 archivesBaseName = "EmbeddedTools"
-version = "2018.07.03" // YYYY.MM.DD(revision)
+version = "2018.07.06-PREVIEW" // YYYY.MM.DD(revision)
 
 pluginBundle {
     website = 'https://github.com/JacisNonsense/EmbeddedTools'

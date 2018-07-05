@@ -27,7 +27,7 @@ class NativeDepsPlugin implements Plugin<Project> {
 
     @Override
     void apply(Project project) {
-        DependencySpecExtension dse = project.extensions.create("ETDependencySpecs", DependencySpecExtension, project)
+        DependencySpecExtension dse = project.extensions.create("ETDependencySpecs", DependencySpecExtension)
 
         project.extensions.add("useLibrary", { Object closureArg, String... names ->
             if (closureArg in TargetedNativeComponent) {

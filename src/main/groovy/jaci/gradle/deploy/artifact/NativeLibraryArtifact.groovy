@@ -1,10 +1,10 @@
 package jaci.gradle.deploy.artifact
 
 import groovy.transform.CompileStatic
-import jaci.gradle.deploy.DeployContext
+import jaci.gradle.deploy.context.DeployContext
 import jaci.gradle.nativedeps.DependencySpecExtension
 import jaci.gradle.nativedeps.ETNativeDepSet
-import org.gradle.api.Project
+import org.gradle.api.file.FileCollection
 
 @CompileStatic
 class NativeLibraryArtifact extends FileCollectionArtifact {
@@ -19,19 +19,12 @@ class NativeLibraryArtifact extends FileCollectionArtifact {
     String buildType = null
 
     @Override
-    void deploy(Project project, DeployContext ctx) {
-        def candidates = project.extensions.getByType(DependencySpecExtension).sets.findAll { ETNativeDepSet set ->
-            boolean valid = set.name.equals(library)
-            if (targetPlatform != null && !set.targetPlatform.name.equals(targetPlatform))
-                valid = false
-            if (flavor != null && set.flavor != null && !set.flavor.name.equals(flavor))
-                valid = false
-            if (buildType != null && set.buildType != null && !set.buildType.name.equals(buildType))
-                valid = false
-            valid
+    void deploy(DeployContext ctx) {
+        def candidates = ctx.project.extensions.getByType(DependencySpecExtension).sets.findAll { ETNativeDepSet set ->
+            set.name.equals(library) && set.appliesTo(flavor, buildType, targetPlatform)
         } as List<ETNativeDepSet>
 
-        files = candidates.collect { it.getRuntimeFiles() }.inject { a, b -> a+b }
-        super.deploy(project, ctx)
+        files.set(candidates.collect { it.getRuntimeFiles() }.inject { a, b -> a+b } as FileCollection)
+        super.deploy(ctx)
     }
 }

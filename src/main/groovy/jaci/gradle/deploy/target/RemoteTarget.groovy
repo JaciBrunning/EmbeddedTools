@@ -1,16 +1,14 @@
 package jaci.gradle.deploy.target
 
 import groovy.transform.CompileStatic
-import groovy.transform.EqualsAndHashCode
 import jaci.gradle.ClosureUtils
-import jaci.gradle.deploy.DeployContext
+import jaci.gradle.deploy.context.DeployContext
 import org.apache.log4j.Logger
 import org.gradle.api.Named
 
 import java.util.concurrent.CountDownLatch
 
 @CompileStatic
-@EqualsAndHashCode(includes = 'name')
 class RemoteTarget implements Named {
     final String name
 

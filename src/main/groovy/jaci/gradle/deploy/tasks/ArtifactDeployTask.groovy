@@ -2,8 +2,8 @@ package jaci.gradle.deploy.tasks
 
 import groovy.transform.CompileStatic
 import jaci.gradle.WorkerStorage
-import jaci.gradle.deploy.DeployContext
-import jaci.gradle.deploy.artifact.ArtifactBase
+import jaci.gradle.deploy.artifact.AbstractArtifact
+import jaci.gradle.deploy.context.DeployContext
 import org.gradle.api.Action
 import org.gradle.api.DefaultTask
 import org.gradle.api.Project
@@ -23,9 +23,9 @@ class ArtifactDeployTask extends DefaultTask {
     private static class DeployStorage {
         Project project
         DeployContext ctx
-        ArtifactBase artifact
+        AbstractArtifact artifact
 
-        DeployStorage(Project project, DeployContext ctx, ArtifactBase artifact) {
+        DeployStorage(Project project, DeployContext ctx, AbstractArtifact artifact) {
             this.project = project
             this.ctx = ctx
             this.artifact = artifact
@@ -43,7 +43,7 @@ class ArtifactDeployTask extends DefaultTask {
     }
 
     @Input
-    ArtifactBase artifact
+    AbstractArtifact artifact
 
     @Inject
     ArtifactDeployTask(WorkerExecutor workerExecutor) {
@@ -58,7 +58,7 @@ class ArtifactDeployTask extends DefaultTask {
             it as TargetDiscoveryTask
         }
 
-        artifact.taskDependencies = taskDependencies.getDependencies(this) as Set<Task>
+//        artifact.taskDependencies = taskDependencies.getDependencies(this) as Set<Task>
 
         discoveries.each { TargetDiscoveryTask discover ->
             def index = deployerStorage.put(new DeployStorage(project, discover.getContext(), artifact))
@@ -80,7 +80,7 @@ class ArtifactDeployTask extends DefaultTask {
         @Override
         void run() {
             def storage = deployerStorage.get(index)
-            storage.artifact.doDeploy(storage.project, storage.ctx)
+//            storage.artifact.doDeploy(storage.project, storage.ctx)
         }
     }
 }

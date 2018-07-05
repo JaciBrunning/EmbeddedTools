@@ -1,11 +1,10 @@
-package jaci.gradle.deploy
+package jaci.gradle.deploy.context
 
 import groovy.transform.CompileStatic
 import jaci.gradle.ETLogger
 import jaci.gradle.EmbeddedTools
 import jaci.gradle.PathUtils
 import jaci.gradle.deploy.cache.CacheMethod
-import jaci.gradle.deploy.cache.CacheMethods
 import jaci.gradle.deploy.target.RemoteTarget
 import jaci.gradle.transport.SshSessionController
 import org.gradle.api.Project
@@ -48,11 +47,6 @@ class SshDeployContext implements DeployContext {
         return target
     }
 
-    @Override
-    Project project() {
-        return project
-    }
-
     String _execute(String command) {
         if (target.mkdirs) session.execute("mkdir -p ${workingDir()}")
 
@@ -68,13 +62,12 @@ class SshDeployContext implements DeployContext {
         return _execute(command)
     }
 
-    void put_internal(Map<String, File> files, Object cache) {
+    void put_internal(Map<String, File> files, CacheMethod cache) {
         if (target.mkdirs) session.execute("mkdir -p ${workingDir()}")
 
-        if (!EmbeddedTools.isSkipCache(project) && cache != null && !(cache instanceof Boolean && cache == false)) {
-            CacheMethod cacheMethod = CacheMethods.getMethod(cache)
-            if (cacheMethod != null && cacheMethod.compatible(this)) {
-                Set<String> updateRequired = cacheMethod.needsUpdate(this, files)
+        if (!EmbeddedTools.isSkipCache(project) && cache != null && !(cache instanceof Boolean && !cache)) {
+            if (cache != null && cache.compatible(this)) {
+                Set<String> updateRequired = cache.needsUpdate(this, files)
                 files = files.findAll { String key, File value -> updateRequired.contains(key) }
             }
         }
@@ -86,12 +79,12 @@ class SshDeployContext implements DeployContext {
     }
 
     @Override
-    void put(File source, String dest, Object cache) {
+    void put(File source, String dest, CacheMethod cache) {
         put_internal([(dest): source], cache)
     }
 
     @Override
-    void put(Set<File> files, Object cache) {
+    void put(Set<File> files, CacheMethod cache) {
         put_internal(files.collectEntries { File file ->  [(file.name): file] }, cache)
     }
 

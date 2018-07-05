@@ -1,7 +1,8 @@
 package jaci.gradle.deploy
 
-import jaci.gradle.deploy.artifact.ArtifactBase
+import jaci.gradle.deploy.artifact.AbstractArtifact
 import jaci.gradle.deploy.artifact.ArtifactsExtension
+import jaci.gradle.deploy.cache.CacheExtension
 import jaci.gradle.deploy.target.RemoteTarget
 import jaci.gradle.deploy.target.TargetsExtension
 import jaci.gradle.deploy.tasks.ArtifactDeployTask
@@ -9,13 +10,18 @@ import jaci.gradle.deploy.tasks.TargetDiscoveryTask
 import org.gradle.api.Action
 import org.gradle.api.Project
 import org.gradle.api.Task
+import org.gradle.internal.reflect.Instantiator
+
+import javax.inject.Inject
 
 class DeployExtension {
     TargetsExtension targets
     ArtifactsExtension artifacts
+    CacheExtension cache
 
     Project project
 
+    @Inject
     DeployExtension(Project project) {
         this.project = project
         targets = new TargetsExtension(project)
@@ -30,7 +36,7 @@ class DeployExtension {
             }
         }
 
-        this.artifacts.all { ArtifactBase artifact ->
+        this.artifacts.all { AbstractArtifact artifact ->
             project.tasks.create("deploy${artifact.name.capitalize()}".toString(), ArtifactDeployTask) { ArtifactDeployTask task ->
                 task.artifact = artifact
                 project.tasks.withType(TargetDiscoveryTask).all { TargetDiscoveryTask task2 ->
@@ -66,5 +72,9 @@ class DeployExtension {
 
     def artifacts(final Closure closure) {
         project.configure(artifacts as Object, closure)
+    }
+
+    def cache(final Closure closure) {
+        project.configure(cache as Object, closure)
     }
 }

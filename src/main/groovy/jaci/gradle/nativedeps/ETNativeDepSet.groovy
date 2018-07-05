@@ -77,4 +77,15 @@ public class ETNativeDepSet implements NativeDependencySet {
 
         return true
     }
+
+    boolean appliesTo(String flavorName, String buildTypeName, String platformName) {
+        if (flavor != null && !flavor.name.equals(flavorName))
+            return false
+        if (buildType != null && !buildType.name.equals(buildTypeName))
+            return false
+        if (!targetPlatform.name.equals(platformName))
+            return false
+
+        return true
+    }
 }
