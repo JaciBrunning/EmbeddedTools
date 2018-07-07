@@ -1,8 +1,10 @@
 package jaci.gradle.deploy.tasks
 
 import groovy.transform.CompileStatic
+import jaci.gradle.ClosureUtils
 import jaci.gradle.WorkerStorage
 import jaci.gradle.deploy.artifact.AbstractArtifact
+import jaci.gradle.deploy.artifact.TaskHungryArtifact
 import jaci.gradle.deploy.context.DeployContext
 import org.gradle.api.Action
 import org.gradle.api.DefaultTask
@@ -58,7 +60,8 @@ class ArtifactDeployTask extends DefaultTask {
             it as TargetDiscoveryTask
         }
 
-//        artifact.taskDependencies = taskDependencies.getDependencies(this) as Set<Task>
+        if (artifact instanceof TaskHungryArtifact)
+            ((TaskHungryArtifact)artifact).taskDependenciesAvailable(taskDependencies.getDependencies(this) as Set<Task>)
 
         discoveries.each { TargetDiscoveryTask discover ->
             def index = deployerStorage.put(new DeployStorage(project, discover.getContext(), artifact))
@@ -80,6 +83,14 @@ class ArtifactDeployTask extends DefaultTask {
         @Override
         void run() {
             def storage = deployerStorage.get(index)
+            def artifact = storage.artifact
+            def context = storage.ctx
+
+            if (artifact.isEnabled(context)) {
+                artifact.getPredeploy().each { Closure c -> ClosureUtils.delegateCall(context, c) }
+                artifact.deploy(context)
+                artifact.getPostdeploy().each { Closure c -> ClosureUtils.delegateCall(context, c) }
+            }
 //            storage.artifact.doDeploy(storage.project, storage.ctx)
         }
     }

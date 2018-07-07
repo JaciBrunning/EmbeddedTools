@@ -6,47 +6,45 @@ import org.gradle.api.internal.DefaultNamedDomainObjectSet
 import org.gradle.internal.reflect.DirectInstantiator
 import org.gradle.internal.reflect.Instantiator
 
-import javax.inject.Inject
-
 // DefaultNamedDomainObjectSet applies the withType, matching, all and other methods
 // that are incredibly useful
 @CompileStatic
 class ArtifactsExtension extends DefaultNamedDomainObjectSet<Artifact> {
     Project project
 
-    @Inject
     ArtifactsExtension(Project project) {
         super(Artifact.class, DirectInstantiator.INSTANCE)
         this.project = project
     }
 
-    def artifact(String name, Class<? extends Artifact> type, final Closure config) {
+    Artifact artifact(String name, Class<? extends Artifact> type, final Closure config) {
         def artifact = type.newInstance(name)
         project.configure(artifact, config)
         this << (artifact)
+        return artifact
     }
-//
-//    def fileArtifact(String name, final Closure config) {
-//        artifact(name, FileArtifact, config)
-//    }
-//
-//    def fileCollectionArtifact(String name, final Closure config) {
-//        artifact(name, FileCollectionArtifact, config)
-//    }
-//
-//    def commandArtifact(String name, final Closure config) {
-//        artifact(name, CommandArtifact, config)
-//    }
-//
-//    def javaArtifact(String name, final Closure config) {
-//        artifact(name, JavaArtifact, config)
-//    }
-//
-////    def nativeArtifact(String name, final Closure config) {
-////        artifact(name, NativeArtifact, config)
-////    }
-//
-//    def nativeLibraryArtifact(String name, final Closure config) {
-//        artifact(name, NativeLibraryArtifact, config)
-//    }
+
+    Artifact fileArtifact(String name, final Closure config) {
+        return artifact(name, FileArtifact, config)
+    }
+
+    Artifact fileCollectionArtifact(String name, final Closure config) {
+        return artifact(name, FileCollectionArtifact, config)
+    }
+
+    Artifact commandArtifact(String name, final Closure config) {
+        return artifact(name, CommandArtifact, config)
+    }
+
+    Artifact javaArtifact(String name, final Closure config) {
+        return artifact(name, JavaArtifact, config)
+    }
+
+    Artifact nativeArtifact(String name, final Closure config) {
+        return artifact(name, NativeArtifact, config)
+    }
+
+    Artifact nativeLibraryArtifact(String name, final Closure config) {
+        return artifact(name, NativeLibraryArtifact, config)
+    }
 }

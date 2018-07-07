@@ -43,6 +43,11 @@ class DryDeployContext implements DeployContext {
         return target
     }
 
+    @Override
+    boolean isDryRun() {
+        return true
+    }
+
     String _execute(String command) {
         if (target.mkdirs) logger.log("  ~ mkdir -p ${workingDir()}")
 

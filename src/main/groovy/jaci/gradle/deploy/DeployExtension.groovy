@@ -2,6 +2,7 @@ package jaci.gradle.deploy
 
 import jaci.gradle.deploy.artifact.AbstractArtifact
 import jaci.gradle.deploy.artifact.ArtifactsExtension
+import jaci.gradle.deploy.artifact.CacheableArtifact
 import jaci.gradle.deploy.cache.CacheExtension
 import jaci.gradle.deploy.target.RemoteTarget
 import jaci.gradle.deploy.target.TargetsExtension
@@ -26,6 +27,7 @@ class DeployExtension {
         this.project = project
         targets = new TargetsExtension(project)
         artifacts = new ArtifactsExtension(project)
+        cache = new CacheExtension(project)
 
         this.targets.all { RemoteTarget target ->
             // Discover the Remote Target on the network
@@ -37,6 +39,9 @@ class DeployExtension {
         }
 
         this.artifacts.all { AbstractArtifact artifact ->
+            if (artifact instanceof CacheableArtifact)
+                ((CacheableArtifact)artifact).setCacheResolver(this.cache)
+
             project.tasks.create("deploy${artifact.name.capitalize()}".toString(), ArtifactDeployTask) { ArtifactDeployTask task ->
                 task.artifact = artifact
                 project.tasks.withType(TargetDiscoveryTask).all { TargetDiscoveryTask task2 ->

@@ -32,7 +32,7 @@ buildScan {
 
 group = "jaci.gradle"
 archivesBaseName = "EmbeddedTools"
-version = "2018.07.06-PREVIEW" // YYYY.MM.DD(revision)
+version = "2018.07.07-PREVIEW" // YYYY.MM.DD(revision)
 
 pluginBundle {
     website = 'https://github.com/JacisNonsense/EmbeddedTools'

@@ -22,6 +22,8 @@ interface DeployContext {
 
     Project getProject()
 
+    boolean isDryRun()
+
     // Run a command (execute)
     String execute(String command)
 

@@ -1,6 +1,7 @@
 package jaci.gradle.deploy.artifact
 
 import groovy.transform.CompileStatic
+import jaci.gradle.deploy.context.DeployContext
 import org.gradle.api.Task
 import org.gradle.api.internal.provider.DefaultProvider
 import org.gradle.api.tasks.bundling.Jar

@@ -28,27 +28,30 @@ repositories.maven { repo ->
     repo.url = "http://first.wpi.edu/FRC/roborio/maven/release"
 }
 
-//deploy {
-//    targets {
-//        target('roborio') {
-//            addresses << "roborio-5333-frc.local" << "10.53.33.2" << "172.22.11.2"
-//            user = 'admin'
-//            directory = '/home/lvuser'
-//            failOnMissing = true
-//            maxChannels = 6
-//        }
-//        target('rpi') {
-//            addresses << "pi_5333:5801"
-//            user = "pi"
-//            password = "raspberry"
-//            directory = '/home/pi'
-//            failOnMissing = false
-//        }
-//    }
-//    artifacts {
-//
-//    }
-//}
+deploy {
+    targets {
+        target('roborio') {
+            addresses << "roborio-5333-frc.local" << "10.53.33.2" << "172.22.11.2"
+            user = 'admin'
+            directory = '/home/lvuser'
+            failOnMissing = true
+            maxChannels = 6
+        }
+        target('rpi') {
+            addresses << "pi_5333:5801"
+            user = "pi"
+            password = "raspberry"
+            directory = '/home/pi'
+            failOnMissing = false
+        }
+    }
+    artifacts {
+        javaArtifact('myArtifact') {
+            jar = "jar"
+            targets << 'roborio'
+        }
+    }
+}
 
 buildScan {
   licenseAgreementUrl = 'https://gradle.com/terms-of-service'

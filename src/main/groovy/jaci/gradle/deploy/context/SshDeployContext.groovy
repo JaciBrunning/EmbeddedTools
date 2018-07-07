@@ -47,6 +47,11 @@ class SshDeployContext implements DeployContext {
         return target
     }
 
+    @Override
+    boolean isDryRun() {
+        return false
+    }
+
     String _execute(String command) {
         if (target.mkdirs) session.execute("mkdir -p ${workingDir()}")
 
