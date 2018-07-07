@@ -2,15 +2,14 @@ package jaci.gradle.deploy.artifact
 
 import groovy.transform.CompileStatic
 import jaci.gradle.deploy.context.DeployContext
-import org.gradle.api.Action
 import org.gradle.api.DomainObjectSet
 import org.gradle.api.Named
-
-import java.lang.annotation.Retention
-import java.lang.annotation.RetentionPolicy
+import org.gradle.api.Project
 
 @CompileStatic
 interface Artifact extends Named {
+    Project getProject()
+
     void dependsOn(Object... paths)
     void after(Object... artifacts)
 

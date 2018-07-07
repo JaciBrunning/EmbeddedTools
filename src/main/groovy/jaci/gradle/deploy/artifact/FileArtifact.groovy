@@ -4,17 +4,19 @@ import groovy.transform.CompileStatic
 import jaci.gradle.Resolver
 import jaci.gradle.deploy.cache.CacheMethod
 import jaci.gradle.deploy.context.DeployContext
-import org.gradle.api.internal.provider.DefaultPropertyState
+import org.gradle.api.Project
 import org.gradle.api.provider.Property
-import org.gradle.api.provider.Provider
 
 @CompileStatic
 class FileArtifact extends AbstractArtifact implements CacheableArtifact {
-    FileArtifact(String name) {
-        super(name)
+
+    FileArtifact(Project project, String name) {
+        super(project, name)
+
+        file = project.objects.property(File.class)
     }
 
-    Property<File> file = new DefaultPropertyState<>(File.class)
+    Property<File> file
     String filename = null
 
     Object cache = null
@@ -23,7 +25,11 @@ class FileArtifact extends AbstractArtifact implements CacheableArtifact {
 
     @Override
     void deploy(DeployContext context) {
-        File f = file.get()
-        context.put(f, (filename == null ? f.name : filename), cacheResolver.resolve(cache))
+        if (file.isPresent()) {
+            File f = file.get()
+            context.put(f, (filename == null ? f.name : filename), cacheResolver.resolve(cache))
+        } else
+            context.logger().log("No file provided for ${toString()}")
     }
+
 }

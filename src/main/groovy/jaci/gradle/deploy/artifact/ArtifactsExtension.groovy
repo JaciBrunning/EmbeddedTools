@@ -4,7 +4,6 @@ import groovy.transform.CompileStatic
 import org.gradle.api.Project
 import org.gradle.api.internal.DefaultNamedDomainObjectSet
 import org.gradle.internal.reflect.DirectInstantiator
-import org.gradle.internal.reflect.Instantiator
 
 // DefaultNamedDomainObjectSet applies the withType, matching, all and other methods
 // that are incredibly useful
@@ -18,7 +17,7 @@ class ArtifactsExtension extends DefaultNamedDomainObjectSet<Artifact> {
     }
 
     Artifact artifact(String name, Class<? extends Artifact> type, final Closure config) {
-        def artifact = type.newInstance(name)
+        def artifact = type.newInstance(project, name)
         project.configure(artifact, config)
         this << (artifact)
         return artifact

@@ -8,10 +8,7 @@ import jaci.gradle.deploy.tasks.TargetDiscoveryTask
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.Task
-import org.gradle.api.file.ProjectLayout
-import org.gradle.api.internal.project.ProjectInternal
 import org.gradle.api.plugins.ExtensionContainer
-import org.gradle.internal.reflect.Instantiator
 import org.gradle.model.ModelMap
 import org.gradle.model.Mutate
 import org.gradle.model.RuleSource

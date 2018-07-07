@@ -47,7 +47,6 @@ deploy {
     }
     artifacts {
         javaArtifact('myArtifact') {
-            jar = "jar"
             targets << 'roborio'
         }
     }

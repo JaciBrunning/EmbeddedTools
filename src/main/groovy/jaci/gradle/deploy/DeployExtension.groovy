@@ -11,7 +11,6 @@ import jaci.gradle.deploy.tasks.TargetDiscoveryTask
 import org.gradle.api.Action
 import org.gradle.api.Project
 import org.gradle.api.Task
-import org.gradle.internal.reflect.Instantiator
 
 import javax.inject.Inject
 

@@ -19,14 +19,15 @@ class CacheExtension extends DefaultNamedDomainObjectSet<CacheMethod> implements
         method("md5sum", Md5SumCacheMethod, {})
     }
 
-    def method(String name, Class<? extends AbstractCacheMethod> type, final Closure config) {
+    CacheMethod method(String name, Class<? extends AbstractCacheMethod> type, final Closure config) {
         def cm = type.newInstance(name)
         project.configure(cm, config)
         this << (cm)
+        return cm
     }
 
-    def method(String name, final Closure config) {
-        method(name, DefaultCacheMethod, config)
+    CacheMethod method(String name, final Closure config) {
+        return method(name, DefaultCacheMethod, config)
     }
 
     CacheMethod resolve(Object cache) {
