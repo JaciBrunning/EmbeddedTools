@@ -3,6 +3,7 @@ package jaci.gradle.deploy.tasks
 import groovy.transform.CompileStatic
 import jaci.gradle.deploy.artifact.Artifact
 import jaci.gradle.deploy.artifact.TaskHungryArtifact
+import jaci.gradle.deploy.discovery.TargetDiscoveryTask
 import jaci.gradle.deploy.target.RemoteTarget
 import org.gradle.api.Action
 import org.gradle.api.DefaultTask
@@ -41,12 +42,12 @@ class ArtifactDeployTask extends DefaultTask {
 
         def discoveries = deps.findAll { i ->
             i instanceof TargetDiscoveryTask &&
-            ((TargetDiscoveryTask)i).isTargetActive() &&
+            ((TargetDiscoveryTask)i).available() &&
             ((TargetDiscoveryTask)i).target.equals(target)
         }.collect { it as TargetDiscoveryTask }
 
         discoveries.each { TargetDiscoveryTask discover ->
-            def index = ArtifactDeployWorker.submitStorage(discover.getContext(), artifact)
+            def index = ArtifactDeployWorker.submitStorage(discover.activeContext(), artifact)
             workerExecutor.submit(ArtifactDeployWorker, ({ WorkerConfiguration config ->
                 config.isolationMode = IsolationMode.NONE
                 config.params index

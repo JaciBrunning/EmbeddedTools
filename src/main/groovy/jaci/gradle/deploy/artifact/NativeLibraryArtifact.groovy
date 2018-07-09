@@ -1,7 +1,7 @@
 package jaci.gradle.deploy.artifact
 
 import groovy.transform.CompileStatic
-import jaci.gradle.deploy.context.DeployContext
+import jaci.gradle.deploy.sessions.context.DeployContext
 import jaci.gradle.nativedeps.DependencySpecExtension
 import jaci.gradle.nativedeps.ETNativeDepSet
 import org.gradle.api.GradleException

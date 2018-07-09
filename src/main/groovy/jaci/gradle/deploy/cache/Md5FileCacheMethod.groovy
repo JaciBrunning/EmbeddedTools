@@ -4,7 +4,7 @@ import groovy.json.JsonBuilder
 import groovy.json.JsonSlurper
 import groovy.transform.CompileStatic
 import groovy.transform.InheritConstructors
-import jaci.gradle.deploy.context.DeployContext
+import jaci.gradle.deploy.sessions.context.DeployContext
 import org.apache.log4j.Logger
 
 import java.nio.file.Files
@@ -23,7 +23,7 @@ class Md5FileCacheMethod extends AbstractCacheMethod {
 
     @Override
     Set<String> needsUpdate(DeployContext context, Map<String, File> files) {
-        context.logger().silent(true)
+        context.logger.silent(true)
         def cs = csI++
         log.debug("Comparing File Checksum $cs...")
 
@@ -51,7 +51,7 @@ class Md5FileCacheMethod extends AbstractCacheMethod {
         if (needs_update.size() > 0) {
             context.execute("echo '${new JsonBuilder(local_md5).toString()}' > cache.md5")
         }
-        context.logger().silent(false)
+        context.logger.silent(false)
         return needs_update
     }
 }

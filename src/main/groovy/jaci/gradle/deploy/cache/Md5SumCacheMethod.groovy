@@ -2,7 +2,7 @@ package jaci.gradle.deploy.cache
 
 import groovy.transform.CompileStatic
 import groovy.transform.InheritConstructors
-import jaci.gradle.deploy.context.DeployContext
+import jaci.gradle.deploy.sessions.context.DeployContext
 import org.apache.log4j.Logger
 
 import java.nio.file.Files
@@ -16,9 +16,9 @@ class Md5SumCacheMethod extends AbstractCacheMethod {
 
     @Override
     boolean compatible(DeployContext context) {
-        context.logger().silent(true)
+        context.logger.silent(true)
         def sum = context.execute("echo test | md5sum 2> /dev/null")
-        context.logger().silent(false)
+        context.logger.silent(false)
 
         return !sum.empty && sum.split(" ").first().equalsIgnoreCase("d8e8fca2dc0f896fd7cb4cb0031ba249")
     }
@@ -26,7 +26,7 @@ class Md5SumCacheMethod extends AbstractCacheMethod {
     @Override
     Set<String> needsUpdate(DeployContext context, Map<String, File> files) {
         def md = MessageDigest.getInstance("MD5")
-        context.logger().silent(true)
+        context.logger.silent(true)
 
         def cs = csI++
 
@@ -53,7 +53,7 @@ class Md5SumCacheMethod extends AbstractCacheMethod {
             ls.first()
         }
 
-        context.logger().silent(false)
+        context.logger.silent(false)
         return files.keySet().findAll { String name -> !upToDate.contains(name) }
     }
 }

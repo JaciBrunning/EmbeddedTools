@@ -2,7 +2,8 @@ package jaci.gradle.deploy.artifact
 
 import groovy.transform.CompileStatic
 import jaci.gradle.ClosureUtils
-import jaci.gradle.deploy.context.DeployContext
+import jaci.gradle.EmbeddedTools
+import jaci.gradle.deploy.sessions.context.DeployContext
 import org.gradle.api.DomainObjectSet
 import org.gradle.api.GradleException
 import org.gradle.api.Project
@@ -74,7 +75,7 @@ abstract class AbstractArtifact implements Artifact, Configurable<Artifact> {
     boolean isEnabled(DeployContext ctx) {
         return disabled ? false :
                 onlyIf == null ? true :
-                        (ClosureUtils.delegateCall(ctx, onlyIf) || ctx.isDryRun())
+                        (ClosureUtils.delegateCall(ctx, onlyIf) || EmbeddedTools.isDryRun(project))
     }
 
     AbstractArtifact configure(Closure closure) {

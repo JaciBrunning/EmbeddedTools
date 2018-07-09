@@ -4,7 +4,7 @@ import groovy.transform.Canonical
 import groovy.transform.CompileStatic
 import jaci.gradle.RefcountList
 import jaci.gradle.deploy.artifact.Artifact
-import jaci.gradle.deploy.context.DeployContext
+import jaci.gradle.deploy.sessions.context.DeployContext
 
 import javax.inject.Inject
 
@@ -54,7 +54,7 @@ class ArtifactDeployWorker implements Runnable {
         if (artifact.isEnabled(context)) {
             artifact.runDeploy(context)
         } else {
-            context.logger().log("Artifact skipped...")
+            context.logger.log("Artifact skipped...")
             artifact.runSkipped(context)
         }
     }

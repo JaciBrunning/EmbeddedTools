@@ -1,10 +1,9 @@
-package jaci.gradle.deploy.tasks
+package jaci.gradle.deploy.discovery
 
 enum DiscoveryState {
-    NOT_RESOLVED("Not Resolved", 0),
-    RESOLVED("Not Connected", 1),
-    CONNECTED("Connected but Invalid", 2),
-    VERIFIED("Valid", 3);
+    STARTED("Started but not resolved", 0),
+    RESOLVED("Resolved but not connected", 1),
+    CONNECTED("Connected", 2)
 
     String stateLocalized
     int priority

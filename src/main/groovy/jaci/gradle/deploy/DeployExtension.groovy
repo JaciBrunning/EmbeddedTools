@@ -4,10 +4,10 @@ import jaci.gradle.deploy.artifact.AbstractArtifact
 import jaci.gradle.deploy.artifact.ArtifactsExtension
 import jaci.gradle.deploy.artifact.CacheableArtifact
 import jaci.gradle.deploy.cache.CacheExtension
+import jaci.gradle.deploy.discovery.TargetDiscoveryTask
 import jaci.gradle.deploy.target.RemoteTarget
 import jaci.gradle.deploy.target.TargetsExtension
 import jaci.gradle.deploy.tasks.ArtifactDeployTask
-import jaci.gradle.deploy.tasks.TargetDiscoveryTask
 import org.gradle.api.Action
 import org.gradle.api.Project
 import org.gradle.api.Task

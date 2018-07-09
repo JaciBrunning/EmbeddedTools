@@ -3,8 +3,8 @@ package jaci.gradle.deploy
 import groovy.transform.CompileStatic
 import jaci.gradle.deploy.artifact.Artifact
 import jaci.gradle.deploy.artifact.NativeArtifact
-import jaci.gradle.deploy.tasks.ArtifactDeployTask
-import jaci.gradle.deploy.tasks.TargetDiscoveryTask
+import jaci.gradle.deploy.discovery.TargetDiscoveryWorker
+import jaci.gradle.deploy.tasks.ArtifactDeployWorker
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.Task
@@ -23,8 +23,8 @@ class DeployPlugin implements Plugin<Project> {
         def deployExt = project.extensions.create("deploy", DeployExtension, project)
 
         project.gradle.buildFinished {
-            TargetDiscoveryTask.clearStorage()
-            ArtifactDeployTask.clearStorage()
+            TargetDiscoveryWorker.clearStorage()
+            ArtifactDeployWorker.clearStorage()
         }
     }
 

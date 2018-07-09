@@ -1,28 +1,26 @@
-package jaci.gradle.deploy.context
+package jaci.gradle.deploy.sessions.context
 
 import groovy.transform.CompileStatic
 import jaci.gradle.ETLogger
 import jaci.gradle.deploy.cache.CacheMethod
-import jaci.gradle.deploy.target.RemoteTarget
-import org.gradle.api.Project
+import jaci.gradle.deploy.discovery.DeployLocation
+import jaci.gradle.deploy.sessions.SessionController
+
+// TODO: Session should hold the actual deploy logic
+// DryDeployContext and SessionDeployContext should be merged into DefaultDeployContext
+// Session should hold _everything_ for the connection.
 
 @CompileStatic
 interface DeployContext {
-    // Get the deploy logger
-    ETLogger logger()
+    SessionController getController()
 
-    // Get the selected hostname (from discover task)
-    String selectedHost()
+    // Get the deploy logger
+    ETLogger getLogger()
 
     // Get the working directory
-    String workingDir()
+    String getWorkingDir()
 
-    // Get the target
-    RemoteTarget remoteTarget()
-
-    Project getProject()
-
-    boolean isDryRun()
+    DeployLocation getDeployLocation()
 
     // Run a command (execute)
     String execute(String command)
