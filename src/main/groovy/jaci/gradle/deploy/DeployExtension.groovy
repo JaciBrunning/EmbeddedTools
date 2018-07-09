@@ -41,6 +41,11 @@ class DeployExtension {
             if (artifact instanceof CacheableArtifact)
                 ((CacheableArtifact)artifact).setCacheResolver(this.cache)
 
+            // TODO: Put this in an afterEvaluate?
+            artifact.targets.all { Object target ->
+
+            }
+
             project.tasks.create("deploy${artifact.name.capitalize()}".toString(), ArtifactDeployTask) { ArtifactDeployTask task ->
                 task.artifact = artifact
                 project.tasks.withType(TargetDiscoveryTask).all { TargetDiscoveryTask task2 ->

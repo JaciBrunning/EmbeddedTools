@@ -81,6 +81,14 @@ abstract class AbstractArtifact implements Artifact, Configurable<Artifact> {
         return ConfigureUtil.configureSelf(closure, this)
     }
 
+    void runDeploy(DeployContext context) {
+        getPredeploy().each { Closure c -> ClosureUtils.delegateCall(context, c) }
+        deploy(context)
+        getPostdeploy().each { Closure c -> ClosureUtils.delegateCall(context, c) }
+    }
+
+    void runSkipped(DeployContext context) { }
+
     private void processAnnotations() {
         for (Class c = this.class; c != null; c = c.getSuperclass()) {
             for (Method method : c.declaredMethods) {
@@ -102,7 +110,8 @@ abstract class AbstractArtifact implements Artifact, Configurable<Artifact> {
         if (paramTypes.length == 1 && paramTypes[0].equals(DeployContext.class)) {
             return true
         } else {
-            throw new GradleException("@${annotation.simpleName} may only be applied to methods taking a DeployContext as the only argument. Problematic method: ${m.name} on ${m.declaringClass.name}")
+            throw new GradleException("@${annotation.simpleName} may only be applied to methods taking a DeployContext " +
+                    "as the only argument. Problematic method: ${m.name} on ${m.declaringClass.name}")
         }
     }
 

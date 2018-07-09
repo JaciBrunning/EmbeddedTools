@@ -1,14 +1,11 @@
 package jaci.gradle.deploy.tasks
 
 import groovy.transform.CompileStatic
-import jaci.gradle.ClosureUtils
-import jaci.gradle.WorkerStorage
-import jaci.gradle.deploy.artifact.AbstractArtifact
+import jaci.gradle.deploy.artifact.Artifact
 import jaci.gradle.deploy.artifact.TaskHungryArtifact
-import jaci.gradle.deploy.context.DeployContext
+import jaci.gradle.deploy.target.RemoteTarget
 import org.gradle.api.Action
 import org.gradle.api.DefaultTask
-import org.gradle.api.Project
 import org.gradle.api.Task
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.Internal
@@ -22,30 +19,13 @@ import javax.inject.Inject
 @CompileStatic
 class ArtifactDeployTask extends DefaultTask {
 
-    private static class DeployStorage {
-        Project project
-        DeployContext ctx
-        AbstractArtifact artifact
-
-        DeployStorage(Project project, DeployContext ctx, AbstractArtifact artifact) {
-            this.project = project
-            this.ctx = ctx
-            this.artifact = artifact
-        }
-    }
-
-    // TODO: clear deployerstorage on build finished
     @Internal
     final WorkerExecutor workerExecutor
-    @Internal
-    private static WorkerStorage<DeployStorage> deployerStorage  = WorkerStorage.obtain()
-
-    public static void clearStorage() {
-        deployerStorage.clear()
-    }
 
     @Input
-    AbstractArtifact artifact
+    Artifact artifact
+    @Input
+    RemoteTarget target
 
     @Inject
     ArtifactDeployTask(WorkerExecutor workerExecutor) {
@@ -54,44 +34,23 @@ class ArtifactDeployTask extends DefaultTask {
 
     @TaskAction
     void deployArtifact() {
-        def discoveries = dependsOn.findAll {
-            i -> i instanceof TargetDiscoveryTask && (i as TargetDiscoveryTask).isTargetActive()
-        }.collect {
-            it as TargetDiscoveryTask
-        }
+        Set<Task> deps = taskDependencies.getDependencies(this) as Set<Task>
 
         if (artifact instanceof TaskHungryArtifact)
-            ((TaskHungryArtifact)artifact).taskDependenciesAvailable(taskDependencies.getDependencies(this) as Set<Task>)
+            ((TaskHungryArtifact)artifact).taskDependenciesAvailable(deps)
+
+        def discoveries = deps.findAll { i ->
+            i instanceof TargetDiscoveryTask &&
+            ((TargetDiscoveryTask)i).isTargetActive() &&
+            ((TargetDiscoveryTask)i).target.equals(target)
+        }.collect { it as TargetDiscoveryTask }
 
         discoveries.each { TargetDiscoveryTask discover ->
-            def index = deployerStorage.put(new DeployStorage(project, discover.getContext(), artifact))
-            workerExecutor.submit(DeployArtifactWorker, ({ WorkerConfiguration config ->
+            def index = ArtifactDeployWorker.submitStorage(discover.getContext(), artifact)
+            workerExecutor.submit(ArtifactDeployWorker, ({ WorkerConfiguration config ->
                 config.isolationMode = IsolationMode.NONE
                 config.params index
             } as Action))
-        }
-    }
-
-    static class DeployArtifactWorker implements Runnable {
-        int index
-
-        @Inject
-        DeployArtifactWorker(Integer index) {
-            this.index = index
-        }
-
-        @Override
-        void run() {
-            def storage = deployerStorage.get(index)
-            def artifact = storage.artifact
-            def context = storage.ctx
-
-            if (artifact.isEnabled(context)) {
-                artifact.getPredeploy().each { Closure c -> ClosureUtils.delegateCall(context, c) }
-                artifact.deploy(context)
-                artifact.getPostdeploy().each { Closure c -> ClosureUtils.delegateCall(context, c) }
-            }
-//            storage.artifact.doDeploy(storage.project, storage.ctx)
         }
     }
 }
