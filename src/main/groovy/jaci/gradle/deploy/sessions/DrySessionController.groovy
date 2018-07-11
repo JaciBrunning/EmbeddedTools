@@ -15,7 +15,7 @@ class DrySessionController extends AbstractSessionController implements IPSessio
 
     @Override
     String execute(String command) {
-        return command
+        return ""
     }
 
     @Override

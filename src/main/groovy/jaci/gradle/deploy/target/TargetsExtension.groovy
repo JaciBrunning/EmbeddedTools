@@ -36,7 +36,7 @@ class TargetsExtension extends DefaultNamedDomainObjectSet<RemoteTarget> impleme
         // TODO
 
         if (result == null)
-            throw new ResolveFailedException("Could not resolve artifact given type: " + o.class.name + " with value: " + o.toString())
+            throw new ResolveFailedException("Could not find target " + o.toString() + " (" + o.class.name + ")")
 
         return result
     }

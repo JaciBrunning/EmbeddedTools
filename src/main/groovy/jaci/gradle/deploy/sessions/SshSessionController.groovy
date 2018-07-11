@@ -50,6 +50,7 @@ class SshSessionController extends AbstractSessionController implements IPSessio
         def is = exec.inputStream
         exec.connect()
         exec.run()
+        // TODO: Also return exit status
         try {
             return is.text
         } finally {
@@ -64,6 +65,7 @@ class SshSessionController extends AbstractSessionController implements IPSessio
         ChannelSftp sftp = session.openChannel('sftp') as ChannelSftp
         sftp.connect()
         try {
+            // TODO: error handling here to user
             sources.eachWithIndex { File file, int idx ->
                 try {
                     sftp.put(file.absolutePath, dests[idx])

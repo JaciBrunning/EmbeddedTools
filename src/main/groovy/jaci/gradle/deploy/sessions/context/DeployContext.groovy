@@ -21,6 +21,9 @@ interface DeployContext {
     // Run a command (execute)
     String execute(String command)
 
+    // Send a batch of files
+    void put(Map<String, File> files, CacheMethod cache)
+
     // Send a single file
     void put(File source, String dest, CacheMethod cache)
 

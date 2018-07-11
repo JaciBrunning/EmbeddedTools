@@ -55,7 +55,8 @@ class DefaultDeployContext implements DeployContext {
         return result
     }
 
-    private void _put(Map<String, File> files, CacheMethod cache) {
+    @Override
+    void put(Map<String, File> files, CacheMethod cache) {
         if (deployLocation.target.mkdirs) session.execute("mkdir -p ${workingDir}")
 
         Map<String, File> cacheHit = [:], cacheMiss = files
@@ -66,7 +67,6 @@ class DefaultDeployContext implements DeployContext {
                 (files.keySet() - updateRequired).each { String f ->
                     cacheHit[f] = cacheMiss.remove(f)
                 }
-//                files = files.findAll { String key, File value -> updateRequired.contains(key) }
             }
         }
 
@@ -81,12 +81,12 @@ class DefaultDeployContext implements DeployContext {
 
     @Override
     void put(File source, String dest, CacheMethod cache) {
-        _put([(dest): source], cache)
+        put([(dest): source], cache)
     }
 
     @Override
     void put(Set<File> files, CacheMethod cache) {
-        _put(files.collectEntries { File file ->  [(file.name): file] }, cache)
+        put(files.collectEntries { File file ->  [(file.name): file] }, cache)
     }
 
     @Override

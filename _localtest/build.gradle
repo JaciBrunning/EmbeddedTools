@@ -50,8 +50,17 @@ deploy {
         javaArtifact('myJavaArtifact') {
             targets << 'roborio'
         }
+        fileTreeArtifact('myFileTreeArtifact') {
+            files = project.fileTree(dir: 'build')
+            directory = "gradle"
+            targets << 'roborio'
+        }
         fileArtifact('myFileArtifact') {
             file = project.file('myfile.dat')
+            targets << 'roborio'
+        }
+        commandArtifact('myCommandArtifact') {
+            command = 'uname -a'
             targets << 'roborio'
         }
     }
