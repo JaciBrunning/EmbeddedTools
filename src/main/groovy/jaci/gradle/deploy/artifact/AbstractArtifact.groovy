@@ -54,6 +54,7 @@ abstract class AbstractArtifact implements Artifact, Configurable<Artifact> {
     void after(Object... artifacts) {
         for (Object artifact : artifacts) {
             // TODO: Use an artifact resolver here
+            // TODO: This should skip other artifacts that don't apply to the current target..?
 //            dependsOn({ Task t -> t.project. } as Closure)
         }
     }

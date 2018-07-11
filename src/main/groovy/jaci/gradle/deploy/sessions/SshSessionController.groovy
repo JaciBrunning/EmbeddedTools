@@ -1,4 +1,4 @@
-package jaci.gradle.deploy.sessions.ssh
+package jaci.gradle.deploy.sessions
 
 import com.jcraft.jsch.ChannelExec
 import com.jcraft.jsch.ChannelSftp

@@ -12,15 +12,18 @@ class ETLogger {
     String indentStr, name
     boolean silent = false
     Logger internalLogger
-    ServiceRegistry registry
     StyledTextOutput colorOut
 
-    ETLogger(String name, ServiceRegistry registry, int indent) {
+    ETLogger(String name, StyledTextOutput textOutput, int indent) {
+        this.name = name
         this.indent = indent
         this.indentStr = ([' ']*indent).join('')
-        internalLogger = Logger.getLogger(ETLogger)
-        colorOut = registry.get(StyledTextOutputFactory).create(name)
-        this.registry = registry
+        this.internalLogger = Logger.getLogger(name)
+        this.colorOut = textOutput
+    }
+
+    ETLogger(String name, ServiceRegistry registry, int indent) {
+        this(name, registry.get(StyledTextOutputFactory).create(name), indent)
     }
 
     ETLogger(String name, ServiceRegistry registry) {
@@ -32,7 +35,7 @@ class ETLogger {
     }
 
     ETLogger push() {
-        return new ETLogger(name, registry, indent + 2)
+        return new ETLogger(name, colorOut, indent + 2)
     }
 
     void log(String msg) {

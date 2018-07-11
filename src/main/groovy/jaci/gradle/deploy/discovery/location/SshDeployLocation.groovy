@@ -1,9 +1,12 @@
-package jaci.gradle.deploy.sessions.ssh
+package jaci.gradle.deploy.discovery.location
 
 import groovy.transform.CompileStatic
 import groovy.transform.InheritConstructors
+import jaci.gradle.EmbeddedTools
 import jaci.gradle.deploy.discovery.AbstractDeployLocation
-import jaci.gradle.deploy.discovery.DiscoveryAction
+import jaci.gradle.deploy.discovery.action.DiscoveryAction
+import jaci.gradle.deploy.discovery.action.DryDiscoveryAction
+import jaci.gradle.deploy.discovery.action.SshDiscoveryAction
 
 @CompileStatic
 @InheritConstructors
@@ -23,6 +26,8 @@ class SshDeployLocation extends AbstractDeployLocation {
         assert address != null
         assert user != null
 
+        if (EmbeddedTools.isDryRun(this.target.project))
+            return new DryDiscoveryAction(this)
         return new SshDiscoveryAction(this)
     }
 

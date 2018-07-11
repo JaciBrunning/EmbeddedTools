@@ -3,8 +3,7 @@ package jaci.gradle.deploy.discovery
 import groovy.transform.CompileStatic
 import groovy.transform.InheritConstructors
 import jaci.gradle.ETLogger
-import jaci.gradle.deploy.discovery.DiscoveryState
-import jaci.gradle.deploy.discovery.TargetDiscoveryWorker
+import jaci.gradle.deploy.discovery.action.DiscoveryAction
 import jaci.gradle.deploy.sessions.context.DeployContext
 import jaci.gradle.deploy.target.RemoteTarget
 import org.gradle.api.Action
@@ -54,7 +53,7 @@ class TargetDiscoveryTask extends DefaultTask {
         log = new ETLogger("TargetDiscoveryTask[${target.name}]", services)
 
         log.log("Discovering Target ${target.name}")
-        List<DiscoveryAction> actions = target.locations.collect { it.createAction() }
+        List<DiscoveryAction> actions = target.locations.collect { it.createAction() } as List<DiscoveryAction>
 
         actions.each { DiscoveryAction action ->
             log.debug("Action ${action.toString()}")
@@ -76,7 +75,8 @@ class TargetDiscoveryTask extends DefaultTask {
 
         def results = actions
                         .collect    { TargetDiscoveryWorker.obtainStorage(it) }
-                        .sort       { target.locations.indexOf(it.location) }
+                        .sort       { l0 -> target.locations.findIndexOf { l1 -> l1.equals(l0) } }
+                        .findAll    { it != null }
 
         def failed      = results.findAll { it.failure != null }
         def succeeded   = results.findAll { it.failure == null }
@@ -118,6 +118,9 @@ class TargetDiscoveryTask extends DefaultTask {
             enumMap.get(e.state).add(e.failure)
         }
 
+        log.debug("Failure enum map: " + enumMap)
+        log.debug("Failure types: " + enumMap.keySet().sort { a -> -a.priority })
+
         // Sort and iterate by state priority
         boolean printFull = true
         enumMap.keySet().sort { a -> -a.priority }.each { DiscoveryState state ->
@@ -126,17 +129,17 @@ class TargetDiscoveryTask extends DefaultTask {
                 log.log("${fails.size()} other address(es) ${state.stateLocalized}.")
             } else {
                 fails.each { DiscoveryFailedException failed ->
-                    log.logErrorHead("${failed.action.deployLocation.friendlyString()}: ${state.stateLocalized}.")
+                    log.logErrorHead("${failed.action.deployLocation.friendlyString()}: ${state.stateLocalized.capitalize()}.")
                     log.push().with {
                         logError("Reason: ${failed.cause.class.simpleName}")
                         logError(failed.cause.message)
                     }
                 }
-                log.log("")
             }
 
             printFull = project.hasProperty("deploy-more-addr") || log.backingLogger().isInfoEnabled()
         }
+        log.log("")
         log.log("Run with -Pdeploy-more-addr or --info for more details") // Blank line
     }
 

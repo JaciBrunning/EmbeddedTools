@@ -38,7 +38,7 @@ class ArtifactDeployWorker implements Runnable {
     int index
 
     @Inject
-    DeployArtifactWorker(Integer index) {
+    ArtifactDeployWorker(Integer index) {
         this.index = index
     }
 

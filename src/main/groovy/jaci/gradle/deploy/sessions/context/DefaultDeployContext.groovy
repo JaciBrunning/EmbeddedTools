@@ -5,7 +5,7 @@ import jaci.gradle.ETLogger
 import jaci.gradle.EmbeddedTools
 import jaci.gradle.PathUtils
 import jaci.gradle.deploy.cache.CacheMethod
-import jaci.gradle.deploy.discovery.DeployLocation
+import jaci.gradle.deploy.discovery.location.DeployLocation
 import jaci.gradle.deploy.sessions.SessionController
 
 @CompileStatic
@@ -58,17 +58,25 @@ class DefaultDeployContext implements DeployContext {
     private void _put(Map<String, File> files, CacheMethod cache) {
         if (deployLocation.target.mkdirs) session.execute("mkdir -p ${workingDir}")
 
+        Map<String, File> cacheHit = [:], cacheMiss = files
+
         if (!EmbeddedTools.isSkipCache(deployLocation.target.project) && cache != null && !(cache instanceof Boolean && !cache)) {
             if (cache != null && cache.compatible(this)) {
                 Set<String> updateRequired = cache.needsUpdate(this, files)
-                files = files.findAll { String key, File value -> updateRequired.contains(key) }
+                (files.keySet() - updateRequired).each { String f ->
+                    cacheHit[f] = cacheMiss.remove(f)
+                }
+//                files = files.findAll { String key, File value -> updateRequired.contains(key) }
             }
         }
 
-        files.each { String dst, File src ->
+        cacheMiss.each { String dst, File src ->
             logger.log("  -F-> ${deployLocation.target.project.rootDir.toURI().relativize(src.toURI()).getPath()} -> ${dst} @ ${workingDir}")
             session.put(src, PathUtils.combine(workingDir, dst))
         }
+
+        if (cacheHit.size() > 0)
+            logger.log("  ${cacheHit.size()} file(s) are up-to-date and were not deployed (cache hit).")
     }
 
     @Override

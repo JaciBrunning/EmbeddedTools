@@ -17,9 +17,13 @@ class FileCollectionArtifact extends AbstractArtifact implements CacheableArtifa
         files = project.objects.property(FileCollection.class)
     }
 
-    Property<FileCollection> files
+    final Property<FileCollection> files
 
-    Object cache = null
+    void setFiles(FileCollection collection) {
+        this.files.set(collection)
+    }
+
+    Object cache = "md5sum"
     Resolver<CacheMethod> cacheResolver
 
     @Override

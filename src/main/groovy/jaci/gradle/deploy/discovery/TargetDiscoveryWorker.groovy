@@ -3,6 +3,7 @@ package jaci.gradle.deploy.discovery
 import groovy.transform.CompileStatic
 import groovy.transform.InheritConstructors
 import jaci.gradle.RequestResultPair
+import jaci.gradle.deploy.discovery.action.DiscoveryAction
 import jaci.gradle.deploy.sessions.context.DeployContext
 import org.apache.log4j.Logger
 
@@ -16,8 +17,6 @@ class TargetDiscoveryWorker implements Runnable {
     // In Gradle, we can't run a task in parallel using workers and pass non-serializable data
     // to the worker. To get around this, we store them statically and clear them at the conclusion
     // of the build. It's not at all advised, but it's the best we've got.
-
-    // TODO: Switch this to a map
 
     private static Map<Integer, RequestResultPair<DiscoveryAction, DiscoveryResult>> storage = new HashMap<>()
 
@@ -40,7 +39,7 @@ class TargetDiscoveryWorker implements Runnable {
     Logger log
 
     @Inject
-    DiscoverTargetWorker(Integer hashcode) {
+    TargetDiscoveryWorker(Integer hashcode) {
         this.pair = storage.get(hashcode)
         log = Logger.getLogger("TargetDiscoveryWorker[${pair.request.toString()}]")
     }
@@ -48,16 +47,21 @@ class TargetDiscoveryWorker implements Runnable {
     @Override
     void run() {
         launch()
+        log.info("Worker Complete")
     }
 
     void succeed(DeployContext ctx) {
+        log.info("Worker Succeeded")
         pair.result = new DiscoveryResult(pair.request.deployLocation, pair.request.state, null, ctx)
     }
 
     void fail(DiscoveryFailedException ex) {
+        log.info("Worker Failed")
         pair.result = new DiscoveryResult(pair.request.deployLocation, pair.request.state, ex, null)
     }
 
+    // There are cases where we don't update the result, which means that the thread was interrupted by
+    // another thread.
     void launch() {
         def thread = new Thread({ discover() })
         thread.start()

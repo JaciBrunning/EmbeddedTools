@@ -1,5 +1,7 @@
-package jaci.gradle.deploy.discovery
+package jaci.gradle.deploy.discovery.action
 
+import jaci.gradle.deploy.discovery.DiscoveryState
+import jaci.gradle.deploy.discovery.location.DeployLocation
 import jaci.gradle.deploy.sessions.context.DeployContext
 
 interface DiscoveryAction {

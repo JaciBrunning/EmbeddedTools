@@ -31,22 +31,27 @@ repositories.maven { repo ->
 deploy {
     targets {
         target('roborio') {
-            addresses << "roborio-5333-frc.local" << "10.53.33.2" << "172.22.11.2"
-            user = 'admin'
             directory = '/home/lvuser'
+            locations {
+                ssh {
+                    address = "roborio-5333-frc.local"
+                    user = "admin"
+                }
+                ssh {
+                    address = "172.22.11.2"
+                    user = "admin"
+                }
+            }
             failOnMissing = true
             maxChannels = 6
         }
-        target('rpi') {
-            addresses << "pi_5333:5801"
-            user = "pi"
-            password = "raspberry"
-            directory = '/home/pi'
-            failOnMissing = false
-        }
     }
     artifacts {
-        javaArtifact('myArtifact') {
+        javaArtifact('myJavaArtifact') {
+            targets << 'roborio'
+        }
+        fileArtifact('myFileArtifact') {
+            file = project.file('myfile.dat')
             targets << 'roborio'
         }
     }

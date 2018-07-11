@@ -20,11 +20,11 @@ abstract class AbstractSessionController implements SessionController {
 
     protected int acquire() {
         int sem = semI++;
-        log.debug("Acquiring Semaphore " + sem + " (" + semaphore.availablePermits() + " available)")
+        getLogger().debug("Acquiring Semaphore " + sem + " (" + semaphore.availablePermits() + " available)")
         long before = System.currentTimeMillis()
         semaphore.acquire()
         long time = System.currentTimeMillis() - before
-        log.debug("Semaphore " + sem + " acquired (took " + time + "ms)")
+        getLogger().debug("Semaphore " + sem + " acquired (took " + time + "ms)")
         return sem
     }
 

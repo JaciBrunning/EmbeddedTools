@@ -5,6 +5,7 @@ import jaci.gradle.Resolver
 import jaci.gradle.deploy.cache.CacheMethod
 import jaci.gradle.deploy.sessions.context.DeployContext
 import org.gradle.api.Project
+import org.gradle.api.file.FileCollection
 import org.gradle.api.provider.Property
 
 @CompileStatic
@@ -16,10 +17,15 @@ class FileArtifact extends AbstractArtifact implements CacheableArtifact {
         file = project.objects.property(File.class)
     }
 
-    Property<File> file
+    final Property<File> file
+
+    void setFile(File file) {
+        this.file.set(file)
+    }
+
     String filename = null
 
-    Object cache = null
+    Object cache = "md5sum"
 
     Resolver<CacheMethod> cacheResolver
 

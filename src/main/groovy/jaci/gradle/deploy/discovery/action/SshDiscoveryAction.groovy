@@ -1,12 +1,13 @@
-package jaci.gradle.deploy.sessions.ssh
+package jaci.gradle.deploy.discovery.action
 
 import groovy.transform.CompileStatic
 import jaci.gradle.ETLogger
-import jaci.gradle.deploy.discovery.DeployLocation
-import jaci.gradle.deploy.discovery.DiscoveryAction
+import jaci.gradle.deploy.discovery.location.DeployLocation
 import jaci.gradle.deploy.discovery.DiscoveryState
+import jaci.gradle.deploy.discovery.location.SshDeployLocation
 import jaci.gradle.deploy.sessions.context.DefaultDeployContext
 import jaci.gradle.deploy.sessions.context.DeployContext
+import jaci.gradle.deploy.sessions.SshSessionController
 import org.gradle.api.internal.project.ProjectInternal
 
 @CompileStatic
@@ -16,8 +17,8 @@ class SshDiscoveryAction implements DiscoveryAction {
     private SshDeployLocation location
     private ETLogger log
 
-    SshDiscoveryAction(SshDeployLocation deployProperties) {
-        this.location = deployProperties
+    SshDiscoveryAction(SshDeployLocation dloc) {
+        this.location = dloc
         log = new ETLogger(toString(), ((ProjectInternal)location.target.project).services) // TODO we should have a factory for this
     }
 
@@ -47,7 +48,8 @@ class SshDiscoveryAction implements DiscoveryAction {
         def resolvedHost = resolveHostname(hostname, location.ipv6)
         state = DiscoveryState.RESOLVED
 
-        def session = new SshSessionController(resolvedHost, port, location.user, location.password, target.timeout)
+        def session = new SshSessionController(resolvedHost, port, location.user, location.password, target.timeout, location.target.maxChannels)
+        session.open()
         log.info("Found ${resolvedHost}! (${location.address})")
         state = DiscoveryState.CONNECTED
 

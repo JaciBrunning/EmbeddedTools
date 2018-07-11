@@ -1,5 +1,6 @@
 package jaci.gradle.deploy
 
+import groovy.transform.CompileStatic
 import jaci.gradle.deploy.artifact.AbstractArtifact
 import jaci.gradle.deploy.artifact.ArtifactsExtension
 import jaci.gradle.deploy.artifact.CacheableArtifact
@@ -13,7 +14,9 @@ import org.gradle.api.Project
 import org.gradle.api.Task
 
 import javax.inject.Inject
+import java.util.concurrent.Callable
 
+@CompileStatic
 class DeployExtension {
     TargetsExtension targets
     ArtifactsExtension artifacts
@@ -41,29 +44,35 @@ class DeployExtension {
             if (artifact instanceof CacheableArtifact)
                 ((CacheableArtifact)artifact).setCacheResolver(this.cache)
 
-            // TODO: Put this in an afterEvaluate?
-            artifact.targets.all { Object target ->
+            artifact.targets.all { Object tObj ->
+                RemoteTarget target = this.targets.resolve(tObj)
+                project.tasks.create("deploy${artifact.name.capitalize()}${target.name.capitalize()}".toString(), ArtifactDeployTask) { ArtifactDeployTask task ->
+                    task.artifact = artifact
+                    task.target = target
 
-            }
-
-            project.tasks.create("deploy${artifact.name.capitalize()}".toString(), ArtifactDeployTask) { ArtifactDeployTask task ->
-                task.artifact = artifact
-                project.tasks.withType(TargetDiscoveryTask).all { TargetDiscoveryTask task2 ->
-                    artifact.targets.matching { it == task2.target.name }.all { String s ->
-                        task.dependsOn(task2)
-                    }
-                }
-
-                artifact.dependencies.all { Object dep ->
-                    if (dep instanceof Closure) {
-                        task.dependsOn(dep.call(project))
-                    } else if (dep instanceof Action) {
-                        task.dependsOn(dep.execute(project))
-                    } else {
-                        task.dependsOn(dep)
-                    }
+                    task.dependsOn({ project.tasks.withType(TargetDiscoveryTask).findAll { TargetDiscoveryTask t -> t.target == target }} as Callable<List<Task>> )
+                    task.dependsOn(artifact.dependencies)
                 }
             }
+//
+//            project.tasks.create("deploy${artifact.name.capitalize()}".toString(), ArtifactDeployTask) { ArtifactDeployTask task ->
+//                task.artifact = artifact
+//                project.tasks.withType(TargetDiscoveryTask).all { TargetDiscoveryTask task2 ->
+//                    artifact.targets.matching { it == task2.target.name }.all { String s ->
+//                        task.dependsOn(task2)
+//                    }
+//                }
+//
+//                artifact.dependencies.all { Object dep ->
+//                    if (dep instanceof Closure) {
+//                        task.dependsOn(dep.call(project))
+//                    } else if (dep instanceof Action) {
+//                        task.dependsOn(dep.execute(project))
+//                    } else {
+//                        task.dependsOn(dep)
+//                    }
+//                }
+//            }
         }
 
         project.tasks.create("deploy") { Task task ->
