@@ -60,14 +60,7 @@ class ArtifactDeployTask extends DefaultTask {
             } as Action))
             return hashcode
         }
-
-        log.debug("Workers submitted, awaiting...")
-        workerExecutor.await()
-        log.debug("Workers done!")
-
-        codes.each { int hashcode ->
-            ArtifactDeployWorker.removeStorage(hashcode)
-        }
+        log.debug("Workers submitted...")
     }
 
     @Override

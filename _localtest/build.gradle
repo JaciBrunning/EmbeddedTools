@@ -5,7 +5,7 @@ buildscript {
     }
     dependencies {
         classpath 'com.jcraft:jsch:0.1.53'
-        classpath group: "jaci.gradle", name: "EmbeddedTools", version: "+"
+        classpath group: "jaci.gradle", name: "EmbeddedTools", version: "2018.07.12-PREVIEW"
     }
 }
 
@@ -52,6 +52,7 @@ deploy {
         }
         fileTreeArtifact('myFileTreeArtifact') {
             files = project.fileTree(dir: 'build')
+            after('myJavaArtifact')
             directory = "gradle"
             targets << 'roborio'
         }
@@ -61,7 +62,7 @@ deploy {
         }
         commandArtifact('myCommandArtifact') {
             command = 'uname -a'
-            after('myFileTreeArtifact')
+            after('myFileArtifact')
             targets << 'roborio'
         }
     }

@@ -49,7 +49,11 @@ class ArtifactDeployWorker implements Runnable {
     @Override
     void run() {
         def storage = deployerStorage.get(hashCode)
-        deploy(storage.ctx, storage.artifact)
+        try {
+            deploy(storage.ctx, storage.artifact)
+        } finally {
+            removeStorage(hashCode)
+        }
     }
 
     void deploy(DeployContext ctx, Artifact artifact) {
