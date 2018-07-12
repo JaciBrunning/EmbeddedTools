@@ -76,7 +76,7 @@ class DefaultDeployContext implements DeployContext {
         }
 
         if (cacheHit.size() > 0)
-            logger.log("  ${cacheHit.size()} file(s) are up-to-date and were not deployed (cache hit).")
+            logger.log("  ${cacheHit.size()} file(s) are up-to-date and were not deployed")
     }
 
     @Override
