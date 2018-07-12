@@ -73,7 +73,7 @@ class TargetDiscoveryWorker implements Runnable {
             // If a valid address is found, all other discovery threads should be halted.
             if (target.discoverInstant) {
                 // Add 500 to account for Thread spinup (address resolution etc)
-                boolean timedOut = !target.latch.await(target.timeout * 1000 + 500, TimeUnit.MILLISECONDS)
+                boolean timedOut = !action.getDiscoveryLatch().await(target.timeout * 1000 + 500, TimeUnit.MILLISECONDS)
                 boolean threadAlive = thread.isAlive()
 
                 // Either latch has triggered, or we've reached timeout, so kill the thread
@@ -118,7 +118,7 @@ class TargetDiscoveryWorker implements Runnable {
             log.info("Target valid, putting in address storage...")
             succeed(ctx)
             log.info("Signalling Countdown")
-            target.latch.countDown()
+            action.getDiscoveryLatch().countDown()
         } catch (InterruptedException ignored) {
             log.info("Thread interrupted!")
             Thread.currentThread().interrupt()

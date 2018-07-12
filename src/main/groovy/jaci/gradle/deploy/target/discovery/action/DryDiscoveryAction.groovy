@@ -10,29 +10,23 @@ import jaci.gradle.deploy.target.location.DeployLocation
 import org.gradle.api.internal.project.ProjectInternal
 
 @CompileStatic
-class DryDiscoveryAction implements DiscoveryAction {
+class DryDiscoveryAction extends AbstractDiscoveryAction {
 
-    private DeployLocation location
     private ETLogger log
 
     DryDiscoveryAction(DeployLocation loc) {
-        this.location = loc
-        this.log = new ETLogger(toString(), ((ProjectInternal)location.target.project).services)
+        super(loc)
+        this.log = new ETLogger(toString(), ((ProjectInternal)deployLocation.target.project).services)
     }
 
     @Override
     DeployContext discover() {
         DrySessionController controller = new DrySessionController()
-        return new DefaultDeployContext(controller, log, location, location.target.directory)
+        return new DefaultDeployContext(controller, log, deployLocation, deployLocation.target.directory)
     }
 
     @Override
     DiscoveryState getState() {
         return DiscoveryState.CONNECTED
-    }
-
-    @Override
-    DeployLocation getDeployLocation() {
-        return location
     }
 }

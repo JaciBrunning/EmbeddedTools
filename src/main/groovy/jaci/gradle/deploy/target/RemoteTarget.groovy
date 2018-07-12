@@ -10,12 +10,11 @@ import org.gradle.api.DomainObjectSet
 import org.gradle.api.Named
 import org.gradle.api.Project
 
-import java.util.concurrent.CountDownLatch
-
 @CompileStatic
 class RemoteTarget implements Named {
     final String name
     final Project project
+    private Logger log
 
     RemoteTarget(String name, Project project) {
         this.name = name
@@ -33,10 +32,6 @@ class RemoteTarget implements Named {
     DomainObjectSet<DeployLocation> locations = new DeployLocationSet(this)
 
     Closure<Boolean> onlyIf = null  // Delegate: DeployContext
-
-    // Internal
-    CountDownLatch latch = new CountDownLatch(1)        // TODO: This should be moved out of here
-    private Logger log
 
     def locations(final Closure closure) {
         project.configure(locations as Object, closure)

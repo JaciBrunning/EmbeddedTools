@@ -33,7 +33,7 @@ class TargetsExtension extends DefaultNamedDomainObjectSet<RemoteTarget> impleme
             result = this.findByName(o.toString())
         else if (o instanceof RemoteTarget)
             result = (RemoteTarget)o
-        // TODO
+        // TODO more resolution methods
 
         if (result == null)
             throw new ResolveFailedException("Could not find target " + o.toString() + " (" + o.class.name + ")")

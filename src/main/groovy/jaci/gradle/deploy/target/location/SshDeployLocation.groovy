@@ -11,14 +11,12 @@ import jaci.gradle.deploy.target.discovery.action.SshDiscoveryAction
 @InheritConstructors
 class SshDeployLocation extends AbstractDeployLocation {
 
-//    List<String> addresses  = []
     String address = null
 
     boolean ipv6 = false
 
     String user = null
-    String password = ""    // TODO: Change to property. Prompting can be done thru property
-//    boolean promptPassword = false
+    String password = ""
 
     @Override
     DiscoveryAction createAction() {

@@ -6,30 +6,24 @@ import jaci.gradle.deploy.context.DefaultDeployContext
 import jaci.gradle.deploy.context.DeployContext
 import jaci.gradle.deploy.sessions.SshSessionController
 import jaci.gradle.deploy.target.discovery.DiscoveryState
-import jaci.gradle.deploy.target.location.DeployLocation
 import jaci.gradle.deploy.target.location.SshDeployLocation
 import org.gradle.api.internal.project.ProjectInternal
 
 @CompileStatic
-class SshDiscoveryAction implements DiscoveryAction {
+class SshDiscoveryAction extends AbstractDiscoveryAction {
 
     private DiscoveryState state
     private SshDeployLocation location
     private ETLogger log
 
     SshDiscoveryAction(SshDeployLocation dloc) {
-        this.location = dloc
+        super(dloc)
         log = new ETLogger(toString(), ((ProjectInternal)location.target.project).services) // TODO we should have a factory for this
     }
 
     @Override
     DiscoveryState getState() {
         return state
-    }
-
-    @Override
-    DeployLocation getDeployLocation() {
-        return location
     }
 
     @Override
