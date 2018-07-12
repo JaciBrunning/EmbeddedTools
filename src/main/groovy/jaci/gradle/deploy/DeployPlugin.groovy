@@ -2,9 +2,9 @@ package jaci.gradle.deploy
 
 import groovy.transform.CompileStatic
 import jaci.gradle.deploy.artifact.Artifact
+import jaci.gradle.deploy.artifact.ArtifactDeployWorker
 import jaci.gradle.deploy.artifact.NativeArtifact
 import jaci.gradle.deploy.target.discovery.TargetDiscoveryWorker
-import jaci.gradle.deploy.artifact.ArtifactDeployWorker
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.Task

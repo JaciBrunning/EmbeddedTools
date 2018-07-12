@@ -2,13 +2,13 @@ package jaci.gradle.deploy
 
 import groovy.transform.CompileStatic
 import jaci.gradle.deploy.artifact.AbstractArtifact
+import jaci.gradle.deploy.artifact.ArtifactDeployTask
 import jaci.gradle.deploy.artifact.ArtifactsExtension
 import jaci.gradle.deploy.artifact.CacheableArtifact
 import jaci.gradle.deploy.cache.CacheExtension
-import jaci.gradle.deploy.target.discovery.TargetDiscoveryTask
 import jaci.gradle.deploy.target.RemoteTarget
 import jaci.gradle.deploy.target.TargetsExtension
-import jaci.gradle.deploy.artifact.ArtifactDeployTask
+import jaci.gradle.deploy.target.discovery.TargetDiscoveryTask
 import org.gradle.api.Project
 import org.gradle.api.Task
 

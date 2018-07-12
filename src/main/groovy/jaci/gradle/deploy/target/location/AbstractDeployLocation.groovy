@@ -1,8 +1,8 @@
 package jaci.gradle.deploy.target.location
 
 import groovy.transform.CompileStatic
-import jaci.gradle.deploy.target.location.DeployLocation
 import jaci.gradle.deploy.target.RemoteTarget
+import jaci.gradle.deploy.target.location.DeployLocation
 
 @CompileStatic
 abstract class AbstractDeployLocation implements DeployLocation {

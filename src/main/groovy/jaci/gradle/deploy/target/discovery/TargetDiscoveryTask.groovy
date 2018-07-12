@@ -3,9 +3,9 @@ package jaci.gradle.deploy.target.discovery
 import groovy.transform.CompileStatic
 import groovy.transform.InheritConstructors
 import jaci.gradle.ETLogger
-import jaci.gradle.deploy.target.discovery.action.DiscoveryAction
 import jaci.gradle.deploy.context.DeployContext
 import jaci.gradle.deploy.target.RemoteTarget
+import jaci.gradle.deploy.target.discovery.action.DiscoveryAction
 import org.gradle.api.Action
 import org.gradle.api.DefaultTask
 import org.gradle.api.GradleException

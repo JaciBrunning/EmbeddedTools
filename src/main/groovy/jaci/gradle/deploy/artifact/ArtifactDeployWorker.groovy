@@ -2,7 +2,6 @@ package jaci.gradle.deploy.artifact
 
 import groovy.transform.Canonical
 import groovy.transform.CompileStatic
-import jaci.gradle.RefcountList
 import jaci.gradle.deploy.context.DeployContext
 
 import javax.inject.Inject
@@ -22,28 +21,30 @@ class ArtifactDeployWorker implements Runnable {
         Artifact artifact
     }
 
-    private static RefcountList<DeployStorage> deployerStorage = new RefcountList<>()
+    private static Map<Integer, DeployStorage> deployerStorage = new HashMap<>()
 
     public static void clearStorage() {
         deployerStorage.clear()
     }
 
     public static int submitStorage(DeployContext context, Artifact artifact) {
-        return deployerStorage.put(new DeployStorage(context, artifact))
+        def ds = new DeployStorage(context, artifact)
+        deployerStorage.put(ds.hashCode(), ds)
+        return ds.hashCode()
     }
 
     // Begin worker
 
-    int index
+    int hashCode
 
     @Inject
-    ArtifactDeployWorker(Integer index) {
-        this.index = index
+    ArtifactDeployWorker(Integer hashCode) {
+        this.hashCode = hashCode
     }
 
     @Override
     void run() {
-        def storage = deployerStorage.get(index)
+        def storage = deployerStorage.get(hashCode)
         deploy(storage.ctx, storage.artifact)
     }
 

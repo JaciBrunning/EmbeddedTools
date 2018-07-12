@@ -3,8 +3,8 @@ package jaci.gradle.deploy.target.discovery
 import groovy.transform.CompileStatic
 import groovy.transform.InheritConstructors
 import jaci.gradle.RequestResultPair
-import jaci.gradle.deploy.target.discovery.action.DiscoveryAction
 import jaci.gradle.deploy.context.DeployContext
+import jaci.gradle.deploy.target.discovery.action.DiscoveryAction
 import org.apache.log4j.Logger
 
 import javax.inject.Inject

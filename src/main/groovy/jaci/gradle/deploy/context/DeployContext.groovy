@@ -3,8 +3,8 @@ package jaci.gradle.deploy.context
 import groovy.transform.CompileStatic
 import jaci.gradle.ETLogger
 import jaci.gradle.deploy.cache.CacheMethod
-import jaci.gradle.deploy.target.location.DeployLocation
 import jaci.gradle.deploy.sessions.SessionController
+import jaci.gradle.deploy.target.location.DeployLocation
 
 @CompileStatic
 interface DeployContext {

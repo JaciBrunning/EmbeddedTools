@@ -2,9 +2,9 @@ package jaci.gradle.deploy.target
 
 import groovy.transform.CompileStatic
 import jaci.gradle.ClosureUtils
+import jaci.gradle.deploy.context.DeployContext
 import jaci.gradle.deploy.target.location.DeployLocation
 import jaci.gradle.deploy.target.location.DeployLocationSet
-import jaci.gradle.deploy.context.DeployContext
 import org.apache.log4j.Logger
 import org.gradle.api.DomainObjectSet
 import org.gradle.api.Named
