@@ -27,7 +27,7 @@ class Md5FileCacheMethod extends AbstractCacheMethod {
         def cs = csI++
         log.debug("Comparing File Checksum $cs...")
 
-        def remote_cache = context.execute("cat cache.md5 2> /dev/null || echo '{}'")
+        def remote_cache = context.execute("cat cache.md5 2> /dev/null || echo '{}'").result
         def remote_md5 = new JsonSlurper().parseText(remote_cache)
 
         if (log.isDebugEnabled()) {

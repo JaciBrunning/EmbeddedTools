@@ -1,6 +1,7 @@
 package jaci.gradle.deploy.sessions
 
 import groovy.transform.CompileStatic
+import jaci.gradle.deploy.CommandDeployResult
 
 @CompileStatic
 class DrySessionController extends AbstractSessionController implements IPSessionController {
@@ -14,8 +15,8 @@ class DrySessionController extends AbstractSessionController implements IPSessio
     }
 
     @Override
-    String execute(String command) {
-        return ""
+    CommandDeployResult execute(String command) {
+        return new CommandDeployResult(command, "", 0)
     }
 
     @Override

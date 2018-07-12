@@ -5,6 +5,7 @@ import com.jcraft.jsch.ChannelSftp
 import com.jcraft.jsch.Session
 import groovy.transform.CompileStatic
 import jaci.gradle.EmbeddedTools
+import jaci.gradle.deploy.CommandDeployResult
 
 @CompileStatic
 class SshSessionController extends AbstractSessionController implements IPSessionController {
@@ -37,7 +38,7 @@ class SshSessionController extends AbstractSessionController implements IPSessio
         getLogger().info("Connected!")
     }
 
-    String execute(String command) {
+    CommandDeployResult execute(String command) {
         int sem = acquire()
 
         ChannelExec exec = session.openChannel('exec') as ChannelExec
@@ -48,9 +49,8 @@ class SshSessionController extends AbstractSessionController implements IPSessio
         def is = exec.inputStream
         exec.connect()
         exec.run()
-        // TODO: Also return exit status
         try {
-            return is.text
+            return new CommandDeployResult(command, is.text, exec.exitStatus)
         } finally {
             exec.disconnect()
             release(sem)
@@ -63,17 +63,16 @@ class SshSessionController extends AbstractSessionController implements IPSessio
         ChannelSftp sftp = session.openChannel('sftp') as ChannelSftp
         sftp.connect()
         try {
-            // TODO: error handling here to user
             sources.eachWithIndex { File file, int idx ->
-                try {
+//                try {
                     sftp.put(file.absolutePath, dests[idx])
-                } catch (Exception e) {
-                    def s = new StringWriter()
-                    def pw = new PrintWriter(s)
-                    e.printStackTrace(pw)
-                    getLogger().debug("Could not deploy ${file.absolutePath}...")
-                    getLogger().debug(s.toString())
-                }
+//                } catch (Exception e) {
+//                    def s = new StringWriter()
+//                    def pw = new PrintWriter(s)
+//                    e.printStackTrace(pw)
+//                    getLogger().debug("Could not deploy ${file.absolutePath}...")
+//                    getLogger().debug(s.toString())
+//                }
             }
         } finally {
             sftp.disconnect()

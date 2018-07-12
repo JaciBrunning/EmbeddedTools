@@ -2,6 +2,7 @@ package jaci.gradle.deploy.context
 
 import groovy.transform.CompileStatic
 import jaci.gradle.ETLogger
+import jaci.gradle.deploy.CommandDeployResult
 import jaci.gradle.deploy.cache.CacheMethod
 import jaci.gradle.deploy.sessions.SessionController
 import jaci.gradle.deploy.target.location.DeployLocation
@@ -19,7 +20,7 @@ interface DeployContext {
     DeployLocation getDeployLocation()
 
     // Run a command (execute)
-    String execute(String command)
+    CommandDeployResult execute(String command)
 
     // Send a batch of files
     void put(Map<String, File> files, CacheMethod cache)

@@ -4,6 +4,7 @@ import groovy.transform.CompileStatic
 import jaci.gradle.ETLogger
 import jaci.gradle.EmbeddedTools
 import jaci.gradle.PathUtils
+import jaci.gradle.deploy.CommandDeployResult
 import jaci.gradle.deploy.cache.CacheMethod
 import jaci.gradle.deploy.sessions.SessionController
 import jaci.gradle.deploy.target.location.DeployLocation
@@ -44,13 +45,17 @@ class DefaultDeployContext implements DeployContext {
     }
 
     @Override
-    String execute(String command) {
+    CommandDeployResult execute(String command) {
         if (deployLocation.target.mkdirs) getController().execute("mkdir -p ${workingDir}")
 
         logger.log("  -C-> $command @ ${workingDir}")
         def result = session.execute([ "cd ${workingDir}", command].join('\n') )
-        if (result != null && result.length() > 0)
-            logger.log("    -> $result")
+        if (result != null) {
+            if (result.result != null && result.result.length() > 0)
+                logger.log("    -[${result.exitCode}]-> ${result.result}")
+            else if (result.exitCode != 0)
+                logger.log("    -[${result.exitCode}]->")
+        }
 
         return result
     }

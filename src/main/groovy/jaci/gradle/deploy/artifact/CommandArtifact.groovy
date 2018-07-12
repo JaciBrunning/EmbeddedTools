@@ -1,6 +1,7 @@
 package jaci.gradle.deploy.artifact
 
 import groovy.transform.CompileStatic
+import jaci.gradle.deploy.CommandDeployResult
 import jaci.gradle.deploy.context.DeployContext
 import org.gradle.api.Project
 
@@ -12,7 +13,7 @@ class CommandArtifact extends AbstractArtifact {
     }
 
     String command = null
-    String result = null
+    CommandDeployResult result = null
 
     @Override
     void deploy(DeployContext context) {

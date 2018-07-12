@@ -17,7 +17,7 @@ class Md5SumCacheMethod extends AbstractCacheMethod {
     @Override
     boolean compatible(DeployContext context) {
         context.logger.silent(true)
-        def sum = context.execute("echo test | md5sum 2> /dev/null")
+        def sum = context.execute("echo test | md5sum 2> /dev/null").result
         context.logger.silent(false)
 
         return !sum.empty && sum.split(" ").first().equalsIgnoreCase("d8e8fca2dc0f896fd7cb4cb0031ba249")
@@ -41,7 +41,7 @@ class Md5SumCacheMethod extends AbstractCacheMethod {
         log.debug("Local Checksums $cs:")
         log.debug(checksums_text)
 
-        def result = context.execute("echo '${checksums_text}' > _tmp.et.md5 && md5sum -c _tmp.et.md5 2> /dev/null; rm _tmp.et.md5")
+        def result = context.execute("echo '${checksums_text}' > _tmp.et.md5 && md5sum -c _tmp.et.md5 2> /dev/null; rm _tmp.et.md5").result
         log.debug("Remote Checksums $cs:")
         log.debug(result)
 
