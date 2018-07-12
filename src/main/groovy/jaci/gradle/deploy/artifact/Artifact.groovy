@@ -11,10 +11,11 @@ interface Artifact extends Named {
     Project getProject()
 
     void dependsOn(Object... paths)
-    void after(Object... artifacts)
 
     DomainObjectSet<Object> getDependencies()
     DomainObjectSet<Object> getTargets()
+
+    Set<ArtifactDeployTask> getTasks()
 
     String getDirectory()
 

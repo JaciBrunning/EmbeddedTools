@@ -11,8 +11,8 @@ import org.gradle.api.file.FileCollection
 @CompileStatic
 class NativeLibraryArtifact extends FileCollectionArtifact {
 
-    NativeLibraryArtifact(Project project, String name) {
-        super(project, name)
+    NativeLibraryArtifact(String name, Project project) {
+        super(name, project)
         library = name
     }
 

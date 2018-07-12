@@ -10,7 +10,7 @@ import org.gradle.internal.reflect.DirectInstantiator
 // that are incredibly useful
 @CompileStatic
 class ArtifactsExtension extends DefaultNamedDomainObjectSet<Artifact> implements Resolver<Artifact> {
-    Project project
+    final Project project
 
     ArtifactsExtension(Project project) {
         super(Artifact.class, DirectInstantiator.INSTANCE)
@@ -18,7 +18,7 @@ class ArtifactsExtension extends DefaultNamedDomainObjectSet<Artifact> implement
     }
 
     Artifact artifact(String name, Class<? extends Artifact> type, final Closure config) {
-        def artifact = type.newInstance(project, name)
+        def artifact = type.newInstance(name, project)
         project.configure(artifact, config)
         this << (artifact)
         return artifact

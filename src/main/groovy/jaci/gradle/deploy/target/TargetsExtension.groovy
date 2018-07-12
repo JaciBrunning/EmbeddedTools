@@ -19,11 +19,7 @@ class TargetsExtension extends DefaultNamedDomainObjectSet<RemoteTarget> impleme
     }
 
     def target(String name, Class<? extends RemoteTarget> type, final Closure config) {
-        def target = type.newInstance(name)
-
-        if (EmbeddedTools.isDryRun(project))
-            target.dry = true
-
+        def target = type.newInstance(name, project)
         project.configure(target, config)
         this << (target)
     }

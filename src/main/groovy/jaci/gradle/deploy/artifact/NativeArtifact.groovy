@@ -9,8 +9,8 @@ import org.gradle.nativeplatform.tasks.AbstractLinkTask
 @CompileStatic
 class NativeArtifact extends FileArtifact implements TaskHungryArtifact {
 
-    NativeArtifact(Project project, String name) {
-        super(project, name)
+    NativeArtifact(String name, Project project) {
+        super(name, project)
         component = name
     }
 

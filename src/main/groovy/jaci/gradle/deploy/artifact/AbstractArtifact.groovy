@@ -2,20 +2,16 @@ package jaci.gradle.deploy.artifact
 
 import groovy.transform.CompileStatic
 import jaci.gradle.ClosureUtils
-import jaci.gradle.EmbeddedTools
-import jaci.gradle.deploy.DeployExtension
 import jaci.gradle.deploy.context.DeployContext
 import org.gradle.api.DomainObjectSet
 import org.gradle.api.GradleException
 import org.gradle.api.Project
-import org.gradle.api.Task
 import org.gradle.api.internal.DefaultDomainObjectSet
 import org.gradle.util.Configurable
 import org.gradle.util.ConfigureUtil
 
 import java.lang.annotation.Annotation
 import java.lang.reflect.Method
-import java.util.concurrent.Callable
 
 @CompileStatic
 abstract class AbstractArtifact implements Artifact, Configurable<Artifact> {
@@ -27,18 +23,18 @@ abstract class AbstractArtifact implements Artifact, Configurable<Artifact> {
 
     private disabled = false
 
-    AbstractArtifact(Project project, String name) {
+    AbstractArtifact(String name, Project project) {
         this.name = name
         this.project = project
         processAnnotations()
     }
 
-    String getName() {
-        return name
-    }
-
     Project getProject() {
         return project
+    }
+
+    String getName() {
+        return name
     }
 
     DomainObjectSet<Object> getDependencies() {
@@ -54,26 +50,9 @@ abstract class AbstractArtifact implements Artifact, Configurable<Artifact> {
             dependencies.add(val)
     }
 
-    void after(Object... artifacts) {
-        for (Object artifact : artifacts) {
-            def callable = {
-                def de = project.extensions.getByType(DeployExtension)
-                def tr = de.targets
-                def ar = de.artifacts
-
-                def art = ar.resolve(artifact)
-                def artTasks = project.tasks.withType(ArtifactDeployTask).findAll { ArtifactDeployTask t ->
-                    t.artifact == art
-                }
-                if (artTasks.size() == 0)
-                    throw new GradleException("Artifact ${art.name} has no deploy tasks!")
-
-                this.targets.collectMany { Object targ ->
-                    def target = tr.resolve(targ)
-                    artTasks.findAll { ArtifactDeployTask t -> t.target == target } as Collection
-                } as Set<Task>
-            } as Callable
-            dependsOn(callable)
+    Set<ArtifactDeployTask> getTasks() {
+        return project.tasks.withType(ArtifactDeployTask).findAll { ArtifactDeployTask t ->
+            t.artifact == this
         }
     }
 
@@ -94,7 +73,7 @@ abstract class AbstractArtifact implements Artifact, Configurable<Artifact> {
     boolean isEnabled(DeployContext ctx) {
         return disabled ? false :
                 onlyIf == null ? true :
-                        (ClosureUtils.delegateCall(ctx, onlyIf) || EmbeddedTools.isDryRun(project))
+                        (ClosureUtils.delegateCall(ctx, onlyIf) || ctx.deployLocation.target.isDry())
     }
 
     AbstractArtifact configure(Closure closure) {

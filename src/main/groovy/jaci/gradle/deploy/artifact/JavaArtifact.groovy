@@ -11,8 +11,8 @@ import java.util.concurrent.Callable
 @CompileStatic
 class JavaArtifact extends FileArtifact implements TaskHungryArtifact {
 
-    JavaArtifact(Project project, String name) {
-        super(project, name)
+    JavaArtifact(String name, Project project) {
+        super(name, project)
         dependsOn({ jar } as Callable<Object>)
     }
 

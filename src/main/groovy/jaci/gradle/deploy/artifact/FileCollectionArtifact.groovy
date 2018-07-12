@@ -11,9 +11,8 @@ import org.gradle.api.provider.Property
 @CompileStatic
 class FileCollectionArtifact extends AbstractArtifact implements CacheableArtifact {
 
-    FileCollectionArtifact(Project project, String name) {
-        super(project, name)
-
+    FileCollectionArtifact(String name, Project project) {
+        super(name, project)
         files = project.objects.property(FileCollection.class)
     }
 
@@ -33,5 +32,4 @@ class FileCollectionArtifact extends AbstractArtifact implements CacheableArtifa
         else
             context.logger.log("No file(s) provided for ${toString()}")
     }
-
 }

@@ -67,7 +67,6 @@ deploy {
         }
         fileTreeArtifact('myFileTreeArtifact') {
             files = project.fileTree(dir: 'build')
-            after('myJavaArtifact')
             directory = "gradle"
             targets << 'roborio' << 'notroborio'
         }
@@ -77,7 +76,6 @@ deploy {
         }
         commandArtifact('myCommandArtifact') {
             command = 'uname -a'
-            after('myFileArtifact')
             targets << 'roborio' << 'notroborio'
         }
     }

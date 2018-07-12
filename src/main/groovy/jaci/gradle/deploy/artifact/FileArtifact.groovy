@@ -10,9 +10,8 @@ import org.gradle.api.provider.Property
 @CompileStatic
 class FileArtifact extends AbstractArtifact implements CacheableArtifact {
 
-    FileArtifact(Project project, String name) {
-        super(project, name)
-
+    FileArtifact(String name, Project project) {
+        super(name, project)
         file = project.objects.property(File.class)
     }
 

@@ -12,9 +12,8 @@ import org.gradle.api.provider.Property
 @CompileStatic
 class FileTreeArtifact extends AbstractArtifact implements CacheableArtifact {
 
-    FileTreeArtifact(Project project, String name) {
-        super(project, name)
-
+    FileTreeArtifact(String name, Project project) {
+        super(name, project)
         files = project.objects.property(FileTree.class)
     }
 
