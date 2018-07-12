@@ -10,10 +10,13 @@ import org.gradle.api.DomainObjectSet
 import org.gradle.api.Named
 import org.gradle.api.Project
 
+import java.util.concurrent.CountDownLatch
+
 @CompileStatic
 class RemoteTarget implements Named {
     final String name
     final Project project
+    private CountDownLatch discoveryLatch = new CountDownLatch(1)
     private Logger log
 
     RemoteTarget(String name, Project project) {
@@ -51,5 +54,14 @@ class RemoteTarget implements Named {
             }
         }
         return true
+    }
+
+    CountDownLatch getDiscoveryLatch() {
+        return this.discoveryLatch
+    }
+
+    void resetLatch() {
+        while (discoveryLatch.count > 0) discoveryLatch.countDown()
+        this.discoveryLatch = new CountDownLatch(1)
     }
 }

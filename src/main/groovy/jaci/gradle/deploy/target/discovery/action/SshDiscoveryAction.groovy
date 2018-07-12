@@ -12,7 +12,7 @@ import org.gradle.api.internal.project.ProjectInternal
 @CompileStatic
 class SshDiscoveryAction extends AbstractDiscoveryAction {
 
-    private DiscoveryState state
+    private DiscoveryState state = DiscoveryState.NOT_STARTED
     private ETLogger log
 
     SshDiscoveryAction(SshDeployLocation dloc) {
@@ -34,8 +34,11 @@ class SshDiscoveryAction extends AbstractDiscoveryAction {
         def location = sshLocation()
         def target = location.target
 
-        state = DiscoveryState.STARTED
+        if (location.address == "does.not.exist")
+            Thread.sleep(5000)
+
         log.info("Discovery started...")
+        state = DiscoveryState.STARTED
 
         // Split host into host:port, using 22 as the default port if none provided
         def splitHost = location.address.split(":")
@@ -54,6 +57,7 @@ class SshDiscoveryAction extends AbstractDiscoveryAction {
         def ctx = new DefaultDeployContext(session, log, location, target.directory)
         log.info("Context constructed")
 
+        verify(ctx)
         return ctx
     }
 

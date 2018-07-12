@@ -22,7 +22,9 @@ class DryDiscoveryAction extends AbstractDiscoveryAction {
     @Override
     DeployContext discover() {
         DrySessionController controller = new DrySessionController()
-        return new DefaultDeployContext(controller, log, deployLocation, deployLocation.target.directory)
+        def ctx = new DefaultDeployContext(controller, log, deployLocation, deployLocation.target.directory)
+        verify(ctx)
+        return ctx
     }
 
     @Override

@@ -1,14 +1,19 @@
 package jaci.gradle.deploy.target.discovery
 
+import groovy.transform.Canonical
 import groovy.transform.CompileStatic
-import groovy.transform.InheritConstructors
-import jaci.gradle.RequestResultPair
+import jaci.gradle.ETLogger
 import jaci.gradle.deploy.context.DeployContext
+import jaci.gradle.deploy.target.RemoteTarget
 import jaci.gradle.deploy.target.discovery.action.DiscoveryAction
-import org.apache.log4j.Logger
+import org.gradle.api.internal.project.ProjectInternal
 
 import javax.inject.Inject
+import java.util.concurrent.ExecutionException
+import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
+import java.util.concurrent.TimeoutException
+import java.util.function.Consumer
 
 @CompileStatic
 class TargetDiscoveryWorker implements Runnable {
@@ -18,122 +23,135 @@ class TargetDiscoveryWorker implements Runnable {
     // to the worker. To get around this, we store them statically and clear them at the conclusion
     // of the build. It's not at all advised, but it's the best we've got.
 
-    private static Map<Integer, RequestResultPair<DiscoveryAction, DiscoveryResult>> storage = new HashMap<>()
+    @CompileStatic
+    @Canonical
+    private static class DiscoveryStorage {
+        RemoteTarget target
+        Consumer<DeployContext> contextSet
+    }
+
+    private static Map<Integer, DiscoveryStorage> storage = [:]
 
     static void clearStorage() {
         storage.clear()
     }
 
-    static int submitStorage(DiscoveryAction request) {
-        storage.put(request.hashCode(), new RequestResultPair<>(request, null))
-        return request.hashCode()
-    }
-
-    static DiscoveryResult obtainStorage(DiscoveryAction request) {
-        return storage.remove(request.hashCode()).result
+    static int submitStorage(RemoteTarget target, Consumer<DeployContext> cb) {
+        int hashcode = target.hashCode()
+        storage.put(hashcode, new DiscoveryStorage(target, { DeployContext ctx ->
+            storage.remove(hashcode)
+            cb.accept(ctx)
+        } as Consumer))
+        return hashcode
     }
 
     // Begin Worker
 
-    RequestResultPair<DiscoveryAction, DiscoveryResult> pair
-    Logger log
+    private RemoteTarget target
+    private Consumer<DeployContext> callback
+    private ETLogger log
+
+    TargetDiscoveryWorker(RemoteTarget target, Consumer<DeployContext> cb) {
+        this.target = target
+        this.callback = cb
+        this.log = new ETLogger("DiscoveryWorker[${target.name}]", ((ProjectInternal)target.project).services)
+    }
+
+    TargetDiscoveryWorker(DiscoveryStorage store) {
+        this(store.target, store.contextSet)
+    }
 
     @Inject
-    TargetDiscoveryWorker(Integer hashcode) {
-        this.pair = storage.get(hashcode)
-        log = Logger.getLogger("TargetDiscoveryWorker[${pair.request.toString()}]")
+    TargetDiscoveryWorker(int hashcode) {
+        this(storage.get(hashcode))
     }
 
     @Override
     void run() {
-        launch()
-        log.info("Worker Complete")
-    }
-
-    void succeed(DeployContext ctx) {
-        log.info("Worker Succeeded")
-        pair.result = new DiscoveryResult(pair.request.deployLocation, pair.request.state, null, ctx)
-    }
-
-    void fail(DiscoveryFailedException ex) {
-        log.info("Worker Failed")
-        pair.result = new DiscoveryResult(pair.request.deployLocation, pair.request.state, ex, null)
-    }
-
-    // There are cases where we don't update the result, which means that the thread was interrupted by
-    // another thread.
-    void launch() {
-        def thread = new Thread({ discover() })
-        thread.start()
-
-        def action = pair.request
-        def target = action.deployLocation.target
+        def actions = target.locations.collect { it.createAction() } as Set<DiscoveryAction>
+        def exec = Executors.newFixedThreadPool(actions.size())
 
         try {
-            // If a valid address is found, all other discovery threads should be halted.
+            // At least one thread was successful.
+            DeployContext ctx = exec.invokeAny(actions, target.timeout, TimeUnit.SECONDS)
+            succeeded(ctx)
+        } catch (TimeoutException | ExecutionException ignored) {
+            // No threads were successful
+            def ex = actions.collect { DiscoveryAction action ->
+                // If the action didn't throw an exception, it has timed out.
+                action.getException() ?: new DiscoveryFailedException(action, new TimeoutException("Discovery timed out."))
+            }
+            failed(ex)
+        } finally {
+            if (log.backingLogger().infoEnabled) {
+                def ex = actions.collect { DiscoveryAction action ->
+                    action.getException()
+                }.findAll { it != null }
+                logAllExceptions(ex)
+            }
+        }
+    }
 
-            // Add 500 to account for Thread spinup (address resolution etc)
-            boolean timedOut = !action.getDiscoveryLatch().await(target.timeout * 1000 + 500, TimeUnit.MILLISECONDS)
-            boolean threadAlive = thread.isAlive()
+    private void succeeded(DeployContext ctx) {
+        log.log("Using ${ctx.controller.friendlyString()} for target ${target.name}")
+        callback.accept(ctx)
+    }
 
-            // Either latch has triggered, or we've reached timeout, so kill the thread
-            if (threadAlive) {
-                thread.interrupt()
-                log.info("Interrupting discovery thread (${timedOut ? "Timed Out" : "Other Address Found"})")
+    private void failed(List<DiscoveryFailedException> ex) {
+        printFailures(ex)
+        callback.accept(null)
+        def failMsg = "Target ${target.name} could not be found at any location! See above for more details."
+        if (target.failOnMissing)
+            throw new TargetNotFoundException(failMsg)
+        else {
+            log.log(failMsg)
+            log.log("${target.name}.failOnMissing is set to false. Skipping this target and moving on...")
+        }
+    }
 
-                if (timedOut) {
-                    def tEx = new DiscoveryFailedException(action, new InterruptedException("Connection Timed Out"))
-                    fail(tEx)
-                }
+    private void logAllExceptions(List<DiscoveryFailedException> exceptions) {
+        exceptions.each { DiscoveryFailedException ex ->
+            log.info("Exception caught in discovery ${ex.action.deployLocation.friendlyString()}: ")
+            def s = new StringWriter()
+            def pw = new PrintWriter(s)
+            ex.printStackTrace(pw)
+            log.info(s.toString())
+        }
+    }
+
+    private void printFailures(List<DiscoveryFailedException> failures) {
+        def enumMap = new HashMap<DiscoveryState, List<DiscoveryFailedException>>()
+        // Sort failures into state buckets
+        failures.each { DiscoveryFailedException e ->
+            if (!enumMap.containsKey(e.action.state))
+                enumMap.put(e.action.state, [] as List)
+            enumMap.get(e.action.state).add(e)
+        }
+
+        log.debug("Failures: ${enumMap}")
+        // Sort and iterate by state priority
+        boolean printFull = true
+        enumMap.keySet().sort { a -> -a.priority }.each { DiscoveryState state ->
+            List<DiscoveryFailedException> fails = enumMap[state]
+            if (!printFull) {
+                log.log("${fails.size()} other action(s) ${state.stateLocalized}.")
             } else {
-                log.info("Discovery thread finished early (likely errored)")
-            }
-        } catch (Exception e) {
-            log.info("Unknown exception in thread management")
-
-            def s = new StringWriter()
-            def pw = new PrintWriter(s)
-            e.printStackTrace(pw)
-            log.info(s.toString())
-        }
-    }
-
-    void discover() {
-        log.info("Discovery thread started")
-
-        def action = pair.request
-        def target = action.deployLocation.target
-        try {
-            def ctx = action.discover()
-
-            def toConnect = target.enabled(ctx)
-            if (!toConnect) {
-                throw new TargetVerificationException("Target failed enabled (onlyIf) check!")
+                fails.each { DiscoveryFailedException failed ->
+                    log.logErrorHead("${failed.action.deployLocation.friendlyString()}: ${state.stateLocalized.capitalize()}.")
+                    log.push().with {
+                        logError("Reason: ${failed.cause.class.simpleName}")
+                        logError(failed.cause.message)
+                    }
+                }
             }
 
-            // Target is valid, put it in the storage
-            log.info("Target valid, putting in address storage...")
-            succeed(ctx)
-            log.info("Signalling Countdown")
-            action.getDiscoveryLatch().countDown()
-        } catch (InterruptedException ignored) {
-            log.info("Thread interrupted!")
-            Thread.currentThread().interrupt()
-        } catch (Throwable e) {
-            // Put this error into the failureStorage so it can be echo'd by the main thread
-            // (workers can't print to stdout)
-            def tEx = new DiscoveryFailedException(action, e)
-            fail(tEx)
-            log.info("Throwable caught in discovery thread")
-
-            def s = new StringWriter()
-            def pw = new PrintWriter(s)
-            tEx.printStackTrace(pw)
-            log.info(s.toString())
+            printFull = target.project.hasProperty("deploy-fail-more") || log.backingLogger().isInfoEnabled()
         }
+
+        log.log("") // blank line
+
+        if (!printFull)
+            log.log("Run with -Pdeploy-fail-more or --info for more details")
     }
 
-    @CompileStatic
-    @InheritConstructors
-    public static class TargetVerificationException extends RuntimeException { }
 }

@@ -46,10 +46,14 @@ deploy {
             maxChannels = 6
         }
         target('notroborio') {
-            directory = '/'
+            directory = '/home/lvuser'
             locations {
                 ssh {
                     address = 'does.not.exist'
+                    user = 'no'
+                }
+                ssh {
+                    address = 'also.does.not.exist'
                     user = 'no'
                 }
             }
