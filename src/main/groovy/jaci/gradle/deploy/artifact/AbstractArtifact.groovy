@@ -3,16 +3,22 @@ package jaci.gradle.deploy.artifact
 import groovy.transform.CompileStatic
 import jaci.gradle.ClosureUtils
 import jaci.gradle.EmbeddedTools
+import jaci.gradle.Resolver
+import jaci.gradle.deploy.DeployExtension
 import jaci.gradle.deploy.context.DeployContext
+import jaci.gradle.deploy.target.RemoteTarget
+import jaci.gradle.deploy.target.TargetsExtension
 import org.gradle.api.DomainObjectSet
 import org.gradle.api.GradleException
 import org.gradle.api.Project
+import org.gradle.api.Task
 import org.gradle.api.internal.DefaultDomainObjectSet
 import org.gradle.util.Configurable
 import org.gradle.util.ConfigureUtil
 
 import java.lang.annotation.Annotation
 import java.lang.reflect.Method
+import java.util.concurrent.Callable
 
 @CompileStatic
 abstract class AbstractArtifact implements Artifact, Configurable<Artifact> {
@@ -53,9 +59,24 @@ abstract class AbstractArtifact implements Artifact, Configurable<Artifact> {
 
     void after(Object... artifacts) {
         for (Object artifact : artifacts) {
-            // TODO: Use an artifact resolver here
-            // TODO: This should skip other artifacts that don't apply to the current target..?
-//            dependsOn({ Task t -> t.project. } as Closure)
+            def callable = {
+                def de = project.extensions.getByType(DeployExtension)
+                def tr = de.targets
+                def ar = de.artifacts
+
+                def art = ar.resolve(artifact)
+                def artTasks = project.tasks.withType(ArtifactDeployTask).findAll { ArtifactDeployTask t ->
+                    t.artifact == art
+                }
+                if (artTasks.size() == 0)
+                    throw new GradleException("Artifact ${art.name} has no deploy tasks!")
+
+                this.targets.collectMany { Object targ ->
+                    def target = tr.resolve(targ)
+                    artTasks.findAll { ArtifactDeployTask t -> t.target == target } as Collection
+                } as Set<Task>
+            } as Callable
+            dependsOn(callable)
         }
     }
 
@@ -120,42 +141,6 @@ abstract class AbstractArtifact implements Artifact, Configurable<Artifact> {
     private Closure methodWrapper(Method m) {
         return { DeployContext ctx -> m.invoke(this, ctx) }
     }
-
-//    void after(Object... artifacts) {
-//        // TODO: Make this use resolver
-//        artifacts.each { Object artifact ->
-//            if (artifact instanceof String) {
-//                dependencies << { Project project ->
-//                    project.tasks.withType(ArtifactDeployTask).matching { ArtifactDeployTask t -> t.artifact.name == artifact }
-//                } as Action<? extends Project>
-//            } else if (artifact instanceof Artifact) {
-//                dependencies << { Project project ->
-//                    project.tasks.withType(ArtifactDeployTask).matching { ArtifactDeployTask t -> t == artifact }
-//                } as Action<? extends Project>
-//            }
-//        }
-//    }
-
-    // Internal
-//    void doDeploy(Project project, DeployContext ctx) {
-//        ctx = ctx.subContext(directory)
-//        ctx.logger().log("-> ${toString()}")
-//        precheck.forEach { Closure c -> ClosureUtils.delegateCall(ctx, c) }
-//
-//        def toRun = true
-//        if (onlyIf != null) {
-//            ctx.logger().log(" -> OnlyIf Check")
-//            toRun = ClosureUtils.delegateCall(ctx, onlyIf) || EmbeddedTools.isDryRun(project)
-//            ctx.logger().log(" -> ${EmbeddedTools.isDryRun(project) ? 'DRY' : toRun ? 'OnlyIf triggered' : 'OnlyIf not triggered'}")
-//        }
-//
-//        if (toRun) {
-//            predeploy.each { Closure c -> ClosureUtils.delegateCall(ctx, c) }
-//            deploy(project, ctx)
-//            postdeploy.each { Closure c -> ClosureUtils.delegateCall(ctx, c) }
-//        }
-//        ctx.logger().log("")
-//    }
 
     @Override
     String toString() {

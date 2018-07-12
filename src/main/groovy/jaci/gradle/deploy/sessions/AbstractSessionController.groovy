@@ -9,10 +9,9 @@ import java.util.concurrent.Semaphore
 abstract class AbstractSessionController implements SessionController {
 
     private Semaphore semaphore
-    private int semI
     private Logger log
+    private int semI
 
-    // TODO Add semaphore locking profiling to build scan
     AbstractSessionController(int maxConcurrent) {
         semaphore = new Semaphore(maxConcurrent)
         semI = 0

@@ -13,12 +13,11 @@ import org.gradle.api.internal.project.ProjectInternal
 class SshDiscoveryAction extends AbstractDiscoveryAction {
 
     private DiscoveryState state
-    private SshDeployLocation location
     private ETLogger log
 
     SshDiscoveryAction(SshDeployLocation dloc) {
         super(dloc)
-        log = new ETLogger(toString(), ((ProjectInternal)location.target.project).services) // TODO we should have a factory for this
+        log = new ETLogger(toString(), ((ProjectInternal)deployLocation.target.project).services) // TODO we should have a factory for this
     }
 
     @Override
@@ -26,8 +25,13 @@ class SshDiscoveryAction extends AbstractDiscoveryAction {
         return state
     }
 
+    private SshDeployLocation sshLocation() {
+        return (SshDeployLocation)getDeployLocation()
+    }
+
     @Override
     DeployContext discover() {
+        def location = sshLocation()
         def target = location.target
 
         state = DiscoveryState.STARTED
@@ -77,6 +81,6 @@ class SshDiscoveryAction extends AbstractDiscoveryAction {
 
     @Override
     public String toString() {
-        return "${this.class.simpleName}[${this.location.address}]"
+        return "${this.class.simpleName}[${this.sshLocation().address}]"
     }
 }

@@ -15,7 +15,8 @@ class EmbeddedTools implements Plugin<Project> {
 
     @Override
     void apply(Project project) {
-        project.extensions.create('em_projectwrapper', ProjectWrapper, project)
+        project.extensions.create('em_projectwrapper', ProjectWrapper, project) // TODO: Use ProjectLayout instead
+
         project.getPluginManager().apply(DeployPlugin)
         logger = new ETLogger(this.class, (project as ProjectInternal).services)
 

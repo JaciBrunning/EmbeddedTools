@@ -10,7 +10,7 @@ buildscript {
 }
 
 plugins {
-    id 'com.gradle.build-scan' version '1.9'
+    id 'com.gradle.build-scan' version '1.15'
 }
 
 apply plugin: "java"
@@ -61,6 +61,7 @@ deploy {
         }
         commandArtifact('myCommandArtifact') {
             command = 'uname -a'
+            after('myFileTreeArtifact')
             targets << 'roborio'
         }
     }

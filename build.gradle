@@ -17,6 +17,7 @@ repositories {
 
 dependencies {
     compile 'com.jcraft:jsch:0.1.53'
+    compile 'com.gradle:build-scan-plugin:1.15'
 
     testCompile('org.spockframework:spock-core:1.1-groovy-2.4') {
         exclude group: 'org.codehaus.groovy'
