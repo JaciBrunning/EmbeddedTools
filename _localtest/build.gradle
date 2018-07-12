@@ -45,16 +45,27 @@ deploy {
             failOnMissing = true
             maxChannels = 6
         }
+        target('notroborio') {
+            directory = '/'
+            locations {
+                ssh {
+                    address = 'does.not.exist'
+                    user = 'no'
+                }
+            }
+            failOnMissing = false
+            maxChannels = 6
+        }
     }
     artifacts {
         javaArtifact('myJavaArtifact') {
-            targets << 'roborio'
+            targets << 'roborio' << 'notroborio'
         }
         fileTreeArtifact('myFileTreeArtifact') {
             files = project.fileTree(dir: 'build')
             after('myJavaArtifact')
             directory = "gradle"
-            targets << 'roborio'
+            targets << 'roborio' << 'notroborio'
         }
         fileArtifact('myFileArtifact') {
             file = project.file('myfile.dat')
@@ -63,7 +74,7 @@ deploy {
         commandArtifact('myCommandArtifact') {
             command = 'uname -a'
             after('myFileArtifact')
-            targets << 'roborio'
+            targets << 'roborio' << 'notroborio'
         }
     }
 }

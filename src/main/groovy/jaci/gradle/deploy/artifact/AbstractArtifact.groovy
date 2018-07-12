@@ -3,11 +3,8 @@ package jaci.gradle.deploy.artifact
 import groovy.transform.CompileStatic
 import jaci.gradle.ClosureUtils
 import jaci.gradle.EmbeddedTools
-import jaci.gradle.Resolver
 import jaci.gradle.deploy.DeployExtension
 import jaci.gradle.deploy.context.DeployContext
-import jaci.gradle.deploy.target.RemoteTarget
-import jaci.gradle.deploy.target.TargetsExtension
 import org.gradle.api.DomainObjectSet
 import org.gradle.api.GradleException
 import org.gradle.api.Project

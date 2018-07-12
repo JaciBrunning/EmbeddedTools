@@ -71,25 +71,22 @@ class TargetDiscoveryWorker implements Runnable {
 
         try {
             // If a valid address is found, all other discovery threads should be halted.
-            if (target.discoverInstant) {
-                // Add 500 to account for Thread spinup (address resolution etc)
-                boolean timedOut = !action.getDiscoveryLatch().await(target.timeout * 1000 + 500, TimeUnit.MILLISECONDS)
-                boolean threadAlive = thread.isAlive()
 
-                // Either latch has triggered, or we've reached timeout, so kill the thread
-                if (threadAlive) {
-                    thread.interrupt()
-                    log.info("Interrupting discovery thread (${timedOut ? "Timed Out" : "Other Address Found"})")
+            // Add 500 to account for Thread spinup (address resolution etc)
+            boolean timedOut = !action.getDiscoveryLatch().await(target.timeout * 1000 + 500, TimeUnit.MILLISECONDS)
+            boolean threadAlive = thread.isAlive()
 
-                    if (timedOut) {
-                        def tEx = new DiscoveryFailedException(action, new InterruptedException("Connection Timed Out"))
-                        fail(tEx)
-                    }
-                } else {
-                    log.info("Discovery thread finished early (likely errored)")
+            // Either latch has triggered, or we've reached timeout, so kill the thread
+            if (threadAlive) {
+                thread.interrupt()
+                log.info("Interrupting discovery thread (${timedOut ? "Timed Out" : "Other Address Found"})")
+
+                if (timedOut) {
+                    def tEx = new DiscoveryFailedException(action, new InterruptedException("Connection Timed Out"))
+                    fail(tEx)
                 }
             } else {
-                thread.join()
+                log.info("Discovery thread finished early (likely errored)")
             }
         } catch (Exception e) {
             log.info("Unknown exception in thread management")

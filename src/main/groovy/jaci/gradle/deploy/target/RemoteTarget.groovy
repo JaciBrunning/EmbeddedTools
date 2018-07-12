@@ -23,7 +23,6 @@ class RemoteTarget implements Named {
     }
 
     boolean mkdirs          = true
-    boolean discoverInstant = true
     String directory        = null     // Null = default user home
     int timeout             = 3
     boolean failOnMissing   = true
