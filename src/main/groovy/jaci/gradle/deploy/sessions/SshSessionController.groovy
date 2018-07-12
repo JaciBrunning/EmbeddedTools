@@ -5,8 +5,6 @@ import com.jcraft.jsch.ChannelSftp
 import com.jcraft.jsch.Session
 import groovy.transform.CompileStatic
 import jaci.gradle.EmbeddedTools
-import jaci.gradle.deploy.sessions.AbstractSessionController
-import jaci.gradle.deploy.sessions.IPSessionController
 
 @CompileStatic
 class SshSessionController extends AbstractSessionController implements IPSessionController {

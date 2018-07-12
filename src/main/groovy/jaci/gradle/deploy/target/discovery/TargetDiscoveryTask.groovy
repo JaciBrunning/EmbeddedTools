@@ -1,10 +1,10 @@
-package jaci.gradle.deploy.discovery
+package jaci.gradle.deploy.target.discovery
 
 import groovy.transform.CompileStatic
 import groovy.transform.InheritConstructors
 import jaci.gradle.ETLogger
-import jaci.gradle.deploy.discovery.action.DiscoveryAction
-import jaci.gradle.deploy.sessions.context.DeployContext
+import jaci.gradle.deploy.target.discovery.action.DiscoveryAction
+import jaci.gradle.deploy.context.DeployContext
 import jaci.gradle.deploy.target.RemoteTarget
 import org.gradle.api.Action
 import org.gradle.api.DefaultTask

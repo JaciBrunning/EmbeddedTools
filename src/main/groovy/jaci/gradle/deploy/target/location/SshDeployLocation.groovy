@@ -1,12 +1,11 @@
-package jaci.gradle.deploy.discovery.location
+package jaci.gradle.deploy.target.location
 
 import groovy.transform.CompileStatic
 import groovy.transform.InheritConstructors
 import jaci.gradle.EmbeddedTools
-import jaci.gradle.deploy.discovery.AbstractDeployLocation
-import jaci.gradle.deploy.discovery.action.DiscoveryAction
-import jaci.gradle.deploy.discovery.action.DryDiscoveryAction
-import jaci.gradle.deploy.discovery.action.SshDiscoveryAction
+import jaci.gradle.deploy.target.discovery.action.DiscoveryAction
+import jaci.gradle.deploy.target.discovery.action.DryDiscoveryAction
+import jaci.gradle.deploy.target.discovery.action.SshDiscoveryAction
 
 @CompileStatic
 @InheritConstructors

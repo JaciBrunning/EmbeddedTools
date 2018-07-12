@@ -1,7 +1,7 @@
-package jaci.gradle.deploy.discovery
+package jaci.gradle.deploy.target.discovery
 
 import groovy.transform.CompileStatic
-import jaci.gradle.deploy.discovery.action.DiscoveryAction
+import jaci.gradle.deploy.target.discovery.action.DiscoveryAction
 
 @CompileStatic
 class DiscoveryFailedException extends RuntimeException {

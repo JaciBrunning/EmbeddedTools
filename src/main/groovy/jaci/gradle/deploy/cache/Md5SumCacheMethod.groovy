@@ -2,7 +2,7 @@ package jaci.gradle.deploy.cache
 
 import groovy.transform.CompileStatic
 import groovy.transform.InheritConstructors
-import jaci.gradle.deploy.sessions.context.DeployContext
+import jaci.gradle.deploy.context.DeployContext
 import org.apache.log4j.Logger
 
 import java.nio.file.Files

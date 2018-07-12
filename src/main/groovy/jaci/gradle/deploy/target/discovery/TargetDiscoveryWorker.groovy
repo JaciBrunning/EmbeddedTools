@@ -1,10 +1,10 @@
-package jaci.gradle.deploy.discovery
+package jaci.gradle.deploy.target.discovery
 
 import groovy.transform.CompileStatic
 import groovy.transform.InheritConstructors
 import jaci.gradle.RequestResultPair
-import jaci.gradle.deploy.discovery.action.DiscoveryAction
-import jaci.gradle.deploy.sessions.context.DeployContext
+import jaci.gradle.deploy.target.discovery.action.DiscoveryAction
+import jaci.gradle.deploy.context.DeployContext
 import org.apache.log4j.Logger
 
 import javax.inject.Inject

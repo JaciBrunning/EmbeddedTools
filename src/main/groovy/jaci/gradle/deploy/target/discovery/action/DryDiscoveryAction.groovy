@@ -1,12 +1,12 @@
-package jaci.gradle.deploy.discovery.action
+package jaci.gradle.deploy.target.discovery.action
 
 import groovy.transform.CompileStatic
 import jaci.gradle.ETLogger
-import jaci.gradle.deploy.discovery.DiscoveryState
-import jaci.gradle.deploy.discovery.location.DeployLocation
+import jaci.gradle.deploy.target.discovery.DiscoveryState
+import jaci.gradle.deploy.target.location.DeployLocation
 import jaci.gradle.deploy.sessions.DrySessionController
-import jaci.gradle.deploy.sessions.context.DefaultDeployContext
-import jaci.gradle.deploy.sessions.context.DeployContext
+import jaci.gradle.deploy.context.DefaultDeployContext
+import jaci.gradle.deploy.context.DeployContext
 import org.gradle.api.internal.project.ProjectInternal
 
 @CompileStatic

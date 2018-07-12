@@ -1,6 +1,6 @@
 package jaci.gradle.deploy.cache
 
-import jaci.gradle.deploy.sessions.context.DeployContext
+import jaci.gradle.deploy.context.DeployContext
 import org.gradle.api.Named
 
 interface CacheMethod extends Named {

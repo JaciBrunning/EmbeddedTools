@@ -1,7 +1,7 @@
 package jaci.gradle.deploy.artifact
 
 import groovy.transform.CompileStatic
-import jaci.gradle.deploy.sessions.context.DeployContext
+import jaci.gradle.deploy.context.DeployContext
 import org.gradle.api.DomainObjectSet
 import org.gradle.api.Named
 import org.gradle.api.Project

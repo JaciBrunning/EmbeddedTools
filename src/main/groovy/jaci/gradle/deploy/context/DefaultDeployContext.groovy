@@ -1,11 +1,11 @@
-package jaci.gradle.deploy.sessions.context
+package jaci.gradle.deploy.context
 
 import groovy.transform.CompileStatic
 import jaci.gradle.ETLogger
 import jaci.gradle.EmbeddedTools
 import jaci.gradle.PathUtils
 import jaci.gradle.deploy.cache.CacheMethod
-import jaci.gradle.deploy.discovery.location.DeployLocation
+import jaci.gradle.deploy.target.location.DeployLocation
 import jaci.gradle.deploy.sessions.SessionController
 
 @CompileStatic

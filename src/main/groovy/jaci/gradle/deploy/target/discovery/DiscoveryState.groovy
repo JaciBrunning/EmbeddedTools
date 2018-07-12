@@ -1,4 +1,4 @@
-package jaci.gradle.deploy.discovery
+package jaci.gradle.deploy.target.discovery
 
 enum DiscoveryState {
     // STARTED and RESOLVED have the same priority since IP addresses will always pass resolution,

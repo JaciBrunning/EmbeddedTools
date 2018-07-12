@@ -1,7 +1,7 @@
-package jaci.gradle.deploy.discovery
+package jaci.gradle.deploy.target.location
 
 import groovy.transform.CompileStatic
-import jaci.gradle.deploy.discovery.location.DeployLocation
+import jaci.gradle.deploy.target.location.DeployLocation
 import jaci.gradle.deploy.target.RemoteTarget
 
 @CompileStatic

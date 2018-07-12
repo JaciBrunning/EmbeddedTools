@@ -1,9 +1,9 @@
-package jaci.gradle.deploy.discovery
+package jaci.gradle.deploy.target.discovery
 
 import groovy.transform.Canonical
 import groovy.transform.CompileStatic
-import jaci.gradle.deploy.discovery.location.DeployLocation
-import jaci.gradle.deploy.sessions.context.DeployContext
+import jaci.gradle.deploy.target.location.DeployLocation
+import jaci.gradle.deploy.context.DeployContext
 
 @Canonical
 @CompileStatic

@@ -3,7 +3,7 @@ package jaci.gradle.deploy.cache
 import groovy.transform.CompileStatic
 import groovy.transform.InheritConstructors
 import jaci.gradle.ClosureUtils
-import jaci.gradle.deploy.sessions.context.DeployContext
+import jaci.gradle.deploy.context.DeployContext
 
 @CompileStatic
 @InheritConstructors

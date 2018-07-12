@@ -1,10 +1,9 @@
-package jaci.gradle.deploy.tasks
+package jaci.gradle.deploy.artifact
 
 import groovy.transform.Canonical
 import groovy.transform.CompileStatic
 import jaci.gradle.RefcountList
-import jaci.gradle.deploy.artifact.Artifact
-import jaci.gradle.deploy.sessions.context.DeployContext
+import jaci.gradle.deploy.context.DeployContext
 
 import javax.inject.Inject
 
