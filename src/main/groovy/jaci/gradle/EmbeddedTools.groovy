@@ -16,7 +16,7 @@ class EmbeddedTools implements Plugin<Project> {
 
     @Override
     void apply(Project project) {
-        project.extensions.create('em_projectwrapper', ProjectWrapper, project) // TODO: Use ProjectLayout instead
+        project.extensions.create('em_projectwrapper', ProjectWrapper, project)
 
         ETLoggerFactory.INSTANCE.addColorOutput(project)
 
