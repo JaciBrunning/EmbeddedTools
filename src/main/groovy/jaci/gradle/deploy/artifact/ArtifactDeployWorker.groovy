@@ -33,6 +33,10 @@ class ArtifactDeployWorker implements Runnable {
         return ds.hashCode()
     }
 
+    public static void removeStorage(int hashcode) {
+        deployerStorage.remove(hashcode)
+    }
+
     // Begin worker
 
     int hashCode

@@ -3,6 +3,7 @@ package jaci.gradle.deploy.artifact
 import groovy.transform.CompileStatic
 import jaci.gradle.deploy.target.RemoteTarget
 import jaci.gradle.deploy.target.discovery.TargetDiscoveryTask
+import org.apache.log4j.Logger
 import org.gradle.api.Action
 import org.gradle.api.DefaultTask
 import org.gradle.api.Task
@@ -33,10 +34,15 @@ class ArtifactDeployTask extends DefaultTask {
 
     @TaskAction
     void deployArtifact() {
+        Logger log = Logger.getLogger(toString())
         Set<Task> deps = taskDependencies.getDependencies(this) as Set<Task>
 
-        if (artifact instanceof TaskHungryArtifact)
-            ((TaskHungryArtifact)artifact).taskDependenciesAvailable(deps)
+        log.debug("Deploying artifact ${artifact.name} for target ${target.name}")
+
+        if (artifact instanceof TaskHungryArtifact) {
+            log.debug("Artifact is task hungry")
+            ((TaskHungryArtifact) artifact).taskDependenciesAvailable(deps)
+        }
 
         def discoveries = deps.findAll { i ->
             i instanceof TargetDiscoveryTask &&
@@ -44,12 +50,28 @@ class ArtifactDeployTask extends DefaultTask {
             ((TargetDiscoveryTask)i).target.equals(target)
         }.collect { it as TargetDiscoveryTask }
 
-        discoveries.each { TargetDiscoveryTask discover ->
+        log.debug("Found ${discoveries.size()} discovery tasks")
+
+        def codes = discoveries.collect { TargetDiscoveryTask discover ->
             def hashcode = ArtifactDeployWorker.submitStorage(discover.activeContext(), artifact)
             workerExecutor.submit(ArtifactDeployWorker, ({ WorkerConfiguration config ->
                 config.isolationMode = IsolationMode.NONE
                 config.params hashcode
             } as Action))
+            return hashcode
         }
+
+        log.debug("Workers submitted, awaiting...")
+        workerExecutor.await()
+        log.debug("Workers done!")
+
+        codes.each { int hashcode ->
+            ArtifactDeployWorker.removeStorage(hashcode)
+        }
+    }
+
+    @Override
+    public String toString() {
+        return "ArtifactDeployTask[${artifact.name} -> ${target.name}]"
     }
 }
