@@ -31,7 +31,6 @@ class DeployExtension {
         cache = new CacheExtension(project)
 
         this.targets.all { RemoteTarget target ->
-            // Discover the Remote Target on the network
             project.tasks.create("discover${target.name.capitalize()}".toString(), TargetDiscoveryTask) { TargetDiscoveryTask task ->
                 task.group = "EmbeddedTools"
                 task.description = "Determine the address(es) of target ${target.name.capitalize()}"
@@ -53,25 +52,6 @@ class DeployExtension {
                     task.dependsOn(artifact.dependencies)
                 }
             }
-//
-//            project.tasks.create("deploy${artifact.name.capitalize()}".toString(), ArtifactDeployTask) { ArtifactDeployTask task ->
-//                task.artifact = artifact
-//                project.tasks.withType(TargetDiscoveryTask).all { TargetDiscoveryTask task2 ->
-//                    artifact.targets.matching { it == task2.target.name }.all { String s ->
-//                        task.dependsOn(task2)
-//                    }
-//                }
-//
-//                artifact.dependencies.all { Object dep ->
-//                    if (dep instanceof Closure) {
-//                        task.dependsOn(dep.call(project))
-//                    } else if (dep instanceof Action) {
-//                        task.dependsOn(dep.execute(project))
-//                    } else {
-//                        task.dependsOn(dep)
-//                    }
-//                }
-//            }
         }
 
         project.tasks.create("deploy") { Task task ->

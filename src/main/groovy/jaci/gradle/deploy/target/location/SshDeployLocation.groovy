@@ -2,9 +2,7 @@ package jaci.gradle.deploy.target.location
 
 import groovy.transform.CompileStatic
 import groovy.transform.InheritConstructors
-import jaci.gradle.EmbeddedTools
 import jaci.gradle.deploy.target.discovery.action.DiscoveryAction
-import jaci.gradle.deploy.target.discovery.action.DryDiscoveryAction
 import jaci.gradle.deploy.target.discovery.action.SshDiscoveryAction
 
 @CompileStatic
@@ -23,8 +21,6 @@ class SshDeployLocation extends AbstractDeployLocation {
         assert address != null
         assert user != null
 
-        if (EmbeddedTools.isDryRun(this.target.project))
-            return new DryDiscoveryAction(this)
         return new SshDiscoveryAction(this)
     }
 

@@ -2,11 +2,11 @@ package jaci.gradle.deploy.target.discovery
 
 import groovy.transform.Canonical
 import groovy.transform.CompileStatic
-import jaci.gradle.ETLogger
 import jaci.gradle.deploy.context.DeployContext
 import jaci.gradle.deploy.target.RemoteTarget
 import jaci.gradle.deploy.target.discovery.action.DiscoveryAction
-import org.gradle.api.internal.project.ProjectInternal
+import jaci.gradle.log.ETLogger
+import jaci.gradle.log.ETLoggerFactory
 
 import javax.inject.Inject
 import java.util.concurrent.ExecutionException
@@ -54,7 +54,7 @@ class TargetDiscoveryWorker implements Runnable {
     TargetDiscoveryWorker(RemoteTarget target, Consumer<DeployContext> cb) {
         this.target = target
         this.callback = cb
-        this.log = new ETLogger("DiscoveryWorker[${target.name}]", ((ProjectInternal)target.project).services)
+        this.log = ETLoggerFactory.INSTANCE.create("${this.class.simpleName}[${target.name}]")
     }
 
     TargetDiscoveryWorker(DiscoveryStorage store) {
@@ -134,7 +134,7 @@ class TargetDiscoveryWorker implements Runnable {
         enumMap.keySet().sort { a -> -a.priority }.each { DiscoveryState state ->
             List<DiscoveryFailedException> fails = enumMap[state]
             if (!printFull) {
-                log.log("${fails.size()} other action(s) ${state.stateLocalized}.")
+                log.logErrorHead("${fails.size()} other action(s) ${state.stateLocalized}.")
             } else {
                 fails.each { DiscoveryFailedException failed ->
                     log.logErrorHead("${failed.action.deployLocation.friendlyString()}: ${state.stateLocalized.capitalize()}.")
@@ -145,13 +145,13 @@ class TargetDiscoveryWorker implements Runnable {
                 }
             }
 
-            printFull = target.project.hasProperty("deploy-fail-more") || log.backingLogger().isInfoEnabled()
+            printFull = log.backingLogger().isInfoEnabled()
         }
+        if (!printFull)
+            log.log("Run with --info for more details")
 
         log.log("") // blank line
 
-        if (!printFull)
-            log.log("Run with -Pdeploy-fail-more or --info for more details")
     }
 
 }

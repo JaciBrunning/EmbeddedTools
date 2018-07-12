@@ -1,10 +1,8 @@
-package jaci.gradle
+package jaci.gradle.log
 
 import groovy.transform.CompileStatic
 import org.apache.log4j.Logger
 import org.gradle.internal.logging.text.StyledTextOutput
-import org.gradle.internal.logging.text.StyledTextOutputFactory
-import org.gradle.internal.service.ServiceRegistry
 
 @CompileStatic
 class ETLogger {
@@ -22,16 +20,8 @@ class ETLogger {
         this.colorOut = textOutput
     }
 
-    ETLogger(String name, ServiceRegistry registry, int indent) {
-        this(name, registry.get(StyledTextOutputFactory).create(name), indent)
-    }
-
-    ETLogger(String name, ServiceRegistry registry) {
-        this(name, registry, 0)
-    }
-
-    ETLogger(Class clazz, ServiceRegistry registry) {
-        this(clazz.name, registry)
+    ETLogger(String name, StyledTextOutput textOutput) {
+        this(name, textOutput, 0)
     }
 
     ETLogger push() {
@@ -58,8 +48,9 @@ class ETLogger {
     }
 
     void logStyle(String msg, StyledTextOutput.Style style) {
-        colorOut.withStyle(style).println(indentStr + msg);
-
+        if (colorOut != null) {
+            colorOut.withStyle(style).println(indentStr + msg);
+        } else println(indentStr + msg)
     }
 
     void logError(String msg) {

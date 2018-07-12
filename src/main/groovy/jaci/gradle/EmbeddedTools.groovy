@@ -1,28 +1,30 @@
 package jaci.gradle
 
 import com.jcraft.jsch.JSch
+import groovy.transform.CompileStatic
 import jaci.gradle.deploy.DeployPlugin
+import jaci.gradle.log.ETLoggerFactory
 import jaci.gradle.nativedeps.NativeDepsPlugin
 import jaci.gradle.toolchains.ToolchainsPlugin
+import org.apache.log4j.Logger
 import org.gradle.api.Plugin
 import org.gradle.api.Project
-import org.gradle.api.internal.project.ProjectInternal
 import org.gradle.nativeplatform.plugins.NativeComponentPlugin
 
+@CompileStatic
 class EmbeddedTools implements Plugin<Project> {
-
-    ETLogger logger
 
     @Override
     void apply(Project project) {
         project.extensions.create('em_projectwrapper', ProjectWrapper, project) // TODO: Use ProjectLayout instead
 
+        ETLoggerFactory.INSTANCE.addColorOutput(project)
+
         project.getPluginManager().apply(DeployPlugin)
-        logger = new ETLogger(this.class, (project as ProjectInternal).services)
 
         // Only apply the ToolchainsPlugin and NativeDepsPlugin if we're building a native project.
         project.getPlugins().withType(NativeComponentPlugin).all { NativeComponentPlugin plugin ->
-            logger.info("Native Project detected: ${plugin.class.name}".toString())
+            Logger.getLogger(this.class).info("Native Project detected: ${plugin.class.name}".toString())
             project.getPluginManager().apply(ToolchainsPlugin)
             project.getPluginManager().apply(NativeDepsPlugin)
         }

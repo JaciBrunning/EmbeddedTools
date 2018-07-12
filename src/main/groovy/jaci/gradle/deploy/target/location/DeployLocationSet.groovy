@@ -18,6 +18,10 @@ class DeployLocationSet extends DefaultDomainObjectSet<DeployLocation> {
     DeployLocation location(Class<? extends DeployLocation> type, final Closure config) {
         def location = type.newInstance(target)
         ConfigureUtil.configure(config, location);
+
+        if (target.isDry())
+            location = new DryDeployLocation(location)
+
         this << location
         return location
     }

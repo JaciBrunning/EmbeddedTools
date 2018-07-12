@@ -1,13 +1,13 @@
 package jaci.gradle.deploy.target.discovery.action
 
 import groovy.transform.CompileStatic
-import jaci.gradle.ETLogger
 import jaci.gradle.deploy.context.DefaultDeployContext
 import jaci.gradle.deploy.context.DeployContext
 import jaci.gradle.deploy.sessions.SshSessionController
 import jaci.gradle.deploy.target.discovery.DiscoveryState
 import jaci.gradle.deploy.target.location.SshDeployLocation
-import org.gradle.api.internal.project.ProjectInternal
+import jaci.gradle.log.ETLogger
+import jaci.gradle.log.ETLoggerFactory
 
 @CompileStatic
 class SshDiscoveryAction extends AbstractDiscoveryAction {
@@ -17,7 +17,7 @@ class SshDiscoveryAction extends AbstractDiscoveryAction {
 
     SshDiscoveryAction(SshDeployLocation dloc) {
         super(dloc)
-        log = new ETLogger(toString(), ((ProjectInternal)deployLocation.target.project).services) // TODO we should have a factory for this
+        log = ETLoggerFactory.INSTANCE.create(toString())
     }
 
     @Override

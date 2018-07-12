@@ -8,20 +8,15 @@ import jaci.gradle.deploy.target.location.DeployLocationSet
 import org.apache.log4j.Logger
 import org.gradle.api.DomainObjectSet
 import org.gradle.api.Named
-import org.gradle.api.Project
-
-import java.util.concurrent.CountDownLatch
+import org.gradle.util.ConfigureUtil
 
 @CompileStatic
 class RemoteTarget implements Named {
     final String name
-    final Project project
-    private CountDownLatch discoveryLatch = new CountDownLatch(1)
     private Logger log
 
-    RemoteTarget(String name, Project project) {
+    RemoteTarget(String name) {
         this.name = name
-        this.project = project
         log = Logger.getLogger(toString())
     }
 
@@ -31,12 +26,14 @@ class RemoteTarget implements Named {
     boolean failOnMissing   = true
     int maxChannels         = 1
 
+    boolean dry             = false
+
     DomainObjectSet<DeployLocation> locations = new DeployLocationSet(this)
 
     Closure<Boolean> onlyIf = null  // Delegate: DeployContext
 
     def locations(final Closure closure) {
-        project.configure(locations as Object, closure)
+        ConfigureUtil.configure(closure, (Object)locations)
     }
 
     @Override
@@ -54,14 +51,5 @@ class RemoteTarget implements Named {
             }
         }
         return true
-    }
-
-    CountDownLatch getDiscoveryLatch() {
-        return this.discoveryLatch
-    }
-
-    void resetLatch() {
-        while (discoveryLatch.count > 0) discoveryLatch.countDown()
-        this.discoveryLatch = new CountDownLatch(1)
     }
 }

@@ -9,7 +9,7 @@ import org.gradle.internal.reflect.DirectInstantiator
 @CompileStatic
 class CacheExtension extends DefaultNamedDomainObjectSet<CacheMethod> implements Resolver<CacheMethod> {
 
-    Project project
+    final Project project
 
     CacheExtension(Project project) {
         super(CacheMethod.class, DirectInstantiator.INSTANCE)
@@ -31,7 +31,9 @@ class CacheExtension extends DefaultNamedDomainObjectSet<CacheMethod> implements
     }
 
     CacheMethod resolve(Object cache) {
-        if (cache == null || cache == false) {
+        if (project.hasProperty("deploy-dirty")) {
+            return null
+        } else if (cache == null || cache == false) {
             return null
         } else if (cache instanceof CacheMethod) {
             return (CacheMethod)cache

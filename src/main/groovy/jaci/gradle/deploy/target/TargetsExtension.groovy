@@ -1,6 +1,7 @@
 package jaci.gradle.deploy.target
 
 import groovy.transform.CompileStatic
+import jaci.gradle.EmbeddedTools
 import jaci.gradle.Resolver
 import org.gradle.api.Project
 import org.gradle.api.internal.DefaultNamedDomainObjectSet
@@ -11,13 +12,18 @@ import org.gradle.internal.reflect.DirectInstantiator
 @CompileStatic
 class TargetsExtension extends DefaultNamedDomainObjectSet<RemoteTarget> implements Resolver<RemoteTarget> {
     final Project project
+
     TargetsExtension(Project project) {
         super(RemoteTarget, DirectInstantiator.INSTANCE)
         this.project = project
     }
 
     def target(String name, Class<? extends RemoteTarget> type, final Closure config) {
-        def target = type.newInstance(name, project)
+        def target = type.newInstance(name)
+
+        if (EmbeddedTools.isDryRun(project))
+            target.dry = true
+
         project.configure(target, config)
         this << (target)
     }

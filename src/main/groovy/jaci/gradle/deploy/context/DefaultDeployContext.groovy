@@ -1,13 +1,12 @@
 package jaci.gradle.deploy.context
 
 import groovy.transform.CompileStatic
-import jaci.gradle.ETLogger
-import jaci.gradle.EmbeddedTools
 import jaci.gradle.PathUtils
 import jaci.gradle.deploy.CommandDeployResult
 import jaci.gradle.deploy.cache.CacheMethod
 import jaci.gradle.deploy.sessions.SessionController
 import jaci.gradle.deploy.target.location.DeployLocation
+import jaci.gradle.log.ETLogger
 
 @CompileStatic
 class DefaultDeployContext implements DeployContext {
@@ -66,7 +65,7 @@ class DefaultDeployContext implements DeployContext {
 
         Map<String, File> cacheHit = [:], cacheMiss = files
 
-        if (!EmbeddedTools.isSkipCache(deployLocation.target.project) && cache != null && !(cache instanceof Boolean && !cache)) {
+        if (cache != null && !(cache instanceof Boolean && !cache)) {
             if (cache != null && cache.compatible(this)) {
                 Set<String> updateRequired = cache.needsUpdate(this, files)
                 (files.keySet() - updateRequired).each { String f ->
@@ -76,7 +75,7 @@ class DefaultDeployContext implements DeployContext {
         }
 
         cacheMiss.each { String dst, File src ->
-            logger.log("  -F-> ${deployLocation.target.project.rootDir.toURI().relativize(src.toURI()).getPath()} -> ${dst} @ ${workingDir}")
+            logger.log("  -F-> ${src} -> ${dst} @ ${workingDir}")
             session.put(src, PathUtils.combine(workingDir, dst))
         }
 
