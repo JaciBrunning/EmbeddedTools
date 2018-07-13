@@ -11,6 +11,7 @@ import org.gradle.nativeplatform.toolchain.internal.ToolType
 import org.gradle.platform.base.BinaryContainer
 
 class ToolchainsPlugin implements Plugin<Project> {
+    // TODO: drive this logic based on the platform (i.e. OptionalNativePlatform)
     void apply(Project project) {
         project.getPluginManager().apply(NativeComponentPlugin.class)
 
