@@ -18,8 +18,8 @@ class SshDeployLocation extends AbstractDeployLocation {
 
     @Override
     DiscoveryAction createAction() {
-        assert address != null
-        assert user != null
+        if (address == null || user == null)
+            throw new IllegalArgumentException("Address and User must not be null for SshDeployLocation")
 
         return new SshDiscoveryAction(this)
     }

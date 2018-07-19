@@ -61,6 +61,7 @@ class SshDiscoveryAction extends AbstractDiscoveryAction {
         return ctx
     }
 
+    // TODO: This should be injected to make testing easier.
     private String resolveHostname(String hostname, boolean allowIpv6) {
         String resolvedHost = hostname
         boolean hasResolved = false
