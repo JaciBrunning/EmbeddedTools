@@ -5,7 +5,7 @@ import jaci.gradle.deploy.cache.CacheMethod
 import jaci.gradle.deploy.context.DeployContext
 import org.gradle.api.file.FileCollection
 
-class FileCollectionArtifactTest extends AbstractArtifactTest {
+class FileCollectionArtifactTest extends AbstractArtifactTestSpec {
 
     FileCollectionArtifact artifact
     def ctx = Mock(DeployContext)

@@ -6,7 +6,7 @@ import org.gradle.testfixtures.ProjectBuilder
 import spock.lang.Specification
 import spock.lang.Subject
 
-abstract class AbstractArtifactTest extends Specification {
+abstract class AbstractArtifactTestSpec extends Specification {
 
     def project = ProjectBuilder.builder().build()
     def name = "TEST"

@@ -3,11 +3,10 @@ package jaci.gradle.deploy.artifact
 import jaci.gradle.Resolver
 import jaci.gradle.deploy.cache.CacheMethod
 import jaci.gradle.deploy.context.DeployContext
-import org.gradle.api.file.FileCollection
 import org.gradle.api.file.FileTree
 import org.gradle.api.file.FileVisitDetails
 
-class FileTreeArtifactTest extends AbstractArtifactTest {
+class FileTreeArtifactTest extends AbstractArtifactTestSpec {
 
     FileTreeArtifact artifact
     def ctx = Mock(DeployContext)

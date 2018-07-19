@@ -3,7 +3,7 @@ package jaci.gradle.deploy.artifact
 import jaci.gradle.deploy.CommandDeployResult
 import jaci.gradle.deploy.context.DeployContext
 
-class CommandArtifactTest extends AbstractArtifactTest {
+class CommandArtifactTest extends AbstractArtifactTestSpec {
 
     CommandArtifact artifact
 
