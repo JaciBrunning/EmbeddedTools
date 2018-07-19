@@ -45,7 +45,7 @@ class ArtifactDeployWorkerTest extends Specification {
         0 * disabledArtifact.runDeploy(_)
     }
 
-    def "run from storage"() {
+    def "storage"() {
         ArtifactDeployWorker.clearStorage()
 
         // Check that it gets inserted

@@ -31,5 +31,7 @@ interface DeployContext {
     // Send multiple files, and trigger cache checking only once
     void put(Set<File> files, CacheMethod cache)
 
+    String friendlyString()
+
     DeployContext subContext(String workingDir)
 }

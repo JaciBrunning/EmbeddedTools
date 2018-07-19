@@ -48,8 +48,8 @@ class TargetDiscoveryWorker implements Runnable {
 
     // Begin Worker
 
-    private RemoteTarget target
-    private Consumer<DeployContext> callback
+    RemoteTarget target
+    Consumer<DeployContext> callback
     private ETLogger log
 
     TargetDiscoveryWorker(RemoteTarget target, Consumer<DeployContext> cb) {
@@ -95,7 +95,7 @@ class TargetDiscoveryWorker implements Runnable {
     }
 
     private void succeeded(DeployContext ctx) {
-        log.log("Using ${ctx.controller.friendlyString()} for target ${target.name}")
+        log.log("Using ${ctx.friendlyString()} for target ${target.name}")
         callback.accept(ctx)
     }
 

@@ -1,9 +1,10 @@
 package jaci.gradle.deploy.target.discovery
 
 import jaci.gradle.deploy.context.DeployContext
-import jaci.gradle.deploy.sessions.SessionController
 import jaci.gradle.deploy.target.RemoteTarget
+import jaci.gradle.deploy.target.discovery.action.AbstractDiscoveryAction
 import jaci.gradle.deploy.target.discovery.action.DiscoveryAction
+import jaci.gradle.deploy.target.location.AbstractDeployLocation
 import jaci.gradle.deploy.target.location.DeployLocation
 import org.gradle.api.internal.DefaultDomainObjectSet
 import spock.lang.Specification
@@ -17,53 +18,127 @@ class TargetDiscoveryWorkerTest extends Specification {
         getTimeout() >> 1
         getLocations() >> new DefaultDomainObjectSet(DeployLocation.class)
     }
-    def context = Mock(DeployContext) {
-        getController() >> Mock(SessionController)
-    }
-    def exception_cause = Mock(Exception)
     def callback = Mock(Consumer)
-
-    def location_success = Mock(DeployLocation) { loc ->
-        loc.getTarget() >> target
-        loc.createAction() >> Mock(DiscoveryAction) {
-            discover() >> context
-            getException() >> null
-            getState() >> DiscoveryState.CONNECTED
-            getDeployLocation() >> loc
-        }
-    }
-
-    def location_failure = Mock(DeployLocation) { loc ->
-        loc.getTarget() >> target
-        loc.createAction() >> Mock(DiscoveryAction) { act ->
-            act.discover() >> null
-            act.getException() >> new DiscoveryFailedException(act, exception_cause)
-            act.getState() >> DiscoveryState.RESOLVED
-            act.getDeployLocation() >> loc
-        }
-    }
+    def context = Mock(DeployContext)
 
     @Subject
     def worker = new TargetDiscoveryWorker(target, callback)
 
     def "single success"() {
-        target.getLocations().add(location_success)
+        target.getLocations().add(new MockedLocation(target, context, true))
 
         when:
         worker.run()
         then:
         1 * callback.accept(context)
-        0 * callback.accept(_)
+        0 * callback.accept(null)
     }
 
     def "single failure"() {
-        target.getLocations().add(location_failure)
+        target.getLocations().add(new MockedLocation(target, context, false))
 
         when:
         worker.run()
         then:
         1 * callback.accept(null)
         0 * callback.accept(_)
+    }
+
+    def "success + failure"() {
+        target.getLocations().add(new MockedLocation(target, context, true))
+        target.getLocations().add(new MockedLocation(target, context, false))
+
+        // Should say we found the target
+        when:
+        worker.run()
+        then:
+        1 * callback.accept(context)
+        0 * callback.accept(null)
+    }
+
+    def "all success"() {
+        target.getLocations().add(new MockedLocation(target, context, true))
+        target.getLocations().add(new MockedLocation(target, context, true))
+
+        when:
+        worker.run()
+        then:
+        1 * callback.accept(context)
+        0 * callback.accept(null)
+    }
+
+    def "all failure"() {
+        target.getLocations().add(new MockedLocation(target, context, false))
+        target.getLocations().add(new MockedLocation(target, context, false))
+
+        when:
+        worker.run()
+        then:
+        1 * callback.accept(null)
+        0 * callback.accept(_)
+    }
+
+    def "storage"() {
+        TargetDiscoveryWorker.clearStorage()
+        target.getLocations().add(new MockedLocation(target, context, true))
+
+        when:
+        def hc = TargetDiscoveryWorker.submitStorage(target, callback)
+        then:
+        TargetDiscoveryWorker.storageCount() == 1
+
+        // Check that, after construction, it is removed from that map
+        // and its attributes match
+        when:
+        def worker = new TargetDiscoveryWorker(hc)
+        then:
+        TargetDiscoveryWorker.storageCount() == 0
+        worker.target == target
+        worker.callback == callback
+    }
+
+    static class MockedLocation extends AbstractDeployLocation {
+        boolean success
+        DeployContext ctx
+
+        MockedLocation(RemoteTarget target, DeployContext ctx, boolean success) {
+            super(target)
+            this.success = success
+            this.ctx = ctx
+        }
+
+        @Override
+        DiscoveryAction createAction() {
+            return new MockedAction(this, ctx, success)
+        }
+
+        @Override
+        String friendlyString() {
+            return "mock'd"
+        }
+    }
+
+
+    static class MockedAction extends AbstractDiscoveryAction {
+        boolean success
+        DeployContext ctx
+
+        MockedAction(DeployLocation location, DeployContext ctx, boolean success) {
+            super(location)
+            this.success = success
+            this.ctx = ctx
+        }
+
+        @Override
+        DeployContext discover() {
+            if (!success) throw new DiscoveryFailedException(this, new RuntimeException())
+            return ctx
+        }
+
+        @Override
+        DiscoveryState getState() {
+            return DiscoveryState.CONNECTED
+        }
     }
 
 }

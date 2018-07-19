@@ -94,6 +94,11 @@ class DefaultDeployContext implements DeployContext {
     }
 
     @Override
+    String friendlyString() {
+        return controller.friendlyString()
+    }
+
+    @Override
     DeployContext subContext(String workingDir) {
         return new DefaultDeployContext(session, logger.push(), deployLocation, PathUtils.combine(this.workingDir, workingDir))
     }
