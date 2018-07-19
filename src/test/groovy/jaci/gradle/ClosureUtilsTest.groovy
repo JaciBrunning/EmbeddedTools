@@ -6,7 +6,7 @@ class ClosureUtilsTest extends Specification {
 
     def "delegateCall delegate"() {
         def delegate = Mock(DelegateSubject)
-        def closure = { a -> callDelegate(a) }
+        def closure = { callDelegate(it) }
 
         when:
         ClosureUtils.delegateCall(delegate, closure)

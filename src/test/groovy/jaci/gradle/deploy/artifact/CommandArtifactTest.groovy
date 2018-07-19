@@ -11,11 +11,6 @@ class CommandArtifactTest extends AbstractArtifactTestSpec {
         artifact = new CommandArtifact(name, project)
     }
 
-    @Override
-    AbstractArtifact getArtifact() {
-        return artifact
-    }
-
     def "deploy"() {
         def result = Mock(CommandDeployResult)
         def ctx = Mock(DeployContext) {

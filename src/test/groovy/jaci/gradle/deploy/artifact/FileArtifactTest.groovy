@@ -13,11 +13,6 @@ class FileArtifactTest extends AbstractArtifactTestSpec {
         artifact = new FileArtifact(name, project)
     }
 
-    @Override
-    AbstractArtifact getArtifact() {
-        return artifact
-    }
-
     def "deploy (no file)"() {
 
         when:

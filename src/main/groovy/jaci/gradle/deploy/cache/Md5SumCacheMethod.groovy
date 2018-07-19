@@ -16,34 +16,43 @@ class Md5SumCacheMethod extends AbstractCacheMethod {
 
     @Override
     boolean compatible(DeployContext context) {
-        context.logger.silent(true)
+        context.logger?.silent(true)
         def sum = context.execute("echo test | md5sum 2> /dev/null").result
-        context.logger.silent(false)
+        context.logger?.silent(false)
 
         return !sum.empty && sum.split(" ").first().equalsIgnoreCase("d8e8fca2dc0f896fd7cb4cb0031ba249")
     }
 
-    @Override
-    Set<String> needsUpdate(DeployContext context, Map<String, File> files) {
+    String localChecksumsText(Map<String, File> files) {
         def md = MessageDigest.getInstance("MD5")
-        context.logger.silent(true)
-
-        def cs = csI++
-
-        log.debug("Comparing Checksums $cs...")
-        def checksums_text = files.collect { String name, File file ->
+        return files.collect { String name, File file ->
             md.reset()
             md.update(Files.readAllBytes(file.toPath()))
             def local = md.digest().encodeHex().toString()
             "${local} *${name}"
         }.join("\n")
+    }
 
-        log.debug("Local Checksums $cs:")
-        log.debug(checksums_text)
+    @Override
+    Set<String> needsUpdate(DeployContext context, Map<String, File> files) {
+        context.logger?.silent(true)
 
-        def result = context.execute("echo '${checksums_text}' > _tmp.et.md5 && md5sum -c _tmp.et.md5 2> /dev/null; rm _tmp.et.md5").result
-        log.debug("Remote Checksums $cs:")
-        log.debug(result)
+        def cs = csI++
+
+        log.debug("Comparing Checksums $cs...")
+        def localChecksums = localChecksumsText(files)
+
+        if (log.isDebugEnabled()) {
+            log.debug("Local Checksums $cs:")
+            log.debug(localChecksums)
+        }
+
+        def result = context.execute("echo '${localChecksums}' > _tmp.et.md5 && md5sum -c _tmp.et.md5 2> /dev/null; rm _tmp.et.md5").result
+
+        if (log.isDebugEnabled()) {
+            log.debug("Remote Checksums $cs:")
+            log.debug(result)
+        }
 
         def upToDate = result.split('\n').collect { String s ->
             s.split(':')
@@ -53,7 +62,7 @@ class Md5SumCacheMethod extends AbstractCacheMethod {
             ls.first()
         }
 
-        context.logger.silent(false)
+        context.logger?.silent(false)
         return files.keySet().findAll { String name -> !upToDate.contains(name) }
     }
 }

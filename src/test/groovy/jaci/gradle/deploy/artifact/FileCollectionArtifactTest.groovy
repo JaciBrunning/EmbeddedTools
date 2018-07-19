@@ -14,11 +14,6 @@ class FileCollectionArtifactTest extends AbstractArtifactTestSpec {
         artifact = new FileCollectionArtifact(name, project)
     }
 
-    @Override
-    AbstractArtifact getArtifact() {
-        return artifact
-    }
-
     def "deploy (no files)"() {
 
         when:

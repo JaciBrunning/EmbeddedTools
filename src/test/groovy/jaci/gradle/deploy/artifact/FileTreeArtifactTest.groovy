@@ -15,11 +15,6 @@ class FileTreeArtifactTest extends AbstractArtifactTestSpec {
         artifact = new FileTreeArtifact(name, project)
     }
 
-    @Override
-    AbstractArtifact getArtifact() {
-        return artifact
-    }
-
     def "deploy (no files)"() {
 
         when:

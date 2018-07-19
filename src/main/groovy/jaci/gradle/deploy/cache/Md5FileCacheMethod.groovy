@@ -21,37 +21,48 @@ class Md5FileCacheMethod extends AbstractCacheMethod {
         return true
     }
 
-    @Override
-    Set<String> needsUpdate(DeployContext context, Map<String, File> files) {
-        context.logger.silent(true)
-        def cs = csI++
-        log.debug("Comparing File Checksum $cs...")
+    private Object getRemoteCache(DeployContext ctx) {
+        def remote_cache = ctx.execute("cat cache.md5 2> /dev/null || echo '{}'").result
+        return new JsonSlurper().parseText(remote_cache)
+    }
 
-        def remote_cache = context.execute("cat cache.md5 2> /dev/null || echo '{}'").result
-        def remote_md5 = new JsonSlurper().parseText(remote_cache)
-
-        if (log.isDebugEnabled()) {
-            log.debug("Remote JSON Cache $cs:")
-            log.debug(remote_cache)
-        }
-
+    Map<String, String> localChecksumsMap(Map<String, File> files) {
         def md = MessageDigest.getInstance("MD5")
-        def local_md5 = files.collectEntries { String name, File file ->
+        return files.collectEntries { String name, File file ->
             md.reset()
             md.update(Files.readAllBytes(file.toPath()))
             [(name): md.digest().encodeHex().toString()]
         } as Map<String, String>
+    }
+
+    @Override
+    Set<String> needsUpdate(DeployContext context, Map<String, File> files) {
+        context.logger?.silent(true)
+        def cs = csI++
+        log.debug("Comparing File Checksum $cs...")
+
+        def remote_md5 = getRemoteCache(context)
+
+        if (log.isDebugEnabled()) {
+            log.debug("Remote Cache $cs:")
+            log.debug(new JsonBuilder(remote_md5).toString())
+        }
+
+        def local_md5 = localChecksumsMap(files)
 
         if (log.isDebugEnabled()) {
             log.debug("Local JSON Cache $cs:")
             log.debug(new JsonBuilder(local_md5).toString())
         }
 
-        def needs_update = files.keySet().findAll { String name -> remote_md5[name] == null || remote_md5[name] != local_md5[name] }
+        def needs_update = files.keySet().findAll { String name ->
+            remote_md5[name] == null || remote_md5[name] != local_md5[name]
+        }
+
         if (needs_update.size() > 0) {
             context.execute("echo '${new JsonBuilder(local_md5).toString()}' > cache.md5")
         }
-        context.logger.silent(false)
+        context.logger?.silent(false)
         return needs_update
     }
 }

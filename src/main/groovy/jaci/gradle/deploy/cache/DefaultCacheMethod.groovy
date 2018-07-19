@@ -8,7 +8,7 @@ import jaci.gradle.deploy.context.DeployContext
 @CompileStatic
 @InheritConstructors
 class DefaultCacheMethod extends AbstractCacheMethod {
-    public Closure<Boolean> cache = { String filename, File localfile -> true }     // true if needs update
+    public Closure<Boolean> needsUpdate = { DeployContext ctx, String filename, File localfile -> true }     // true if needs update
     public Closure<Boolean> compatible = { true }
 
     @Override
@@ -19,7 +19,7 @@ class DefaultCacheMethod extends AbstractCacheMethod {
     @Override
     Set<String> needsUpdate(DeployContext context, Map<String, File> files) {
         return files.findAll { String name, File file ->
-            ClosureUtils.delegateCall(context, cache, name, file) as boolean
+            ClosureUtils.delegateCall(context, needsUpdate, name, file) as boolean
         }.keySet()
     }
 }
