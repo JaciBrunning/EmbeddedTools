@@ -33,6 +33,7 @@ class RemoteTarget implements Named {
     boolean failOnMissing   = true
     int maxChannels         = 1
 
+    // TODO: Enable this to be called from context
     boolean dry             = false
 
     DomainObjectSet<DeployLocation> locations = new DeployLocationSet(this)

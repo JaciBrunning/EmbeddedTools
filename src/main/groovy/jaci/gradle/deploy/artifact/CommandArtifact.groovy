@@ -14,7 +14,7 @@ class CommandArtifact extends AbstractArtifact {
 
     @Override
     void deploy(DeployContext context) {
-        result = context.execute(command)
+        this.result = context.execute(command)
     }
 
 }

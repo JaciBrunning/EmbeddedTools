@@ -27,9 +27,8 @@ class ArtifactDeployWorkerTest extends Specification {
 
         // We should only call runDeploy with the correct subcontext
         then:
-        1 * enabledArtifact.runDeploy(subctx)
-        0 * enabledArtifact.runDeploy(_)
-        0 * enabledArtifact.runSkipped(_)
+        1 * enabledArtifact.deploy(subctx)
+        0 * enabledArtifact.deploy(_)
     }
 
     def "runs skipped disabled"() {
@@ -38,11 +37,8 @@ class ArtifactDeployWorkerTest extends Specification {
         when:
         worker.run()
 
-        // We should only call runSkipped with the correct subcontext
         then:
-        1 * disabledArtifact.runSkipped(subctx)
-        0 * disabledArtifact.runSkipped(_)
-        0 * disabledArtifact.runDeploy(_)
+        0 * disabledArtifact.deploy(_)
     }
 
     def "storage"() {

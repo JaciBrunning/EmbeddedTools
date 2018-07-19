@@ -26,9 +26,6 @@ interface Artifact extends Named {
     List<Closure> getPostdeploy()
     void setPostdeploy(List<Closure> actions)
 
-    void runDeploy(DeployContext context)
-    void runSkipped(DeployContext context)
-
     void setOnlyIf(Closure action)
 
     boolean isEnabled(DeployContext context)

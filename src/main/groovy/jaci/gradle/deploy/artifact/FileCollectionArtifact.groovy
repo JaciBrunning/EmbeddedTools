@@ -28,8 +28,8 @@ class FileCollectionArtifact extends AbstractArtifact implements CacheableArtifa
     @Override
     void deploy(DeployContext context) {
         if (files.isPresent())
-            context.put(files.get().files, cacheResolver.resolve(cache))
+            context.put(files.get().files, cacheResolver?.resolve(cache))
         else
-            context.logger.log("No file(s) provided for ${toString()}")
+            context.logger?.log("No file(s) provided for ${toString()}")
     }
 }

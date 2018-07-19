@@ -63,10 +63,9 @@ class ArtifactDeployWorker implements Runnable {
         def enabled = artifact.isEnabled(context)
 
         if (enabled) {
-            artifact.runDeploy(context)
+            ArtifactRunner.runDeploy(artifact, context)
         } else {
             context.logger.log("Artifact skipped...")
-            artifact.runSkipped(context)
         }
     }
 }

@@ -39,9 +39,9 @@ class FileTreeArtifact extends AbstractArtifact implements CacheableArtifact {
                     f[details.path] = details.file
             }
             context.execute("mkdir -p ${mkdirs.join(' ')}")
-            context.put(f, cacheResolver.resolve(cache))
+            context.put(f, cacheResolver?.resolve(cache))
         } else
-            context.logger.log("No file tree provided for ${toString()}")
+            context.logger?.log("No file tree provided for ${toString()}")
     }
 
 }

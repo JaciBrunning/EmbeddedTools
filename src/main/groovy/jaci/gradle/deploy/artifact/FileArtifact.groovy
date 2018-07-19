@@ -31,9 +31,9 @@ class FileArtifact extends AbstractArtifact implements CacheableArtifact {
     void deploy(DeployContext context) {
         if (file.isPresent()) {
             File f = file.get()
-            context.put(f, (filename == null ? f.name : filename), cacheResolver.resolve(cache))
+            context.put(f, (filename == null ? f.name : filename), cacheResolver?.resolve(cache))
         } else
-            context.logger.log("No file provided for ${toString()}")
+            context.logger?.log("No file provided for ${toString()}")
     }
 
 }

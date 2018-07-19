@@ -63,7 +63,11 @@ abstract class AbstractArtifact implements Artifact, Configurable<Artifact> {
     Closure onlyIf           = null
 
     void setDisabled() {
-        disabled = true
+        setDisabled(true)
+    }
+
+    void setDisabled(boolean state) {
+        this.disabled = state
     }
 
     boolean isDisabled() {
@@ -73,23 +77,11 @@ abstract class AbstractArtifact implements Artifact, Configurable<Artifact> {
     boolean isEnabled(DeployContext ctx) {
         return disabled ? false :
                 onlyIf == null ? true :
-                        (ClosureUtils.delegateCall(ctx, onlyIf) || ctx.deployLocation.target.isDry())
+                        (ClosureUtils.delegateCall(ctx, onlyIf) || ctx?.deployLocation?.target?.isDry())
     }
 
     AbstractArtifact configure(Closure closure) {
         return ConfigureUtil.configureSelf(closure, this)
-    }
-
-    void runDeploy(DeployContext context) {
-        getPredeploy().each { Closure c -> ClosureUtils.delegateCall(context, c) }
-        deploy(context)
-        getPostdeploy().each { Closure c -> ClosureUtils.delegateCall(context, c) }
-    }
-
-    void runSkipped(DeployContext context) { }
-
-    private Closure methodWrapper(Method m) {
-        return { DeployContext ctx -> m.invoke(this, ctx) }
     }
 
     @Override
