@@ -1,7 +1,6 @@
 package jaci.gradle.deploy.target
 
 import groovy.transform.CompileStatic
-import jaci.gradle.EmbeddedTools
 import jaci.gradle.Resolver
 import org.gradle.api.Project
 import org.gradle.api.internal.DefaultNamedDomainObjectSet

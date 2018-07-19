@@ -38,11 +38,12 @@ class TargetDiscoveryWorker implements Runnable {
 
     static int submitStorage(RemoteTarget target, Consumer<DeployContext> cb) {
         int hashcode = target.hashCode()
-        storage.put(hashcode, new DiscoveryStorage(target, { DeployContext ctx ->
-            storage.remove(hashcode)
-            cb.accept(ctx)
-        } as Consumer))
+        storage.put(hashcode, new DiscoveryStorage(target, cb))
         return hashcode
+    }
+
+    static int storageCount() {
+        return storage.size()
     }
 
     // Begin Worker
@@ -64,6 +65,7 @@ class TargetDiscoveryWorker implements Runnable {
     @Inject
     TargetDiscoveryWorker(int hashcode) {
         this(storage.get(hashcode))
+        storage.remove(hashcode)
     }
 
     @Override

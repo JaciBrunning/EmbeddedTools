@@ -33,33 +33,36 @@ class ArtifactDeployWorker implements Runnable {
         return ds.hashCode()
     }
 
-    public static void removeStorage(int hashcode) {
-        deployerStorage.remove(hashcode)
+    public static int storageCount() {
+        return deployerStorage.size()
     }
 
     // Begin worker
 
-    int hashCode
+    DeployContext ctx
+    Artifact artifact
+
+    ArtifactDeployWorker(DeployContext ctx, Artifact artifact) {
+        this.ctx = ctx
+        this.artifact = artifact
+    }
+
+    ArtifactDeployWorker(DeployStorage storage) {
+        this(storage.ctx, storage.artifact)
+    }
 
     @Inject
     ArtifactDeployWorker(Integer hashCode) {
-        this.hashCode = hashCode
+        this(deployerStorage.get(hashCode))
+        deployerStorage.remove(hashCode)
     }
 
     @Override
     void run() {
-        def storage = deployerStorage.get(hashCode)
-        try {
-            deploy(storage.ctx, storage.artifact)
-        } finally {
-            removeStorage(hashCode)
-        }
-    }
-
-    void deploy(DeployContext ctx, Artifact artifact) {
         def context = ctx.subContext(artifact.getDirectory())
+        def enabled = artifact.isEnabled(context)
 
-        if (artifact.isEnabled(context)) {
+        if (enabled) {
             artifact.runDeploy(context)
         } else {
             context.logger.log("Artifact skipped...")
