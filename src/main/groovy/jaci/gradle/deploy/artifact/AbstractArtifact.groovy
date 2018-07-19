@@ -27,7 +27,6 @@ abstract class AbstractArtifact implements Artifact, Configurable<Artifact> {
     AbstractArtifact(String name, Project project) {
         this.name = name
         this.project = project
-        processAnnotations()
     }
 
     Project getProject() {
@@ -88,32 +87,6 @@ abstract class AbstractArtifact implements Artifact, Configurable<Artifact> {
     }
 
     void runSkipped(DeployContext context) { }
-
-    private void processAnnotations() {
-        for (Class c = this.class; c != null; c = c.getSuperclass()) {
-            for (Method method : c.declaredMethods) {
-                if (processAnnotation(method, Predeploy.class)) {
-                    predeploy << methodWrapper(method)
-                }
-                if (processAnnotation(method, Postdeploy.class)) {
-                    postdeploy << methodWrapper(method)
-                }
-            }
-        }
-    }
-
-    private boolean processAnnotation(Method m, Class<? extends Annotation> annotation) {
-        if (m.getAnnotation(annotation) == null)
-            return false
-
-        final Class<?>[] paramTypes = m.getParameterTypes()
-        if (paramTypes.length == 1 && paramTypes[0].equals(DeployContext.class)) {
-            return true
-        } else {
-            throw new GradleException("@${annotation.simpleName} may only be applied to methods taking a DeployContext " +
-                    "as the only argument. Problematic method: ${m.name} on ${m.declaringClass.name}")
-        }
-    }
 
     private Closure methodWrapper(Method m) {
         return { DeployContext ctx -> m.invoke(this, ctx) }

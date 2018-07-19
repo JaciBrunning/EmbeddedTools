@@ -39,8 +39,8 @@ abstract class AbstractDiscoveryAction implements DiscoveryAction {
     }
 
     void verify(DeployContext ctx) {
-        if (!location.target.enabled(ctx))
-            throw new TargetVerificationException("Target failed enabled (onlyIf) check!")
+        if (!location.target.verify(ctx))
+            throw new TargetVerificationException("Target failed verify (onlyIf) check!")
     }
 
 }

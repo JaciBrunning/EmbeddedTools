@@ -63,7 +63,7 @@ class RemoteTarget implements Named {
         return "RemoteTarget[${name}]".toString()
     }
 
-    boolean enabled(DeployContext ctx) {
+    boolean verify(DeployContext ctx) {
         if (onlyIf instanceof Closure) {
             log.debug("OnlyIf...")
             boolean toConnect = ClosureUtils.delegateCall(ctx, onlyIf)
