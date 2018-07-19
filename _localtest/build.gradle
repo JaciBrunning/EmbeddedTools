@@ -81,6 +81,28 @@ deploy {
     }
 }
 
+model {
+    platforms {
+        desktop {
+            architecture 'x86_64'
+        }
+    }
+
+    toolChains {
+        gcc(Gcc)
+    }
+
+    components {
+        my_program(NativeExecutableSpec) {
+            targetPlatform "desktop"
+
+            sources.cpp {
+                source.srcDirs "src_c"
+            }
+        }
+    }
+}
+
 buildScan {
   licenseAgreementUrl = 'https://gradle.com/terms-of-service'
   licenseAgree = 'yes'

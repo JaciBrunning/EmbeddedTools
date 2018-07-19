@@ -50,7 +50,7 @@ class ETLogger {
     void logStyle(String msg, StyledTextOutput.Style style) {
         if (colorOut != null) {
             colorOut.withStyle(style).println(indentStr + msg);
-        } else println(indentStr + msg)
+        } else log(msg)
     }
 
     void logError(String msg) {
