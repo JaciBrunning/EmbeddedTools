@@ -57,31 +57,19 @@ class SshSessionController extends AbstractSessionController implements IPSessio
         }
     }
 
-    void put(List<File> sources, List<String> dests) {
+    void put(Map<String, File> files) {
         int sem = acquire()
 
         ChannelSftp sftp = session.openChannel('sftp') as ChannelSftp
         sftp.connect()
         try {
-            sources.eachWithIndex { File file, int idx ->
-//                try {
-                    sftp.put(file.absolutePath, dests[idx])
-//                } catch (Exception e) {
-//                    def s = new StringWriter()
-//                    def pw = new PrintWriter(s)
-//                    e.printStackTrace(pw)
-//                    getLogger().debug("Could not deploy ${file.absolutePath}...")
-//                    getLogger().debug(s.toString())
-//                }
+            files.each { String dst, File src ->
+                sftp.put(src.absolutePath, dst)
             }
         } finally {
             sftp.disconnect()
             release(sem)
         }
-    }
-
-    void put(File source, String dest) {
-        put([source], [dest])
     }
 
     @Override

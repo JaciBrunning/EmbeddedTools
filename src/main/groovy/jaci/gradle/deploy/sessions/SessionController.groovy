@@ -10,8 +10,7 @@ interface SessionController extends Closeable {
 
     CommandDeployResult execute(String command)
 
-    void put(List<File> sources, List<String> destinations)
-    void put(File source, String dest)
+    void put(Map<String, File> files)
 
     String friendlyString()
 

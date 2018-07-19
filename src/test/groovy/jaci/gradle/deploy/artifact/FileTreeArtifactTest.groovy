@@ -45,14 +45,18 @@ class FileTreeArtifactTest extends AbstractArtifactTest {
                 getPath() >> p
             }
         }
-        def fileMap = fileEntries.collectEntries { [(it.getPath()), it.getFile()] }
-
         def fileTree = Mock(FileTree) {
             visit(_) >> { cb ->
                 (dirEntries + fileEntries).each { cb.first().call(it) }
                 null
             }
         }
+
+        def fileMap = [
+                "test": fileEntries[0].getFile(),
+                "mydir/test": fileEntries[1].getFile(),
+                "mydir/subdir/test": fileEntries[2].getFile()
+        ]
 
         artifact.setFiles(fileTree)
 
@@ -61,6 +65,7 @@ class FileTreeArtifactTest extends AbstractArtifactTest {
         then:
         1 * ctx.execute("mkdir -p ${dirString}")
         1 * ctx.put(fileMap, null)
+        0 * ctx.put(_, _)
     }
 
     def "deploy cache"() {

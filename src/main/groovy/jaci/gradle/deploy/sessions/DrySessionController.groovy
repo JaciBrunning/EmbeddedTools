@@ -20,10 +20,7 @@ class DrySessionController extends AbstractSessionController implements IPSessio
     }
 
     @Override
-    void put(List<File> sources, List<String> destinations) { }
-
-    @Override
-    void put(File source, String dest) { }
+    void put(Map<String, File> files) { }
 
     @Override
     String friendlyString() {

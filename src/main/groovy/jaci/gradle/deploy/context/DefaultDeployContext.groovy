@@ -45,7 +45,7 @@ class DefaultDeployContext implements DeployContext {
 
     @Override
     CommandDeployResult execute(String command) {
-        if (deployLocation.target.mkdirs) getController().execute("mkdir -p ${workingDir}")
+        getController().execute("mkdir -p ${workingDir}")
 
         logger.log("  -C-> $command @ ${workingDir}")
         def result = session.execute([ "cd ${workingDir}", command].join('\n') )
@@ -61,7 +61,7 @@ class DefaultDeployContext implements DeployContext {
 
     @Override
     void put(Map<String, File> files, CacheMethod cache) {
-        if (deployLocation.target.mkdirs) session.execute("mkdir -p ${workingDir}")
+        session.execute("mkdir -p ${workingDir}")
 
         Map<String, File> cacheHit = [:], cacheMiss = files
 
@@ -74,9 +74,12 @@ class DefaultDeployContext implements DeployContext {
             }
         }
 
-        cacheMiss.each { String dst, File src ->
-            logger.log("  -F-> ${src} -> ${dst} @ ${workingDir}")
-            session.put(src, PathUtils.combine(workingDir, dst))
+        if (!cacheMiss.isEmpty()) {
+            def entries = cacheMiss.collectEntries { String dst, File src ->
+                logger.log("  -F-> ${src} -> ${dst} @ ${workingDir}")
+                [(PathUtils.combine(workingDir, dst)): src]
+            } as Map<String, File>
+            session.put(entries)
         }
 
         if (cacheHit.size() > 0)

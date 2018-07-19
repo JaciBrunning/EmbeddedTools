@@ -27,7 +27,6 @@ class RemoteTarget implements Named {
         log = Logger.getLogger(toString())
     }
 
-    boolean mkdirs          = true
     String directory        = null     // Null = default user home
     int timeout             = 3
     boolean failOnMissing   = true
