@@ -5,6 +5,7 @@ import jaci.gradle.deploy.context.DeployContext
 import org.gradle.api.DomainObjectSet
 import org.gradle.api.Named
 import org.gradle.api.Project
+import org.gradle.api.tasks.TaskCollection
 
 @CompileStatic
 interface Artifact extends Named {
@@ -15,7 +16,7 @@ interface Artifact extends Named {
     DomainObjectSet<Object> getDependencies()
     DomainObjectSet<Object> getTargets()
 
-    Set<ArtifactDeployTask> getTasks()
+    TaskCollection<ArtifactDeployTask> getTasks()
 
     String getDirectory()
 

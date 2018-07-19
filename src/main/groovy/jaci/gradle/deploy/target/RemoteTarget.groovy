@@ -11,6 +11,7 @@ import org.apache.log4j.Logger
 import org.gradle.api.DomainObjectSet
 import org.gradle.api.Named
 import org.gradle.api.Project
+import org.gradle.api.tasks.TaskCollection
 import org.gradle.util.ConfigureUtil
 
 @CompileStatic
@@ -51,8 +52,8 @@ class RemoteTarget implements Named {
         ConfigureUtil.configure(closure, (Object)locations)
     }
 
-    TargetDiscoveryTask getDiscoveryTask() {
-        return project.tasks.withType(TargetDiscoveryTask).find { TargetDiscoveryTask t ->
+    TaskCollection<TargetDiscoveryTask> getDiscoveryTask() {
+        return project.tasks.withType(TargetDiscoveryTask).matching { TargetDiscoveryTask t ->
             t.target == this
         }
     }

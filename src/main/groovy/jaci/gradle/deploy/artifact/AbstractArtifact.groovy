@@ -7,6 +7,7 @@ import org.gradle.api.DomainObjectSet
 import org.gradle.api.GradleException
 import org.gradle.api.Project
 import org.gradle.api.internal.DefaultDomainObjectSet
+import org.gradle.api.tasks.TaskCollection
 import org.gradle.util.Configurable
 import org.gradle.util.ConfigureUtil
 
@@ -50,8 +51,8 @@ abstract class AbstractArtifact implements Artifact, Configurable<Artifact> {
             dependencies.add(val)
     }
 
-    Set<ArtifactDeployTask> getTasks() {
-        return project.tasks.withType(ArtifactDeployTask).findAll { ArtifactDeployTask t ->
+    TaskCollection<ArtifactDeployTask> getTasks() {
+        return project.tasks.withType(ArtifactDeployTask).matching { ArtifactDeployTask t ->
             t.artifact == this
         }
     }

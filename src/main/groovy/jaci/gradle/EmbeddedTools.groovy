@@ -1,6 +1,7 @@
 package jaci.gradle
 
 import com.jcraft.jsch.JSch
+import groovy.transform.Canonical
 import groovy.transform.CompileStatic
 import jaci.gradle.deploy.DeployPlugin
 import jaci.gradle.log.ETLoggerFactory
@@ -30,9 +31,10 @@ class EmbeddedTools implements Plugin<Project> {
         }
     }
 
+    @CompileStatic
+    @Canonical
     static class ProjectWrapper {
         Project project
-        ProjectWrapper(Project project) { this.project = project }
     }
 
     static JSch jsch

@@ -11,6 +11,7 @@ import jaci.gradle.deploy.target.TargetsExtension
 import jaci.gradle.deploy.target.discovery.TargetDiscoveryTask
 import org.gradle.api.Project
 import org.gradle.api.Task
+import org.gradle.api.tasks.TaskCollection
 
 import javax.inject.Inject
 import java.util.concurrent.Callable
@@ -31,7 +32,7 @@ class DeployExtension {
         cache = new CacheExtension(project)
 
         this.targets.all { RemoteTarget target ->
-            project.tasks.create("discover${target.name.capitalize()}".toString(), TargetDiscoveryTask) { TargetDiscoveryTask task ->
+            project.tasks.register("discover${target.name.capitalize()}".toString(), TargetDiscoveryTask) { TargetDiscoveryTask task ->
                 task.group = "EmbeddedTools"
                 task.description = "Determine the address(es) of target ${target.name.capitalize()}"
                 task.target = target
@@ -44,17 +45,17 @@ class DeployExtension {
 
             artifact.targets.all { Object tObj ->
                 RemoteTarget target = this.targets.resolve(tObj)
-                project.tasks.create("deploy${artifact.name.capitalize()}${target.name.capitalize()}".toString(), ArtifactDeployTask) { ArtifactDeployTask task ->
+                project.tasks.register("deploy${artifact.name.capitalize()}${target.name.capitalize()}".toString(), ArtifactDeployTask) { ArtifactDeployTask task ->
                     task.artifact = artifact
                     task.target = target
 
-                    task.dependsOn({ project.tasks.withType(TargetDiscoveryTask).findAll { TargetDiscoveryTask t -> t.target == target }} as Callable<List<Task>> )
+                    task.dependsOn({ project.tasks.withType(TargetDiscoveryTask).matching { TargetDiscoveryTask t -> t.target == target }} as Callable<TaskCollection> )
                     task.dependsOn(artifact.dependencies)
                 }
             }
         }
 
-        project.tasks.create("deploy") { Task task ->
+        project.tasks.register("deploy") { Task task ->
             task.group = "EmbeddedTools"
             task.description = "Deploy all artifacts on all targets"
             project.tasks.withType(ArtifactDeployTask).all { ArtifactDeployTask task2 ->
