@@ -35,7 +35,7 @@ class RemoteTarget implements Named {
     // TODO: Enable this to be called from context
     boolean dry             = false
 
-    DomainObjectSet<DeployLocation> locations = new DeployLocationSet(this)
+    DeployLocationSet locations = new DeployLocationSet(this)
 
     Closure<Boolean> onlyIf = null  // Delegate: DeployContext
 
