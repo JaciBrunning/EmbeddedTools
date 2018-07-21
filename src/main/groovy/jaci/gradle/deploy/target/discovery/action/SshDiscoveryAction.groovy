@@ -34,9 +34,6 @@ class SshDiscoveryAction extends AbstractDiscoveryAction {
         def location = sshLocation()
         def target = location.target
 
-        if (location.address == "does.not.exist")
-            Thread.sleep(5000)
-
         log.info("Discovery started...")
         state = DiscoveryState.STARTED
 
