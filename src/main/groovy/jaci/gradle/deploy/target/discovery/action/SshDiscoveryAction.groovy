@@ -17,7 +17,6 @@ class SshDiscoveryAction extends AbstractDiscoveryAction {
 
     SshDiscoveryAction(SshDeployLocation dloc) {
         super(dloc)
-        log = ETLoggerFactory.INSTANCE.create(toString())
     }
 
     @Override
@@ -33,12 +32,14 @@ class SshDiscoveryAction extends AbstractDiscoveryAction {
     DeployContext discover() {
         def location = sshLocation()
         def target = location.target
+        def address = location.address
+        log = ETLoggerFactory.INSTANCE.create("SshDiscoveryAction[${address}]")
 
         log.info("Discovery started...")
         state = DiscoveryState.STARTED
 
         // Split host into host:port, using 22 as the default port if none provided
-        def splitHost = location.address.split(":")
+        def splitHost = address.split(":")
         def hostname = splitHost[0]
         def port = splitHost.length > 1 ? Integer.parseInt(splitHost[1]) : 22
         log.info("Parsed Host: HOST = ${hostname}, PORT = ${port}")
@@ -48,7 +49,7 @@ class SshDiscoveryAction extends AbstractDiscoveryAction {
 
         def session = new SshSessionController(resolvedHost, port, location.user, location.password, target.timeout, location.target.maxChannels)
         session.open()
-        log.info("Found ${resolvedHost}! (${location.address})")
+        log.info("Found ${resolvedHost}! (${address})")
         state = DiscoveryState.CONNECTED
 
         def ctx = new DefaultDeployContext(session, log, location, target.directory)
@@ -83,6 +84,6 @@ class SshDiscoveryAction extends AbstractDiscoveryAction {
 
     @Override
     public String toString() {
-        return "${this.class.simpleName}[${this.sshLocation().address}]"
+        return "${this.class.simpleName}"
     }
 }

@@ -134,12 +134,12 @@ class TargetDiscoveryWorker implements Runnable {
 
         log.debug("Failures: ${enumMap}")
         // Sort and iterate by state priority
-        boolean printFull = true
-        enumMap.keySet().sort { a -> -a.priority }.each { DiscoveryState state ->
+        def sorted = enumMap.keySet().sort { a -> -a.priority }
+        int printFullPriority = sorted.first().priority
+
+        sorted.each { DiscoveryState state ->
             List<DiscoveryFailedException> fails = enumMap[state]
-            if (!printFull) {
-                log.logErrorHead("${fails.size()} other action(s) ${state.stateLocalized}.")
-            } else {
+            if (state.priority == printFullPriority || log.backingLogger().isInfoEnabled()){
                 fails.each { DiscoveryFailedException failed ->
                     log.logErrorHead("${failed.action.deployLocation.friendlyString()}: ${state.stateLocalized.capitalize()}.")
                     log.push().with {
@@ -147,12 +147,12 @@ class TargetDiscoveryWorker implements Runnable {
                         logError(failed.cause.message)
                     }
                 }
+            } else {
+                log.logErrorHead("${fails.size()} other action(s) ${state.stateLocalized}.")
             }
-
-            printFull = log.backingLogger().isInfoEnabled()
         }
-        if (!printFull)
-            log.log("Run with --info for more details")
+
+        log.log("Run with --info for more details")
 
         log.log("") // blank line
 
