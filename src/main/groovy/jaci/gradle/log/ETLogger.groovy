@@ -1,8 +1,11 @@
 package jaci.gradle.log
 
 import groovy.transform.CompileStatic
+import jaci.gradle.ClosureUtils
 import org.apache.log4j.Logger
 import org.gradle.internal.logging.text.StyledTextOutput
+
+import java.util.concurrent.Semaphore
 
 @CompileStatic
 class ETLogger {
@@ -11,6 +14,7 @@ class ETLogger {
     boolean silent = false
     Logger internalLogger
     StyledTextOutput colorOut
+    private Semaphore semaphore
 
     ETLogger(String name, StyledTextOutput textOutput, int indent) {
         this.name = name
@@ -18,6 +22,7 @@ class ETLogger {
         this.indentStr = ([' ']*indent).join('')
         this.internalLogger = Logger.getLogger(name)
         this.colorOut = textOutput
+        this.semaphore = new Semaphore(1)
     }
 
     ETLogger(String name, StyledTextOutput textOutput) {
@@ -26,6 +31,15 @@ class ETLogger {
 
     ETLogger push() {
         return new ETLogger(name, colorOut, indent + 2)
+    }
+
+    void withLock(Closure c) {
+        this.semaphore.acquire()
+        try {
+            ClosureUtils.delegateCall(this, c)
+        } finally {
+            this.semaphore.release()
+        }
     }
 
     void log(String msg) {

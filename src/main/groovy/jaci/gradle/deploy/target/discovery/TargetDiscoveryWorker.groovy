@@ -100,14 +100,16 @@ class TargetDiscoveryWorker implements Runnable {
     }
 
     private void failed(List<DiscoveryFailedException> ex) {
-        printFailures(ex)
         callback.accept(null)
-        def failMsg = "Target ${target.name} could not be found at any location! See above for more details."
-        if (target.failOnMissing)
-            throw new TargetNotFoundException(failMsg)
-        else {
-            log.log(failMsg)
-            log.log("${target.name}.failOnMissing is set to false. Skipping this target and moving on...")
+        log.withLock {
+            printFailures(ex)
+            def failMsg = "Target ${target.name} could not be found at any location! See above for more details."
+            if (target.failOnMissing)
+                throw new TargetNotFoundException(failMsg)
+            else {
+                log.log(failMsg)
+                log.log("${target.name}.failOnMissing is set to false. Skipping this target and moving on...")
+            }
         }
     }
 
