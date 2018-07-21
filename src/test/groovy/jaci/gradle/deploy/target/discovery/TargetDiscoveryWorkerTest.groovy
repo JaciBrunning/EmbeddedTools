@@ -6,6 +6,7 @@ import jaci.gradle.deploy.target.discovery.action.AbstractDiscoveryAction
 import jaci.gradle.deploy.target.discovery.action.DiscoveryAction
 import jaci.gradle.deploy.target.location.AbstractDeployLocation
 import jaci.gradle.deploy.target.location.DeployLocation
+import jaci.gradle.deploy.target.location.DeployLocationSet
 import org.gradle.api.internal.DefaultDomainObjectSet
 import spock.lang.Specification
 import spock.lang.Subject
@@ -14,9 +15,9 @@ import java.util.function.Consumer
 
 class TargetDiscoveryWorkerTest extends Specification {
 
-    def target = Mock(RemoteTarget) {
-        getTimeout() >> 1
-        getLocations() >> new DefaultDomainObjectSet(DeployLocation.class)
+    def target = Mock(RemoteTarget) { RemoteTarget t ->
+        t.getTimeout() >> 1
+        t.getLocations() >> new DeployLocationSet(t)
     }
     def callback = Mock(Consumer)
     def context = Mock(DeployContext)
@@ -45,8 +46,8 @@ class TargetDiscoveryWorkerTest extends Specification {
     }
 
     def "success + failure"() {
-        target.getLocations().add(new MockedLocation(target, context, true))
         target.getLocations().add(new MockedLocation(target, context, false))
+        target.getLocations().add(new MockedLocation(target, context, true))
 
         // Should say we found the target
         when:
