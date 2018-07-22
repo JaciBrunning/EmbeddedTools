@@ -1,9 +1,12 @@
 package jaci.gradle.deploy.cache
 
-import jaci.gradle.deploy.DeployContext
+import groovy.transform.CompileStatic
+import jaci.gradle.deploy.context.DeployContext
+import org.gradle.api.Named
 
-trait CacheMethod {
+@CompileStatic
+interface CacheMethod extends Named {
     // Returns false if something can't be found (e.g. md5sum). In this case, cache checking is skipped.
-    abstract boolean compatible(DeployContext context)
-    abstract Set<String> needsUpdate(DeployContext context, Map<String, File> files)
+    boolean compatible(DeployContext context)
+    Set<String> needsUpdate(DeployContext context, Map<String, File> files)
 }

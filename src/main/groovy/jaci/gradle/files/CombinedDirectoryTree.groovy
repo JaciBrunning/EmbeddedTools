@@ -5,19 +5,22 @@ import groovy.transform.CompileStatic
 @CompileStatic
 class CombinedDirectoryTree extends AbstractDirectoryTree {
 
-    List<AbstractDirectoryTree> subtrees
+    List<IDirectoryTree> subtrees
 
     CombinedDirectoryTree() {
         subtrees = []
     }
 
-    CombinedDirectoryTree add(AbstractDirectoryTree tree) {
+    CombinedDirectoryTree(IDirectoryTree... trees) {
+        subtrees = trees as List
+    }
+
+    void add(IDirectoryTree tree) {
         subtrees.add(tree)
-        return this
     }
 
     @Override
     Set<File> getDirectories() {
-        return subtrees.collectMany { AbstractDirectoryTree t -> t.getDirectories() } as Set<File>
+        return subtrees.collectMany { IDirectoryTree t -> t.getDirectories() } as Set<File>
     }
 }

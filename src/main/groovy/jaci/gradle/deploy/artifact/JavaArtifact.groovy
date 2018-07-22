@@ -1,31 +1,33 @@
 package jaci.gradle.deploy.artifact
 
 import groovy.transform.CompileStatic
-import jaci.gradle.deploy.DeployContext
+import org.gradle.api.GradleException
 import org.gradle.api.Project
 import org.gradle.api.Task
 import org.gradle.api.tasks.bundling.Jar
 
+import java.util.concurrent.Callable
+
 @CompileStatic
-class JavaArtifact extends FileCollectionArtifact {
-    JavaArtifact(String name) {
-        super(name)
+class JavaArtifact extends FileArtifact implements TaskHungryArtifact {
+
+    JavaArtifact(String name, Project project) {
+        super(name, project)
+        dependsOn({ jar } as Callable<Object>)
     }
 
-    String jar
-    String filename = null
-
-    // Set after deploy logic
-    File _jarfile
-
-    void setJar(Object jarNotation) {
-        this.jar = jarNotation
-        dependsOn(jarNotation)
-    }
+    Object jar = "jar"
 
     @Override
-    void deploy(Project project, DeployContext ctx) {
-        _jarfile = taskDependencies.findAll { it instanceof Jar }.collect { Task t -> t.outputs.files.files.first() }.first()
-        ctx.put(_jarfile, (filename == null ? _jarfile.name : filename), cache)
+    void taskDependenciesAvailable(Set<Task> tasks) {
+        Set<Task> jarTasks = tasks.findAll { it instanceof Jar }   // JarTask existence is already checked in dependsOn
+        if (jarTasks.size() > 1)
+            throw new GradleException("${toString()} given multiple Jar tasks: ${jarTasks}")
+
+        Set<File> files = jarTasks.first().outputs.files.files
+        if (files.empty)
+            throw new GradleException("${toString()} Jar Task has no output files: ${jarTasks.first()}")
+
+        file.set(files.first())
     }
 }

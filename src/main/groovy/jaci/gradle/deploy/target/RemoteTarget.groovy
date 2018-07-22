@@ -1,57 +1,69 @@
 package jaci.gradle.deploy.target
 
 import groovy.transform.CompileStatic
-import groovy.transform.EqualsAndHashCode
 import jaci.gradle.ClosureUtils
 import jaci.gradle.EmbeddedTools
-import jaci.gradle.deploy.DeployContext
-import jaci.gradle.deploy.tasks.TargetDiscoveryTask
-import jaci.gradle.transport.SshSessionController
+import jaci.gradle.deploy.context.DeployContext
+import jaci.gradle.deploy.target.discovery.TargetDiscoveryTask
+import jaci.gradle.deploy.target.location.DeployLocation
+import jaci.gradle.deploy.target.location.DeployLocationSet
 import org.apache.log4j.Logger
+import org.gradle.api.DomainObjectSet
 import org.gradle.api.Named
 import org.gradle.api.Project
-
-import java.util.concurrent.CountDownLatch
+import org.gradle.api.tasks.TaskCollection
+import org.gradle.util.ConfigureUtil
 
 @CompileStatic
-@EqualsAndHashCode(includes = 'name')
 class RemoteTarget implements Named {
-    final String name
+    private Logger log
+    private final String name
+    private final Project project
 
-    RemoteTarget(String name) {
+    RemoteTarget(String name, Project project) {
         this.name = name
+        this.project = project
+        this.dry = EmbeddedTools.isDryRun(project)
         log = Logger.getLogger(toString())
     }
 
-    List<String> addresses  = []
-    boolean mkdirs          = true
-    boolean ipv6            = false    // Enable IPv6 resolution? (experimental)
-    boolean discoverInstant = true
     String directory        = null     // Null = default user home
-    String user             = null
-    String password         = ""
-    boolean promptPassword  = false
     int timeout             = 3
     boolean failOnMissing   = true
-    int maxChannels = 1
+    int maxChannels         = 1
 
-    List<Closure> precheck  = []  // Called before onlyIf
+    // TODO: Enable this to be called from context
+    boolean dry             = false
+
+    DeployLocationSet locations = new DeployLocationSet(this)
+
     Closure<Boolean> onlyIf = null  // Delegate: DeployContext
 
-    Logger log
+    @Override
+    String getName() {
+        return name
+    }
 
-    // Internal
-    CountDownLatch latch = new CountDownLatch(1)
+    Project getProject() {
+        return project
+    }
+
+    void locations(final Closure closure) {
+        ConfigureUtil.configure(closure, (Object)locations)
+    }
+
+    TaskCollection<TargetDiscoveryTask> getDiscoveryTask() {
+        return project.tasks.withType(TargetDiscoveryTask).matching { TargetDiscoveryTask t ->
+            t.target == this
+        }
+    }
 
     @Override
     String toString() {
         return "RemoteTarget[${name}]".toString()
     }
 
-    boolean toConnect(DeployContext ctx) {
-        log.debug("Precheck....")
-        precheck.forEach { Closure c -> ClosureUtils.delegateCall(ctx, c) }
-
+    boolean verify(DeployContext ctx) {
         if (onlyIf instanceof Closure) {
             log.debug("OnlyIf...")
             boolean toConnect = ClosureUtils.delegateCall(ctx, onlyIf)

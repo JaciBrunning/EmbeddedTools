@@ -1,10 +1,9 @@
 package jaci.gradle.nativedeps
 
 import groovy.transform.CompileStatic
-import jaci.gradle.files.AbstractDirectoryTree
+import jaci.gradle.files.IDirectoryTree
 import org.gradle.api.Project
 import org.gradle.api.file.FileCollection
-import org.gradle.api.internal.file.collections.FileCollectionAdapter
 import org.gradle.nativeplatform.BuildType
 import org.gradle.nativeplatform.Flavor
 import org.gradle.nativeplatform.NativeDependencySet
@@ -18,14 +17,14 @@ public class ETNativeDepSet implements NativeDependencySet {
     Project         project
     String          name
     FileCollection  staticLibs, sharedLibs, dynamicLibs
-    AbstractDirectoryTree headers, sources
+    IDirectoryTree  headers, sources
     List<String>    systemLibs
     NativePlatform  targetPlatform
     Flavor          flavor
     BuildType       buildType
 
     public ETNativeDepSet(Project project, String name,
-                          AbstractDirectoryTree headers, AbstractDirectoryTree sources,
+                          IDirectoryTree headers, IDirectoryTree sources,
                           FileCollection staticLibs, FileCollection sharedLibs,
                           FileCollection dynamicLibs, List<String> systemLibs,
                           NativePlatform targetPlatform, Flavor flavor, BuildType buildType) {
@@ -61,6 +60,8 @@ public class ETNativeDepSet implements NativeDependencySet {
 
     @Override
     FileCollection getRuntimeFiles() {
+        // Needed to have a flat set, as otherwise the install tasks do not work
+        // properly
         return project.files {
             return dynamicLibs.files
         }
@@ -72,6 +73,17 @@ public class ETNativeDepSet implements NativeDependencySet {
         if (buildType != null && buildType != btype)
             return false
         if (targetPlatform != plat)
+            return false
+
+        return true
+    }
+
+    boolean appliesTo(String flavorName, String buildTypeName, String platformName) {
+        if (flavor != null && !flavor.name.equals(flavorName))
+            return false
+        if (buildType != null && !buildType.name.equals(buildTypeName))
+            return false
+        if (!targetPlatform.name.equals(platformName))
             return false
 
         return true

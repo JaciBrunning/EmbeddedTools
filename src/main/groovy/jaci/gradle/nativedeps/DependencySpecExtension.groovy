@@ -1,7 +1,6 @@
 package jaci.gradle.nativedeps
 
 import groovy.transform.CompileStatic
-import org.gradle.api.Project
 import org.gradle.nativeplatform.BuildType
 import org.gradle.nativeplatform.Flavor
 import org.gradle.nativeplatform.NativeBinarySpec
@@ -11,7 +10,7 @@ import org.gradle.nativeplatform.platform.NativePlatform
 public class DependencySpecExtension {
     List<ETNativeDepSet> sets
 
-    public DependencySpecExtension(Project project) {
+    public DependencySpecExtension() {
         sets = [] as List<ETNativeDepSet>
     }
 

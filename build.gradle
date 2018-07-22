@@ -4,6 +4,7 @@ plugins {
     id 'groovy'
     id 'maven-publish'
     id "idea"
+    id 'com.gradle.build-scan' version '1.15'
 }
 
 repositories {
@@ -16,11 +17,27 @@ repositories {
 
 dependencies {
     compile 'com.jcraft:jsch:0.1.53'
+    compile 'com.gradle:build-scan-plugin:1.15'
+
+    testCompile('org.spockframework:spock-core:1.1-groovy-2.4') {
+        exclude group: 'org.codehaus.groovy'
+    }
+    testCompile('cglib:cglib-nodep:2.2')
+    testCompile('org.objenesis:objenesis:1.2')
+    testCompile gradleTestKit()
+}
+
+buildScan {
+    termsOfServiceUrl = 'https://gradle.com/terms-of-service'
+    termsOfServiceAgree = 'yes'
 }
 
 group = "jaci.gradle"
 archivesBaseName = "EmbeddedTools"
-version = "2018.07.03" // YYYY.MM.DD(revision)
+version = "2018.07.21b" // YYYY.MM.DD(revision)
+
+sourceCompatibility = 1.8
+targetCompatibility = 1.8
 
 pluginBundle {
     website = 'https://github.com/JacisNonsense/EmbeddedTools'
@@ -60,6 +77,6 @@ gradlePlugin {
 }
 
 wrapper {
-    gradleVersion = '4.8.1'
+    gradleVersion = '4.9'
     distributionType = Wrapper.DistributionType.ALL
 }

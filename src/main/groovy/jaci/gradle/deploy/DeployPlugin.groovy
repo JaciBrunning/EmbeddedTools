@@ -1,10 +1,10 @@
 package jaci.gradle.deploy
 
 import groovy.transform.CompileStatic
-import jaci.gradle.deploy.artifact.ArtifactBase
+import jaci.gradle.deploy.artifact.Artifact
+import jaci.gradle.deploy.artifact.ArtifactDeployWorker
 import jaci.gradle.deploy.artifact.NativeArtifact
-import jaci.gradle.deploy.tasks.ArtifactDeployTask
-import jaci.gradle.deploy.tasks.TargetDiscoveryTask
+import jaci.gradle.deploy.target.discovery.TargetDiscoveryWorker
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.Task
@@ -20,19 +20,18 @@ import org.gradle.platform.base.BinaryContainer
 class DeployPlugin implements Plugin<Project> {
     @Override
     void apply(Project project) {
-        def deployExt = new DeployExtension(project)
-        project.extensions.add('deploy', deployExt)
+        def deployExt = project.extensions.create("deploy", DeployExtension, project)
 
         project.gradle.buildFinished {
-            TargetDiscoveryTask.clearStorage()
-            ArtifactDeployTask.clearStorage()
+            TargetDiscoveryWorker.clearStorage()
+            ArtifactDeployWorker.clearStorage()
         }
     }
 
     static class DeployRules extends RuleSource {
         @Mutate
         void createBinariesTasks(final ModelMap<Task> tasks, final ExtensionContainer ext, final BinaryContainer binaries) {
-            ext.getByType(DeployExtension).artifacts.each { ArtifactBase artifact ->
+            ext.getByType(DeployExtension).artifacts.each { Artifact artifact ->
                 if (artifact instanceof NativeArtifact) {
                     NativeArtifact na = artifact as NativeArtifact
                     binaries.each { bin ->

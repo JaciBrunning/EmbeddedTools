@@ -3,18 +3,14 @@ package jaci.gradle.nativedeps
 import groovy.transform.CompileStatic
 import jaci.gradle.EmbeddedTools
 import jaci.gradle.SortUtils
-import jaci.gradle.files.AbstractDirectoryTree
 import jaci.gradle.files.DefaultDirectoryTree
+import jaci.gradle.files.IDirectoryTree
 import org.gradle.api.GradleException
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.Task
 import org.gradle.api.file.FileCollection
 import org.gradle.api.file.FileTree
-import org.gradle.api.internal.file.collections.DirectoryFileTree
-import org.gradle.api.internal.file.collections.FileSystemMirroringFileTree
-import org.gradle.api.internal.file.collections.FileTreeAdapter
-import org.gradle.api.internal.file.collections.LocalFileTree
 import org.gradle.api.internal.provider.DefaultProvider
 import org.gradle.api.plugins.ExtensionContainer
 import org.gradle.api.tasks.util.PatternFilterable
@@ -26,28 +22,26 @@ import org.gradle.nativeplatform.tasks.AbstractLinkTask
 import org.gradle.platform.base.BinaryTasks
 import org.gradle.platform.base.PlatformContainer
 
-import java.util.concurrent.Callable
-
 @CompileStatic
 class NativeDepsPlugin implements Plugin<Project> {
 
     @Override
     void apply(Project project) {
-        DependencySpecExtension dse = project.extensions.create("ETDependencySpecs", DependencySpecExtension, project)
+        DependencySpecExtension dse = project.extensions.create("ETDependencySpecs", DependencySpecExtension)
 
         project.extensions.add("useLibrary", { Object closureArg, String... names ->
             if (closureArg in TargetedNativeComponent) {
                 TargetedNativeComponent component = (TargetedNativeComponent)closureArg
                 component.binaries.withType(NativeBinarySpec).all { NativeBinarySpec bin ->
                     names.each { String name ->
-                        DelegatedDependencySet set = new DelegatedDependencySet(project, name, bin)
+                        DelegatedDependencySet set = new DelegatedDependencySet(name, bin, dse)
                         bin.lib(set)
                     }
                 }
             } else if (closureArg in NativeBinarySpec) {
                 NativeBinarySpec bin = (NativeBinarySpec)closureArg
                 names.each { String name ->
-                    DelegatedDependencySet set = new DelegatedDependencySet(project, name, bin)
+                    DelegatedDependencySet set = new DelegatedDependencySet(name, bin, dse)
                     bin.lib(set)
                 }
             } else if (closureArg in LanguageSourceSet) {
@@ -171,8 +165,8 @@ class NativeDepsPlugin implements Plugin<Project> {
 
                 tPlatforms.each { NativePlatform platform ->
                     def libs = lib.libs.collect { dse.find(it, flavor, buildType, platform) }
-                    def headers = libs.collect { it.headers }.inject { a, b -> a+b } as AbstractDirectoryTree
-                    def sources = libs.collect { it.sources }.inject { a, b -> a+b } as AbstractDirectoryTree
+                    def headers = libs.collect { it.headers }.inject { a, b -> a+b } as IDirectoryTree
+                    def sources = libs.collect { it.sources }.inject { a, b -> a+b } as IDirectoryTree
                     def staticFiles = libs.collect { it.staticLibs }.inject { a, b -> a+b } as FileCollection
                     def sharedFiles = libs.collect { it.sharedLibs }.inject { a, b -> a+b } as FileCollection
                     def dynamicFiles = libs.collect { it.dynamicLibs }.inject { a, b -> a+b } as FileCollection

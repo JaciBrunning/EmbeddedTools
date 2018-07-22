@@ -11,6 +11,10 @@ class DiscreteDirectoryTree extends AbstractDirectoryTree {
         set = []
     }
 
+    DiscreteDirectoryTree(Set<File> set) {
+        this.set = set
+    }
+
     void add(File f) {
         set.add(f)
     }
