@@ -10,7 +10,7 @@ class PathUtilsTest extends Specification {
         def path = PathUtils.combine("/myroot/", "relative/")
 
         then:
-        path.equals("/myroot/relative")
+        path.equals("/myroot/relative/")
     }
 
     def "combine upone"() {
