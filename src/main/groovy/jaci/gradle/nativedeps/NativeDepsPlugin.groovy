@@ -10,6 +10,13 @@ import org.gradle.api.GradleException
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.Task
+import org.gradle.api.artifacts.Configuration
+import org.gradle.api.artifacts.Dependency
+import org.gradle.api.artifacts.DependencyArtifact
+import org.gradle.api.artifacts.ModuleDependency
+import org.gradle.api.artifacts.ResolvedArtifact
+import org.gradle.api.artifacts.ResolvedDependency
+import org.gradle.api.artifacts.component.ModuleComponentIdentifier
 import org.gradle.api.file.FileCollection
 import org.gradle.api.file.FileTree
 import org.gradle.api.internal.provider.DefaultProvider
@@ -136,19 +143,53 @@ class NativeDepsPlugin implements Plugin<Project> {
             }
         }
 
+        private static boolean nullSafeEquals(Object a, Object b) {
+            return (a == b) || (a != null && b != null && a.equals(b))
+        }
+
+        private static File resolve(Configuration cfg, Dependency dep) {
+            def artifacts = cfg.resolvedConfiguration.resolvedArtifacts
+            def selected = artifacts.findAll { ResolvedArtifact art ->
+                def mid = art.moduleVersion.id
+                boolean applies = false
+
+                if (nullSafeEquals(mid.group, dep.group) && nullSafeEquals(mid.name, dep.name)) {
+                    if (dep instanceof ModuleDependency) {
+                        applies = !((ModuleDependency)dep).artifacts.findAll { DependencyArtifact dart ->
+                            nullSafeEquals(dart.classifier, art.classifier)
+                        }.empty
+                    } else {
+                        applies = true
+                    }
+                }
+
+                applies
+            }
+            if (selected.empty)
+                throw new GradleException("Can't find any artifacts that apply to dependency: ${dep.name}")
+
+            return selected.first().file
+        }
+
         private static Supplier<FileTree> addDependency(Project proj, NativeLib lib) {
             def config = lib.getConfiguration() ?: "native_$lib.name".toString()
             def cfg = proj.configurations.maybeCreate(config)
-            def dep = proj.dependencies.add(config, lib.getMaven() ?: lib.getFile())
-            if (lib.getMaven() != null || lib.getFile().isFile()) {
+            if (lib.getMaven() != null) {
+                def dep = proj.dependencies.add(config, lib.getMaven())
                 return {
-                    proj.zipTree(cfg.files(dep).first())
+                    proj.zipTree(resolve(cfg, dep))
                 } as Supplier<FileTree>
-            } else {
+            } else if (lib.getFile() != null && lib.getFile().directory) {
                 // File is a directory
                 return {
-                    proj.fileTree(cfg.files(dep).first())
+                    proj.fileTree(lib.getFile())
                 } as Supplier<FileTree>
+            } else if (lib.getFile() != null && lib.getFile().file) {
+                return {
+                    proj.zipTree(lib.getFile())
+                } as Supplier<FileTree>
+            } else {
+                throw new GradleException("No target defined for dependency ${lib.name} (maven=${lib.getMaven()} file=${lib.getFile()})")
             }
         }
 
