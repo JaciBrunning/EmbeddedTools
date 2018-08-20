@@ -5,7 +5,7 @@ buildscript {
     }
     dependencies {
         classpath 'com.jcraft:jsch:0.1.53'
-        classpath group: "jaci.gradle", name: "EmbeddedTools", version: "2018.07.21b"
+        classpath group: "jaci.gradle", name: "EmbeddedTools", version: "2018.08.20"
     }
 }
 
@@ -87,6 +87,7 @@ model {
             targetPlatform = "desktop"
             headerDirs = ['']
             maven = "edu.wpi.first.wpilibc:wpilibc:2018.4.1:headers@zip"
+            configuration = "wpilib"
         }
     }
 
@@ -108,7 +109,7 @@ model {
             sources.cpp {
                 source.srcDirs "src_c"
             }
-//            useLibrary(it, "wpi_headers")
+            useLibrary(it, "wpi_headers")
         }
     }
 }

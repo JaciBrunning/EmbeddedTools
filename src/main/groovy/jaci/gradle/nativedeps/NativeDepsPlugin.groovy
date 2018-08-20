@@ -10,8 +10,6 @@ import org.gradle.api.GradleException
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.Task
-import org.gradle.api.artifacts.Configuration
-import org.gradle.api.artifacts.Dependency
 import org.gradle.api.file.FileCollection
 import org.gradle.api.file.FileTree
 import org.gradle.api.internal.provider.DefaultProvider
@@ -24,6 +22,9 @@ import org.gradle.nativeplatform.platform.NativePlatform
 import org.gradle.nativeplatform.tasks.AbstractLinkTask
 import org.gradle.platform.base.BinaryTasks
 import org.gradle.platform.base.PlatformContainer
+
+import java.util.concurrent.Callable
+import java.util.function.Supplier
 
 @CompileStatic
 class NativeDepsPlugin implements Plugin<Project> {
@@ -65,143 +66,55 @@ class NativeDepsPlugin implements Plugin<Project> {
         }
 
         @Mutate
-        void addMavenDeps(final NativeDepsSpec spec, final ExtensionContainer extensions) {
-            Project project = extensions.getByType(EmbeddedTools.ProjectWrapper).project
-
-            // Add Maven Dependencies if necessary
-            spec.withType(NativeLib) {
-                if (it.getMaven() != null) {
-                    String cfgname = it.getConfigurationName() ?: "native_${it.name}"
-                    def cfg = project.configurations.maybeCreate(cfgname)
-                    project.dependencies.add(cfgname, it.getMaven())
-                }
-            }
-        }
-
-        @Mutate
-        void addNativeLibraries(ModelMap<Task> tasks,
-                                final NativeDepsSpec spec, final ExtensionContainer extensions,
-                                final FlavorContainer flavors, final BuildTypeContainer buildTypes, final PlatformContainer platforms) {
-
-            // Add the library bindings, so we can access them from the native component configuration.
-            // This must be different from addMavenDeps since by now, the dependencies of the project are 'locked'
-            // and set as read-only.
+        void addNativeLibs(ModelMap<Task> tasks,
+                            final NativeDepsSpec spec, final ExtensionContainer extensions,
+                            final FlavorContainer flavors, final BuildTypeContainer buildTypes, final PlatformContainer platforms) {
             Project project = extensions.getByType(EmbeddedTools.ProjectWrapper).project
             DependencySpecExtension dse = extensions.getByType(DependencySpecExtension)
 
-            spec.withType(NativeLib).each { lib ->
-                def binname = lib.name
-                def libname = lib.libraryName ?: lib.name
-                FileTree rootTree, sharedFiles, staticFiles, dynamicFiles
+            spec.withType(NativeLib).each { NativeLib lib ->
+                def uniqName = lib.name
+                def libName = lib.libraryName ?: uniqName
 
-                def flavor = lib.flavor == null ? null as Flavor : flavors.findByName(lib.flavor)
-                def buildType = lib.buildType == null ? null as BuildType : buildTypes.findByName(lib.buildType)
-                def tPlatforms = [] as List<NativePlatform>
-                if (lib.targetPlatforms != null && lib.targetPlatforms.size() > 0) {
-                    lib.targetPlatforms.each { String p ->
-                        tPlatforms.add(platforms.getByName(p) as NativePlatform)
-                    }
-                } else {
-                    tPlatforms = [platforms.getByName(lib.targetPlatform) as NativePlatform]
-                }
+                Supplier<FileTree> rootTree = addDependency(project, lib)
 
-                if (lib.getMaven() != null) {
-                    String cfgname = lib.getConfigurationName() ?: "native_${lib.name}"
+                Flavor flavor = lib.flavor == null ? null : flavors.findByName(lib.flavor)
+                BuildType buildType = lib.buildType == null ? null : buildTypes.findByName(lib.buildType)
+                List<NativePlatform> targetPlatforms = getPlatforms(lib, platforms)
 
-                    def cfg = project.configurations.getByName(cfgname)
-                    // RESOLVE 1
-                    rootTree = project.zipTree(cfg.dependencies.collectMany { cfg.files(it) as Collection }.first())
-//                    rootTree = project.zipTree(project.file({
-//                        cfg.dependencies.collectMany { cfg.files(it) as Collection }.first()
-//                    }))
+                FileCollection sharedFiles = matcher(project, rootTree, lib.sharedMatchers)
+                FileCollection staticFiles = matcher(project, rootTree, lib.staticMatchers)
+                FileCollection dynamicFiles = matcher(project, rootTree, lib.dynamicMatchers)
 
-//                    rootTree = project.files({
-//                        project.zipTree(cfg.dependencies.collectMany { cfg.files(it) as Collection }.first())
-//                    } as Action<File>)
+                IDirectoryTree headerFiles = new DefaultDirectoryTree(rootTree, lib.headerDirs ?: [] as List<String>)
+                IDirectoryTree sourceFiles = new DefaultDirectoryTree(rootTree, lib.sourceDirs ?: [] as List<String>)
 
-                    cfg.dependencies.matching { Dependency d -> d. }
-                } else if (lib.getFile().isDirectory()) {
-                    rootTree = project.fileTree(lib.getFile())
-                } else {
-                    // Assume ZIP File
-                    rootTree = project.zipTree(lib.getFile())
-                }
-
-                sharedFiles = rootTree.matching { PatternFilterable pat -> pat.include(lib.sharedMatchers  ?: ['<<EMBEDDEDTOOLS_NOMATCH>>']) }
-                staticFiles = rootTree.matching { PatternFilterable pat -> pat.include(lib.staticMatchers  ?: ['<<EMBEDDEDTOOLS_NOMATCH>>']) }
-                dynamicFiles = rootTree.matching { PatternFilterable pat -> pat.include(lib.dynamicMatchers ?: ['<<EMBEDDEDTOOLS_NOMATCH>>']) }
-
-                def headerFiles = new DefaultDirectoryTree(rootTree, lib.headerDirs ?: [] as List<String>)
-                def sourceFiles = new DefaultDirectoryTree(rootTree, lib.sourceDirs ?: [] as List<String>)
-
-                tPlatforms.each { NativePlatform platform ->
+                targetPlatforms.each { NativePlatform platform ->
                     ETNativeDepSet depSet = new ETNativeDepSet(
-                        project,
-                        libname,
-                        headerFiles,
-                        sourceFiles,
-                        staticFiles,
-                        sharedFiles,
-                        dynamicFiles,
+                        project, libName,
+                        headerFiles, sourceFiles,
+                        staticFiles, sharedFiles, dynamicFiles,
                         lib.systemLibs ?: [] as List<String>,
-                        platform,
-                        flavor,
-                        buildType
+                        platform, flavor, buildType
                     )
                     dse.sets.add(depSet)
                 }
                 null
             }
 
-            List<SortUtils.TopoMember<CombinedNativeLib>> unsorted = []
-            spec.withType(CombinedNativeLib).each { lib ->
-                def member = new SortUtils.TopoMember<CombinedNativeLib>()
-                member.name = lib.name
-                member.dependsOn = lib.libs
-                member.extra = lib
-                unsorted << member
-            }
+            sortCombinedLibs(spec.withType(CombinedNativeLib)).each { CombinedNativeLib lib ->
+                def uniqName = lib.name
+                def libName = lib.libraryName ?: uniqName
 
-            List<SortUtils.TopoMember<CombinedNativeLib>> sorted = SortUtils.topoSort(unsorted)
-            sorted.each { SortUtils.TopoMember<CombinedNativeLib> member ->
-                CombinedNativeLib lib = member.extra
-                def libname = lib.libraryName ?: lib.name
+                Flavor flavor = lib.flavor == null ? null : flavors.findByName(lib.flavor)
+                BuildType buildType = lib.buildType == null ? null : buildTypes.findByName(lib.buildType)
+                List<NativePlatform> targetPlatforms = getPlatforms(lib, platforms)
 
-                def flavor = lib.flavor == null ? null as Flavor : flavors.findByName(lib.flavor)
-                def buildType = lib.buildType == null ? null as BuildType : buildTypes.findByName(lib.buildType)
-                def tPlatforms = [] as List<NativePlatform>
-                if (lib.targetPlatforms != null && lib.targetPlatforms.size() > 0) {
-                    lib.targetPlatforms.each { String p ->
-                        tPlatforms.add(platforms.getByName(p) as NativePlatform)
-                    }
-                } else {
-                    tPlatforms = [platforms.getByName(lib.targetPlatform) as NativePlatform]
+                targetPlatforms.each { NativePlatform platform ->
+                    ETNativeDepSet dep = mergedDepSet(project, dse, libName, lib.libs, flavor, buildType, platform)
+                    dse.sets.add(dep)
                 }
-
-                tPlatforms.each { NativePlatform platform ->
-                    def libs = lib.libs.collect { dse.find(it, flavor, buildType, platform) }
-                    def headers = libs.collect { it.headers }.inject { a, b -> a+b } as IDirectoryTree
-                    def sources = libs.collect { it.sources }.inject { a, b -> a+b } as IDirectoryTree
-                    def staticFiles = libs.collect { it.staticLibs }.inject { a, b -> a+b } as FileCollection
-                    def sharedFiles = libs.collect { it.sharedLibs }.inject { a, b -> a+b } as FileCollection
-                    def dynamicFiles = libs.collect { it.dynamicLibs }.inject { a, b -> a+b } as FileCollection
-                    def systemLibs = libs.collectMany { it.systemLibs as Collection } as List<String>
-
-                    ETNativeDepSet depSet = new ETNativeDepSet(
-                        project,
-                        libname,
-                        headers,
-                        sources,
-                        staticFiles,
-                        sharedFiles,
-                        dynamicFiles,
-                        systemLibs,
-                        platform,
-                        flavor,
-                        buildType
-                    )
-                    dse.sets.add(depSet)
-                }
+                null
             }
         }
 
@@ -220,6 +133,67 @@ class NativeDepsPlugin implements Plugin<Project> {
                         }))
                     }
                 }
+            }
+        }
+
+        private static Supplier<FileTree> addDependency(Project proj, NativeLib lib) {
+            def config = lib.getConfiguration() ?: "native_$lib.name".toString()
+            def cfg = proj.configurations.maybeCreate(config)
+            def dep = proj.dependencies.add(config, lib.getMaven() ?: lib.getFile())
+            if (lib.getMaven() != null || lib.getFile().isFile()) {
+                return {
+                    proj.zipTree(cfg.files(dep).first())
+                } as Supplier<FileTree>
+            } else {
+                // File is a directory
+                return {
+                    proj.fileTree(cfg.files(dep).first())
+                } as Supplier<FileTree>
+            }
+        }
+
+        private static FileCollection matcher(Project proj, Supplier<FileTree> tree, List<String> matchers) {
+            return proj.files({
+                tree.get().matching({ PatternFilterable filter ->
+                    // <<!!ET_NOMATCH!!> is a magic string in the case the matchers are null.
+                    // This is because, without include, the filter will include all files
+                    // by default. We don't want this behavior.
+                    filter.include(matchers ?: ["<<!!ET_NOMATCH!!>"])
+                } as Action<PatternFilterable>)
+            } as Callable<FileCollection>)
+        }
+
+        private static List<CombinedNativeLib> sortCombinedLibs(Iterable<CombinedNativeLib> libs) {
+            List<SortUtils.TopoMember<CombinedNativeLib>> unsorted = libs.collect { CombinedNativeLib lib ->
+                new SortUtils.TopoMember<CombinedNativeLib>(lib.name, lib.libs, lib);
+            }
+            return SortUtils.topoSort(unsorted).collect { it.extra }
+        }
+
+        private static ETNativeDepSet mergedDepSet(Project proj, DependencySpecExtension dse, String name, List<String> libNames,
+                                                   Flavor flavor, BuildType buildType, NativePlatform platform) {
+            List<ETNativeDepSet> libs = libNames.collect { dse.find(it, flavor, buildType, platform) }
+            IDirectoryTree headers = libs.collect { it.headers }.inject { a, b -> a+b }
+            IDirectoryTree sources = libs.collect { it.sources }.inject { a, b -> a+b }
+            FileCollection staticFiles = libs.collect { it.staticLibs }.inject { a, b -> a+b }
+            FileCollection sharedFiles = libs.collect { it.sharedLibs }.inject { a, b -> a+b }
+            FileCollection dynamicFiles = libs.collect { it.dynamicLibs }.inject { a, b -> a+b }
+            List<String> systemLibs = libs.collectMany { it.systemLibs as Collection }
+
+            return new ETNativeDepSet(
+                    proj, name,
+                    headers, sources,
+                    staticFiles, sharedFiles, dynamicFiles,
+                    systemLibs,
+                    platform, flavor, buildType
+            )
+        }
+
+        private static List<NativePlatform> getPlatforms(BaseLibSpec lib, final PlatformContainer platforms) {
+            if (lib.targetPlatform == null && (lib.targetPlatforms == null || lib.targetPlatforms.empty))
+                return [] as List;
+            return (lib.targetPlatforms ?: [lib.targetPlatform] as List<String>).collect {
+                platforms.getByName(it) as NativePlatform
             }
         }
     }

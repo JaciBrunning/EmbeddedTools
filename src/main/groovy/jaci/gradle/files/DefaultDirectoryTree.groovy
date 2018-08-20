@@ -8,21 +8,28 @@ import org.gradle.api.internal.file.collections.FileSystemMirroringFileTree
 import org.gradle.api.internal.file.collections.FileTreeAdapter
 import org.gradle.api.internal.file.collections.LocalFileTree
 
+import java.util.function.Supplier
+
 @CompileStatic
 class DefaultDirectoryTree extends AbstractDirectoryTree {
 
-    private FileTree tree
+    private Supplier<FileTree> treeSupplier
     private List<String> subdirs
 
-    DefaultDirectoryTree(FileTree rootTree, List<String> subdirs) {
-        this.tree = rootTree
+    DefaultDirectoryTree(Supplier<FileTree> rootTree, List<String> subdirs) {
+        this.treeSupplier = rootTree
         this.subdirs = subdirs
+    }
+
+    DefaultDirectoryTree(FileTree tree, List<String> subdirs) {
+        this({ tree }, subdirs)
     }
 
     @Override
     Set<File> getDirectories() {
         Set<File> files = subdirs.collect { String subdir ->
             File rootDir = null
+            def tree = treeSupplier.get()
             if (tree instanceof DirectoryTree) {                // project.fileTree
                 rootDir = ((DirectoryTree)tree).getDir()
             } else if (tree instanceof FileTreeAdapter) {       // project.zipTree

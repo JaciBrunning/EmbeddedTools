@@ -1,10 +1,12 @@
 package jaci.gradle
 
+import groovy.transform.Canonical
 import groovy.transform.CompileStatic
 
 @CompileStatic
 class SortUtils {
 
+    @Canonical
     static class TopoMember<T> {
         String name
         List<String> dependsOn = []

@@ -32,6 +32,11 @@ interface NativeLib extends BaseLibSpec {
     void setMaven(String dependencyNotation)
     String getMaven()
 
+    // Specify which dependency configuration to plop this library in.
+    // By default, it is generated as "native_${name}"
+    void setConfiguration(String name)
+    String getConfiguration()
+
     void setFile(File dir_or_zip)
     File getFile()
 }
