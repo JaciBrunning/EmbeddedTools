@@ -5,10 +5,13 @@ import jaci.gradle.EmbeddedTools
 import jaci.gradle.SortUtils
 import jaci.gradle.files.DefaultDirectoryTree
 import jaci.gradle.files.IDirectoryTree
+import org.gradle.api.Action
 import org.gradle.api.GradleException
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.Task
+import org.gradle.api.artifacts.Configuration
+import org.gradle.api.artifacts.Dependency
 import org.gradle.api.file.FileCollection
 import org.gradle.api.file.FileTree
 import org.gradle.api.internal.provider.DefaultProvider
@@ -68,8 +71,9 @@ class NativeDepsPlugin implements Plugin<Project> {
             // Add Maven Dependencies if necessary
             spec.withType(NativeLib) {
                 if (it.getMaven() != null) {
-                    def cfg = project.configurations.maybeCreate("native_${it.name}")
-                    project.dependencies.add(cfg.name, it.getMaven())
+                    String cfgname = it.getConfigurationName() ?: "native_${it.name}"
+                    def cfg = project.configurations.maybeCreate(cfgname)
+                    project.dependencies.add(cfgname, it.getMaven())
                 }
             }
         }
@@ -102,9 +106,20 @@ class NativeDepsPlugin implements Plugin<Project> {
                 }
 
                 if (lib.getMaven() != null) {
-                    def cfg = project.configurations.getByName("native_${binname}")
+                    String cfgname = lib.getConfigurationName() ?: "native_${lib.name}"
 
+                    def cfg = project.configurations.getByName(cfgname)
+                    // RESOLVE 1
                     rootTree = project.zipTree(cfg.dependencies.collectMany { cfg.files(it) as Collection }.first())
+//                    rootTree = project.zipTree(project.file({
+//                        cfg.dependencies.collectMany { cfg.files(it) as Collection }.first()
+//                    }))
+
+//                    rootTree = project.files({
+//                        project.zipTree(cfg.dependencies.collectMany { cfg.files(it) as Collection }.first())
+//                    } as Action<File>)
+
+                    cfg.dependencies.matching { Dependency d -> d. }
                 } else if (lib.getFile().isDirectory()) {
                     rootTree = project.fileTree(lib.getFile())
                 } else {

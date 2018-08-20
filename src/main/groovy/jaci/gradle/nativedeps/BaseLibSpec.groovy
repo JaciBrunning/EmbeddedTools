@@ -26,4 +26,9 @@ interface BaseLibSpec extends Named {
 
     void setBuildType(String type)
     String getBuildType()
+
+    // Specify which dependency configuration to plop this library in.
+    // By default, it is generated as "native_${name}"
+    void setConfigurationName(String name)
+    String getConfigurationName()
 }
