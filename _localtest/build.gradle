@@ -82,6 +82,14 @@ deploy {
 }
 
 model {
+//    libraries {
+//        wpi_headers(NativeLib) {
+//            targetPlatform = "desktop"
+//            headerDirs = ['']
+//            maven = "edu.wpi.first.wpilibc:wpilibc:2018.4.1:headers@zip"
+//        }
+//    }
+
     platforms {
         desktop {
             architecture 'x86_64'
@@ -90,6 +98,7 @@ model {
 
     toolChains {
         gcc(Gcc)
+        visualCpp(VisualCpp)
     }
 
     components {
@@ -99,6 +108,7 @@ model {
             sources.cpp {
                 source.srcDirs "src_c"
             }
+//            useLibrary(it, "wpi_headers")
         }
     }
 }
@@ -221,7 +231,7 @@ buildScan {
 //}
 
 jar {
-    from configurations.compile.collect { it.isDirectory() ? it : zipTree(it) }
+    from { configurations.compile.collect { it.isDirectory() ? it : zipTree(it) } }
 }
 
 wrapper {
