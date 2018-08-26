@@ -5,24 +5,15 @@ import jaci.gradle.EmbeddedTools
 import jaci.gradle.SortUtils
 import jaci.gradle.files.DefaultDirectoryTree
 import jaci.gradle.files.IDirectoryTree
-import org.gradle.api.Action
-import org.gradle.api.GradleException
-import org.gradle.api.Plugin
-import org.gradle.api.Project
-import org.gradle.api.Task
-import org.gradle.api.artifacts.Configuration
-import org.gradle.api.artifacts.Dependency
-import org.gradle.api.artifacts.DependencyArtifact
-import org.gradle.api.artifacts.ModuleDependency
-import org.gradle.api.artifacts.ResolvedArtifact
-import org.gradle.api.artifacts.ResolvedDependency
-import org.gradle.api.artifacts.component.ModuleComponentIdentifier
+import org.gradle.api.*
+import org.gradle.api.artifacts.*
 import org.gradle.api.file.FileCollection
 import org.gradle.api.file.FileTree
 import org.gradle.api.internal.provider.DefaultProvider
 import org.gradle.api.plugins.ExtensionContainer
 import org.gradle.api.tasks.util.PatternFilterable
 import org.gradle.language.base.LanguageSourceSet
+import org.gradle.language.nativeplatform.DependentSourceSet
 import org.gradle.model.*
 import org.gradle.nativeplatform.*
 import org.gradle.nativeplatform.platform.NativePlatform
@@ -44,21 +35,31 @@ class NativeDepsPlugin implements Plugin<Project> {
             if (closureArg in TargetedNativeComponent) {
                 TargetedNativeComponent component = (TargetedNativeComponent)closureArg
                 component.binaries.withType(NativeBinarySpec).all { NativeBinarySpec bin ->
-                    names.each { String name ->
-                        DelegatedDependencySet set = new DelegatedDependencySet(name, bin, dse)
-                        bin.lib(set)
+                    Set<DelegatedDependencySet> dds = names.collect { String name ->
+                        new DelegatedDependencySet(name, bin, dse)
+                    } as Set
+
+                    bin.inputs.withType(DependentSourceSet) { DependentSourceSet dss ->
+                        dds.each { DelegatedDependencySet set ->
+                            dss.lib(set)
+                        }
                     }
                 }
             } else if (closureArg in NativeBinarySpec) {
-                NativeBinarySpec bin = (NativeBinarySpec)closureArg
-                names.each { String name ->
-                    DelegatedDependencySet set = new DelegatedDependencySet(name, bin, dse)
-                    bin.lib(set)
+                NativeBinarySpec bin = (NativeBinarySpec) closureArg
+                Set<DelegatedDependencySet> dds = names.collect { String name ->
+                    new DelegatedDependencySet(name, bin, dse)
+                } as Set
+
+                bin.inputs.withType(DependentSourceSet) { DependentSourceSet dss ->
+                    dds.each { DelegatedDependencySet set ->
+                        dss.lib(set)
+                    }
                 }
             } else if (closureArg in LanguageSourceSet) {
                 throw new GradleException('The useLibrary command needs to be placed directly in the component. Move it outside of the sources declaration.')
             } else {
-                throw new GradleException('Unknown type, You put this declaration in a weird place...')
+                throw new GradleException('Unknown type for useLibrary target. You put this declaration in a weird place...')
             }
         })
     }
@@ -126,18 +127,18 @@ class NativeDepsPlugin implements Plugin<Project> {
         }
 
         @BinaryTasks
-        void addLinkerArgs(ModelMap<Task> tasks, final NativeBinarySpec bin) {
-            bin.libs.each { NativeDependencySet set ->
-                if (set instanceof ETNativeDepSet) {
-                    bin.linker.args.addAll((set as ETNativeDepSet).getSystemLibs().collectMany { name ->
-                        [ "-l", name ] as Collection<String>
-                    })
-                } else if (set instanceof DelegatedDependencySet) {
-                    def dds = set as DelegatedDependencySet
-                    tasks.withType(AbstractLinkTask) { AbstractLinkTask linkTask ->
-                        linkTask.linkerArgs.addAll(new DefaultProvider<List<String>>({
-                            dds.get().getSystemLibs().collectMany { name -> ["-l", name] as Collection<String> }
-                        }))
+        void addLinkerArgs(ModelMap<Task> tasks, final NativeBinarySpec binary) {
+            // We can't use binary.libs because that forces a reenumeration of all libraries,
+            // which breaks multiproject builds. Instead, we have to resolve manually
+            binary.inputs.withType(DependentSourceSet) { DependentSourceSet dss ->
+                dss.libs.each { Object lib ->
+                    if (lib instanceof DelegatedDependencySet) {
+                        DelegatedDependencySet set = (DelegatedDependencySet)lib
+                        tasks.withType(AbstractLinkTask) { AbstractLinkTask linkTask ->
+                            linkTask.linkerArgs.addAll(new DefaultProvider<List<String>>({
+                                set.getSystemLibs().collectMany { name -> ["-l", name] as Collection<String> }
+                            }))
+                        }
                     }
                 }
             }

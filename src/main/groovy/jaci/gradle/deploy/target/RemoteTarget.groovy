@@ -5,10 +5,8 @@ import jaci.gradle.ClosureUtils
 import jaci.gradle.EmbeddedTools
 import jaci.gradle.deploy.context.DeployContext
 import jaci.gradle.deploy.target.discovery.TargetDiscoveryTask
-import jaci.gradle.deploy.target.location.DeployLocation
 import jaci.gradle.deploy.target.location.DeployLocationSet
 import org.apache.log4j.Logger
-import org.gradle.api.DomainObjectSet
 import org.gradle.api.Named
 import org.gradle.api.Project
 import org.gradle.api.tasks.TaskCollection

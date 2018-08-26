@@ -4,15 +4,11 @@ import groovy.transform.CompileStatic
 import jaci.gradle.ClosureUtils
 import jaci.gradle.deploy.context.DeployContext
 import org.gradle.api.DomainObjectSet
-import org.gradle.api.GradleException
 import org.gradle.api.Project
 import org.gradle.api.internal.DefaultDomainObjectSet
 import org.gradle.api.tasks.TaskCollection
 import org.gradle.util.Configurable
 import org.gradle.util.ConfigureUtil
-
-import java.lang.annotation.Annotation
-import java.lang.reflect.Method
 
 @CompileStatic
 abstract class AbstractArtifact implements Artifact, Configurable<Artifact> {

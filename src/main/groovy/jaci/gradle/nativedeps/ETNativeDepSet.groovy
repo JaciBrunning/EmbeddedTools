@@ -12,7 +12,7 @@ import org.gradle.nativeplatform.platform.NativePlatform
 import java.util.concurrent.Callable
 
 @CompileStatic
-public class ETNativeDepSet implements NativeDependencySet {
+public class ETNativeDepSet implements NativeDependencySet, SystemLibsDependencySet {
 
     Project         project
     String          name

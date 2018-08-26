@@ -6,7 +6,7 @@ import org.gradle.nativeplatform.NativeBinarySpec
 import org.gradle.nativeplatform.NativeDependencySet
 
 @CompileStatic
-class DelegatedDependencySet implements NativeDependencySet {
+class DelegatedDependencySet implements NativeDependencySet, SystemLibsDependencySet {
 
     String name
     NativeBinarySpec binary
@@ -42,6 +42,11 @@ class DelegatedDependencySet implements NativeDependencySet {
 
     FileCollection getSourceFiles() {
         return get().getSourceRoots()
+    }
+
+    @Override
+    List<String> getSystemLibs() {
+        return get().getSystemLibs()
     }
 
     @CompileStatic
