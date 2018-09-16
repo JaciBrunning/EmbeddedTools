@@ -11,6 +11,7 @@ class DelegatedDependencySet implements NativeDependencySet, SystemLibsDependenc
     String name
     NativeBinarySpec binary
     DependencySpecExtension ext
+    boolean skipOnNonFoundDependency
 
     DelegatedDependencySet(String name, NativeBinarySpec bin, DependencySpecExtension ext) {
         this.name = name
@@ -18,35 +19,60 @@ class DelegatedDependencySet implements NativeDependencySet, SystemLibsDependenc
         this.ext = ext
     }
 
+    DelegatedDependencySet(String name, NativeBinarySpec bin, DependencySpecExtension ext, boolean skipUd) {
+        this(name, bin, ext)
+        this.skipOnNonFoundDependency = skipUd
+    }
+
     ETNativeDepSet get() {
         def ds = ext.find(name, binary)
-        if (ds == null)
+        if (ds == null && !skipOnNonFoundDependency)
             throw new MissingDependencyException(name, binary)
         return ds
     }
 
     @Override
     FileCollection getIncludeRoots() {
-        return get().getIncludeRoots()
+        def depSet =  get()
+        if (depSet == null) {
+            return ext.project.files()
+        }
+        return depSet.getIncludeRoots()
     }
 
     @Override
     FileCollection getLinkFiles() {
-        return get().getLinkFiles()
+        def depSet =  get()
+        if (depSet == null) {
+            return ext.project.files()
+        }
+        return depSet.getLinkFiles()
     }
 
     @Override
     FileCollection getRuntimeFiles() {
-        return get().getRuntimeFiles()
+        def depSet =  get()
+        if (depSet == null) {
+            return ext.project.files()
+        }
+        return depSet.getRuntimeFiles()
     }
 
     FileCollection getSourceFiles() {
-        return get().getSourceRoots()
+        def depSet =  get()
+        if (depSet == null) {
+            return ext.project.files()
+        }
+        return depSet.getSourceRoots()
     }
 
     @Override
     List<String> getSystemLibs() {
-        return get().getSystemLibs()
+        def depSet =  get()
+        if (depSet == null) {
+            return []
+        }
+        return depSet.getSystemLibs()
     }
 
     @CompileStatic
