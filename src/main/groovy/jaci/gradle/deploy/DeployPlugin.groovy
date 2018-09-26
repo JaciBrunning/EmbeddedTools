@@ -38,7 +38,7 @@ class DeployPlugin implements Plugin<Project> {
                         if (bin instanceof NativeBinarySpec) {
                             NativeBinarySpec spec = bin as NativeBinarySpec
 
-                            if (spec.component.name == na.component && spec.targetPlatform.name == na.targetPlatform) {
+                            if (na.appliesTo(spec)) {
                                 spec.tasks.withType(AbstractLinkTask) { AbstractLinkTask task ->
                                     na.dependsOn(task)
                                 }

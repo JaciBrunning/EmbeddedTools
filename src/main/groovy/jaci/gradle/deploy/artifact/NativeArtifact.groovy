@@ -4,6 +4,7 @@ import groovy.transform.CompileStatic
 import org.gradle.api.GradleException
 import org.gradle.api.Project
 import org.gradle.api.Task
+import org.gradle.nativeplatform.NativeBinarySpec
 import org.gradle.nativeplatform.tasks.AbstractLinkTask
 
 @CompileStatic
@@ -17,6 +18,8 @@ class NativeArtifact extends FileArtifact implements TaskHungryArtifact {
     // Accessed in DeployPlugin rules.
     String component = null
     String targetPlatform = null
+    String buildType = null
+    String flavor = null
 
     @Override
     void taskDependenciesAvailable(Set<Task> tasks) {
@@ -31,6 +34,19 @@ class NativeArtifact extends FileArtifact implements TaskHungryArtifact {
             throw new GradleException("${toString()} Link Task has no output files: ${linkTasks.first()}")
 
         file.set(files.first())
+    }
+
+    boolean appliesTo(NativeBinarySpec bin) {
+        if (!bin.component.name.equals(component))
+            return false
+        if (flavor != null && !flavor.equals(bin.flavor.name))
+            return false
+        if (buildType != null && !buildType.equals(bin.buildType.name))
+            return false
+        if (!targetPlatform.equals(bin.targetPlatform.name))
+            return false
+
+        return true
     }
 
 }
