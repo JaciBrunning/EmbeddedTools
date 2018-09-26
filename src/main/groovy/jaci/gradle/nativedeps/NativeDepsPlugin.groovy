@@ -20,6 +20,7 @@ import org.gradle.nativeplatform.platform.NativePlatform
 import org.gradle.nativeplatform.tasks.AbstractLinkTask
 import org.gradle.platform.base.BinaryTasks
 import org.gradle.platform.base.PlatformContainer
+import org.gradle.platform.base.VariantComponentSpec
 
 import java.util.concurrent.Callable
 import java.util.function.Supplier
@@ -32,8 +33,8 @@ class NativeDepsPlugin implements Plugin<Project> {
         DependencySpecExtension dse = project.extensions.create("ETDependencySpecs", DependencySpecExtension, project)
 
         project.extensions.add("useLibrary", { Object closureArg, String... names ->
-            if (closureArg in TargetedNativeComponent) {
-                TargetedNativeComponent component = (TargetedNativeComponent)closureArg
+            if (closureArg in VariantComponentSpec) {
+                VariantComponentSpec component = (VariantComponentSpec)closureArg
                 component.binaries.withType(NativeBinarySpec).all { NativeBinarySpec bin ->
                     Set<DelegatedDependencySet> dds = names.collect { String name ->
                         new DelegatedDependencySet(name, bin, dse)
