@@ -26,12 +26,12 @@ class NativeLibraryArtifact extends FileCollectionArtifact {
         def sets = project.getExtensions().getByType(DependencySpecExtension).sets
 
         def candidates = sets.findAll { ETNativeDepSet set ->
-            set.name.equals(library) && set.appliesTo(flavor, buildType, targetPlatform)
+            set.name.equals(library) && set.appliesTo(getFlavor(), getBuildType(), getTargetPlatform())
         } as List<ETNativeDepSet>
 
         if (candidates.empty)
             throw new GradleException("${toString()} cannot find suitable dependency for library ${library}, " +
-                    "platform ${targetPlatform}, flavor ${flavor}, buildType ${buildType}")
+                    "platform ${getTargetPlatform()}, flavor ${getFlavor()}, buildType ${getBuildType()}")
 
         files.set(candidates.collect { it.getRuntimeFiles() }.inject { a,b -> a + b } as FileCollection)
 

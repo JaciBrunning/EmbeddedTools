@@ -37,13 +37,13 @@ class NativeArtifact extends FileArtifact implements TaskHungryArtifact {
     }
 
     boolean appliesTo(NativeBinarySpec bin) {
-        if (!bin.component.name.equals(component))
+        if (!bin.getComponent().name.equals(component))
             return false
-        if (flavor != null && !flavor.equals(bin.flavor.name))
+        if (flavor != null && !getFlavor().equals(bin.flavor.name))
             return false
-        if (buildType != null && !buildType.equals(bin.buildType.name))
+        if (buildType != null && !getBuildType().equals(bin.buildType.name))
             return false
-        if (!targetPlatform.equals(bin.targetPlatform.name))
+        if (!getTargetPlatform().equals(bin.targetPlatform.name))
             return false
 
         return true
