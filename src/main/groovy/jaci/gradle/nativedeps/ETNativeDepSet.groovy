@@ -88,4 +88,9 @@ public class ETNativeDepSet implements NativeDependencySet, SystemLibsDependency
 
         return true
     }
+
+    @Override
+    String toString() {
+        return "ETNativeDepSet[${name} F:${flavor} BT:${buildType} P:${targetPlatform}]"
+    }
 }

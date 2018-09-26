@@ -34,7 +34,7 @@ buildScan {
 
 group = "jaci.gradle"
 archivesBaseName = "EmbeddedTools"
-version = "2018.09.26" // YYYY.MM.DD(revision)
+version = "2018.09.27" // YYYY.MM.DD(revision)
 
 sourceCompatibility = 1.8
 targetCompatibility = 1.8
@@ -61,6 +61,7 @@ publishing {
                 if (project.hasProperty('localPublish')) {
                     classifier null
                     groupId 'gradle.plugin.' + group
+                    artifactId 'DeployTools'
                 }
             }
         }

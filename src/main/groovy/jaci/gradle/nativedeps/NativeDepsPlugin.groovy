@@ -40,10 +40,8 @@ class NativeDepsPlugin implements Plugin<Project> {
                         new DelegatedDependencySet(name, bin, dse)
                     } as Set
 
-                    bin.inputs.withType(DependentSourceSet) { DependentSourceSet dss ->
-                        dds.each { DelegatedDependencySet set ->
-                            dss.lib(set)
-                        }
+                    dds.each { DelegatedDependencySet set ->
+                        bin.lib(set)
                     }
                 }
             } else if (closureArg in NativeBinarySpec) {
@@ -52,10 +50,8 @@ class NativeDepsPlugin implements Plugin<Project> {
                     new DelegatedDependencySet(name, bin, dse)
                 } as Set
 
-                bin.inputs.withType(DependentSourceSet) { DependentSourceSet dss ->
-                    dds.each { DelegatedDependencySet set ->
-                        dss.lib(set)
-                    }
+                dds.each { DelegatedDependencySet set ->
+                    bin.lib(set)
                 }
             } else if (closureArg in LanguageSourceSet) {
                 throw new GradleException('The useLibrary command needs to be placed directly in the component. Move it outside of the sources declaration.')
@@ -129,19 +125,17 @@ class NativeDepsPlugin implements Plugin<Project> {
 
         @BinaryTasks
         void addLinkerArgs(ModelMap<Task> tasks, final NativeBinarySpec binary) {
-            // We can't use binary.libs because that forces a reenumeration of all libraries,
-            // which breaks multiproject builds. Instead, we have to resolve manually
-            binary.inputs.withType(DependentSourceSet) { DependentSourceSet dss ->
-                dss.libs.each { Object lib ->
-                    if (lib instanceof DelegatedDependencySet) {
-                        DelegatedDependencySet set = (DelegatedDependencySet)lib
-                        tasks.withType(AbstractLinkTask) { AbstractLinkTask linkTask ->
-                            linkTask.linkerArgs.addAll(new DefaultProvider<List<String>>({
-                                set.getSystemLibs().collectMany { name -> ["-l", name] as Collection<String> }
-                            }))
+            tasks.withType(AbstractLinkTask) { AbstractLinkTask task ->
+                task.linkerArgs.addAll(new DefaultProvider<List<String>>({
+                    def libs = [] as List<String>
+                    binary.libs.each { Object lib ->
+                        if (lib instanceof DelegatedDependencySet) {
+                            DelegatedDependencySet set = (DelegatedDependencySet)lib
+                            libs += set.getSystemLibs()
                         }
                     }
-                }
+                    libs
+                }))
             }
         }
 
