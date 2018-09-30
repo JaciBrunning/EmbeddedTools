@@ -10,8 +10,8 @@ import jaci.gradle.deploy.target.RemoteTarget
 import jaci.gradle.deploy.target.TargetsExtension
 import jaci.gradle.deploy.target.discovery.TargetDiscoveryTask
 import org.gradle.api.Project
-import org.gradle.api.plugins.ExtensionAware
 import org.gradle.api.Task
+import org.gradle.api.plugins.ExtensionAware
 import org.gradle.api.tasks.TaskCollection
 
 import javax.inject.Inject

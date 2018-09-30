@@ -13,7 +13,6 @@ import org.gradle.api.internal.provider.DefaultProvider
 import org.gradle.api.plugins.ExtensionContainer
 import org.gradle.api.tasks.util.PatternFilterable
 import org.gradle.language.base.LanguageSourceSet
-import org.gradle.language.nativeplatform.DependentSourceSet
 import org.gradle.model.*
 import org.gradle.nativeplatform.*
 import org.gradle.nativeplatform.platform.NativePlatform

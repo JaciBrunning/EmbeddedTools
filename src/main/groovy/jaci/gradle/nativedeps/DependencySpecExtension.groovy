@@ -1,7 +1,6 @@
 package jaci.gradle.nativedeps
 
 import groovy.transform.CompileStatic
-import org.apache.log4j.Logger
 import org.gradle.api.Project
 import org.gradle.nativeplatform.BuildType
 import org.gradle.nativeplatform.Flavor

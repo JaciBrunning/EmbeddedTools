@@ -52,6 +52,10 @@ class ArtifactsExtension extends DefaultNamedDomainObjectSet<Artifact> implement
         return artifact(name, NativeLibraryArtifact, config)
     }
 
+    Artifact binaryLibraryArtifact(String name, final Closure config) {
+        return artifact(name, BinaryLibraryArtifact, config)
+    }
+
     @Override
     Artifact resolve(Object o) {
         Artifact result = null

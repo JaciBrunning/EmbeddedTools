@@ -20,6 +20,7 @@ class NativeArtifact extends FileArtifact implements TaskHungryArtifact {
     String targetPlatform = null
     String buildType = null
     String flavor = null
+    boolean deployLibraries = true
 
     @Override
     void taskDependenciesAvailable(Set<Task> tasks) {
@@ -34,6 +35,11 @@ class NativeArtifact extends FileArtifact implements TaskHungryArtifact {
             throw new GradleException("${toString()} Link Task has no output files: ${linkTasks.first()}")
 
         file.set(files.first())
+    }
+
+    void configureLibsArtifact(BinaryLibraryArtifact bla) {
+        bla.targets.addAll(targets.toSet())
+        bla.setDirectory(getDirectory())
     }
 
     boolean appliesTo(NativeBinarySpec bin) {

@@ -3,6 +3,7 @@ package jaci.gradle.deploy
 import groovy.transform.CompileStatic
 import jaci.gradle.deploy.artifact.Artifact
 import jaci.gradle.deploy.artifact.ArtifactDeployWorker
+import jaci.gradle.deploy.artifact.BinaryLibraryArtifact
 import jaci.gradle.deploy.artifact.NativeArtifact
 import jaci.gradle.deploy.target.discovery.TargetDiscoveryWorker
 import org.gradle.api.Plugin
@@ -22,6 +23,10 @@ class DeployPlugin implements Plugin<Project> {
     void apply(Project project) {
         def deployExt = project.extensions.create("deploy", DeployExtension, project)
 
+        deployExt.artifacts.withType(NativeArtifact).all { NativeArtifact art ->
+
+        }
+
         project.gradle.buildFinished {
             TargetDiscoveryWorker.clearStorage()
             ArtifactDeployWorker.clearStorage()
@@ -31,17 +36,18 @@ class DeployPlugin implements Plugin<Project> {
     static class DeployRules extends RuleSource {
         @Mutate
         void createBinariesTasks(final ModelMap<Task> tasks, final ExtensionContainer ext, final BinaryContainer binaries) {
-            ext.getByType(DeployExtension).artifacts.each { Artifact artifact ->
-                if (artifact instanceof NativeArtifact) {
-                    NativeArtifact na = artifact as NativeArtifact
-                    binaries.each { bin ->
-                        if (bin instanceof NativeBinarySpec) {
-                            NativeBinarySpec spec = bin as NativeBinarySpec
+            def deployExtension = ext.getByType(DeployExtension)
+            deployExtension.artifacts.withType(NativeArtifact).each { NativeArtifact artifact ->
+                binaries.withType(NativeBinarySpec).each { NativeBinarySpec bin ->
+                    if (artifact.appliesTo(bin)) {
+                        bin.tasks.withType(AbstractLinkTask) { AbstractLinkTask task ->
+                            artifact.dependsOn(task)
+                        }
 
-                            if (na.appliesTo(spec)) {
-                                spec.tasks.withType(AbstractLinkTask) { AbstractLinkTask task ->
-                                    na.dependsOn(task)
-                                }
+                        if (artifact.deployLibraries) {
+                            deployExtension.artifacts.binaryLibraryArtifact("${artifact.name}Libraries") { BinaryLibraryArtifact bla ->
+                                bla.binary = bin
+                                artifact.configureLibsArtifact(bla)
                             }
                         }
                     }
