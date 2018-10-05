@@ -1,3 +1,5 @@
+import groovy.transform.Canonical
+
 plugins {
     id "com.gradle.plugin-publish" version "0.9.9"
     id 'java-gradle-plugin'
@@ -78,6 +80,6 @@ gradlePlugin {
 }
 
 wrapper {
-    gradleVersion = '4.9'
+    gradleVersion = '5.0-milestone-1'
     distributionType = Wrapper.DistributionType.ALL
 }
