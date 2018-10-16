@@ -17,12 +17,6 @@ class MavenArtifact extends FileArtifact {
     Dependency dependency
     Configuration configuration
 
-    String filename = null
-
-    Object cache = "md5sum"
-
-    Resolver<CacheMethod> cacheResolver
-
     @Override
     void deploy(DeployContext ctx) {
         if (configuration == null || dependency == null) {
