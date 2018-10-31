@@ -247,7 +247,7 @@ class NativeDepsPlugin implements Plugin<Project> {
 
         private static List<NativePlatform> getPlatforms(BaseLibSpec lib, final PlatformContainer platforms) {
             if (lib.targetPlatform == null && (lib.targetPlatforms == null || lib.targetPlatforms.empty))
-                return [null] as List;
+                return [] as List;
             return (lib.targetPlatforms ?: [lib.targetPlatform] as List<String>).collect {
                 platforms.getByName(it) as NativePlatform
             }
