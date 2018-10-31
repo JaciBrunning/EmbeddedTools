@@ -110,13 +110,17 @@ class NativeDepsPlugin implements Plugin<Project> {
                 def uniqName = lib.name
                 def libName = lib.libraryName ?: uniqName
 
-                Flavor flavor = lib.flavor == null ? null : flavors.findByName(lib.flavor)
-                BuildType buildType = lib.buildType == null ? null : buildTypes.findByName(lib.buildType)
+                List<Flavor> targetFlavors = getFlavors(lib, flavors)
+                List<BuildType> targetBuildTypes = getBuildTypes(lib, buildTypes)
                 List<NativePlatform> targetPlatforms = getPlatforms(lib, platforms)
 
                 targetPlatforms.each { NativePlatform platform ->
-                    ETNativeDepSet dep = mergedDepSet(project, dse, libName, lib.libs, flavor, buildType, platform)
-                    dse.sets.add(dep)
+                    targetFlavors.each { Flavor flavor ->
+                        targetBuildTypes.each { BuildType buildType ->
+                            ETNativeDepSet dep = mergedDepSet(project, dse, libName, lib.libs, flavor, buildType, platform)
+                            dse.sets.add(dep)
+                        }
+                    }
                 }
                 null
             }
@@ -225,9 +229,25 @@ class NativeDepsPlugin implements Plugin<Project> {
             )
         }
 
+        private static List<Flavor> getFlavors(BaseLibSpec lib, final FlavorContainer flavors) {
+            if (lib.flavor == null && (lib.flavors == null || lib.flavors.empty))
+                return [null] as List;
+            return (lib.flavors ?: [lib.flavor] as List<String>).collect {
+                flavors.getByName(it) as Flavor
+            }
+        }
+
+        private static List<BuildType> getBuildTypes(BaseLibSpec lib, final BuildTypeContainer buildTypes) {
+            if (lib.buildType == null && (lib.buildTypes == null || lib.buildTypes.empty))
+                return [null] as List;
+            return (lib.buildTypes ?: [lib.buildType] as List<String>).collect {
+                buildTypes.getByName(it) as BuildType
+            }
+        }
+
         private static List<NativePlatform> getPlatforms(BaseLibSpec lib, final PlatformContainer platforms) {
             if (lib.targetPlatform == null && (lib.targetPlatforms == null || lib.targetPlatforms.empty))
-                return [] as List;
+                return [null] as List;
             return (lib.targetPlatforms ?: [lib.targetPlatform] as List<String>).collect {
                 platforms.getByName(it) as NativePlatform
             }
