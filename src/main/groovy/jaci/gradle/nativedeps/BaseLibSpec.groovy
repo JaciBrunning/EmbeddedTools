@@ -24,6 +24,16 @@ interface BaseLibSpec extends Named {
     void setFlavor(String flavour)
     String getFlavor()
 
+    // Same as above, but for multiple flavors. Appends platform name
+    // to the binary names
+    void setFlavors(List<String> flavors_multi)
+    List<String> getFlavors()
+
     void setBuildType(String type)
     String getBuildType()
+
+    // Same as above, but for multiple build types. Appends platform name
+    // to the binary names
+    void setBuildTypes(List<String> builds_multi)
+    List<String> getBuildTypes()
 }
