@@ -5,6 +5,7 @@ import jaci.gradle.log.ETLogger
 import jaci.gradle.log.ETLoggerFactory
 import org.gradle.api.Plugin
 import org.gradle.api.Project
+import org.gradle.internal.logging.text.StyledTextOutput
 import org.gradle.internal.text.TreeFormatter
 import org.gradle.language.base.internal.registry.LanguageTransformContainer
 import org.gradle.model.Mutate
@@ -47,8 +48,13 @@ class ToolchainsPlugin implements Plugin<Project> {
                 "asm" : ToolType.ASSEMBLER
         ]
 
-        static void markUnavailable(ETLogger log, NativeBinarySpec bin, String reason, boolean disable) {
-            log.logErrorHead("Skipping build: $bin: $reason")
+        static void markUnavailable(ETLogger log, NativeBinarySpec bin, String reason, boolean disable, boolean error) {
+            String msg = "Skipping build: $bin: $reason"
+            if (error)
+                log.logErrorHead(msg)
+            else
+                log.logStyle(msg, StyledTextOutput.Style.Info)
+
             if (disable)
                 ((BinarySpecInternal)bin).setBuildable(false)
         }
@@ -77,7 +83,7 @@ class ToolchainsPlugin implements Plugin<Project> {
 
                             def searchResult = toolProvider.isToolAvailable(requiresTool)
                             if (!searchResult.isAvailable()) {
-                                markUnavailable(log, bin, "Toolchain ${tc.name} cannot build ${bin.targetPlatform.name} (tool ${requiresTool} not found)", true)
+                                markUnavailable(log, bin, "Toolchain ${tc.name} cannot build ${bin.targetPlatform.name} (tool ${requiresTool} not found)", true, true)
                                 log.info("Could not find tool: ${requiresTool}")
                                 def fmt = new TreeFormatter()
                                 searchResult.explain(fmt)
@@ -86,14 +92,14 @@ class ToolchainsPlugin implements Plugin<Project> {
                         }
                     }
                     if (!hasTransform)
-                        markUnavailable(log, bin, "Binary does not have a language transform for input ${ss}.", true)
+                        markUnavailable(log, bin, "Binary does not have a language transform for input ${ss}.", true, true)
                 }
                 if (bin.inputs.empty) {
-                    markUnavailable(log, bin, "Binary has no inputs", true)
+                    markUnavailable(log, bin, "Binary has no inputs", true, true)
                 }
             } else {
                 // Gradle automatically disables cases where a toolchain can't be found for this platform.
-                markUnavailable(log, bin, "Could not find valid toolchain for platform ${bin.targetPlatform.name}", false)
+                markUnavailable(log, bin, "Could not find valid toolchain for platform ${bin.targetPlatform.name}", false, false)
             }
         }
 
