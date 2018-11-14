@@ -10,6 +10,7 @@ import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.Task
 import org.gradle.api.plugins.ExtensionContainer
+import org.gradle.language.base.plugins.ComponentModelBasePlugin
 import org.gradle.model.ModelMap
 import org.gradle.model.Mutate
 import org.gradle.model.RuleSource
@@ -21,6 +22,8 @@ import org.gradle.platform.base.BinaryContainer
 class DeployPlugin implements Plugin<Project> {
     @Override
     void apply(Project project) {
+        project.getPluginManager().apply(ComponentModelBasePlugin)
+
         def deployExt = project.extensions.create("deploy", DeployExtension, project)
 
         deployExt.artifacts.withType(NativeArtifact).all { NativeArtifact art ->
