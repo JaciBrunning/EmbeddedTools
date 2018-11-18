@@ -88,6 +88,7 @@ class NativeDepsPlugin implements Plugin<Project> {
 
                 FileCollection sharedFiles = matcher(project, rootTree, lib.sharedMatchers)
                 FileCollection staticFiles = matcher(project, rootTree, lib.staticMatchers)
+                FileCollection debugFiles = matcher(project, rootTree, lib.debugMatchers)
                 FileCollection dynamicFiles = matcher(project, rootTree, lib.dynamicMatchers)
 
                 IDirectoryTree headerFiles = new DefaultDirectoryTree(rootTree, lib.headerDirs ?: [] as List<String>)
@@ -98,7 +99,7 @@ class NativeDepsPlugin implements Plugin<Project> {
                         project, libName,
                         headerFiles, sourceFiles,
                         staticFiles, sharedFiles, dynamicFiles,
-                        lib.systemLibs ?: [] as List<String>,
+                        debugFiles, lib.systemLibs ?: [] as List<String>,
                         platform, flavor, buildType
                     )
                     dse.sets.add(depSet)
@@ -217,14 +218,15 @@ class NativeDepsPlugin implements Plugin<Project> {
             IDirectoryTree sources = libs.collect { it.sources }.inject { a, b -> a+b }
             FileCollection staticFiles = libs.collect { it.staticLibs }.inject { a, b -> a+b }
             FileCollection sharedFiles = libs.collect { it.sharedLibs }.inject { a, b -> a+b }
+            FileCollection debugFiles = libs.collect { it.debugLibs }.inject { a, b -> a+b }
             FileCollection dynamicFiles = libs.collect { it.dynamicLibs }.inject { a, b -> a+b }
             List<String> systemLibs = libs.collectMany { it.systemLibs as Collection }
 
             return new ETNativeDepSet(
                     proj, name,
                     headers, sources,
-                    staticFiles, sharedFiles, dynamicFiles,
-                    systemLibs,
+                    staticFiles, sharedFiles,
+                    dynamicFiles, debugFiles, systemLibs,
                     platform, flavor, buildType
             )
         }
