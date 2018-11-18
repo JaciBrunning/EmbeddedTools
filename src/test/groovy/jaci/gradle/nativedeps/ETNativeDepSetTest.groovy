@@ -19,6 +19,7 @@ class ETNativeDepSetTest extends Specification {
                 project, "test",
                 null, null, null,
                 null, null, null,
+                null,
                 platform, flavor, type
         )
     }
