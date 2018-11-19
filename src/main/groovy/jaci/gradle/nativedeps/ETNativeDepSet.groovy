@@ -16,7 +16,7 @@ public class ETNativeDepSet implements NativeDependencySet, SystemLibsDependency
 
     Project         project
     String          name
-    FileCollection  staticLibs, sharedLibs, dynamicLibs
+    FileCollection  staticLibs, sharedLibs, dynamicLibs, debugLibs
     IDirectoryTree  headers, sources
     List<String>    systemLibs
     NativePlatform  targetPlatform
@@ -26,8 +26,9 @@ public class ETNativeDepSet implements NativeDependencySet, SystemLibsDependency
     public ETNativeDepSet(Project project, String name,
                           IDirectoryTree headers, IDirectoryTree sources,
                           FileCollection staticLibs, FileCollection sharedLibs,
-                          FileCollection dynamicLibs, List<String> systemLibs,
-                          NativePlatform targetPlatform, Flavor flavor, BuildType buildType) {
+                          FileCollection dynamicLibs, FileCollection debugLibs,
+                          List<String> systemLibs, NativePlatform targetPlatform,
+                          Flavor flavor, BuildType buildType) {
         this.project = project
         this.name = name
 
@@ -37,6 +38,7 @@ public class ETNativeDepSet implements NativeDependencySet, SystemLibsDependency
         this.staticLibs = staticLibs
         this.sharedLibs = sharedLibs
         this.dynamicLibs = dynamicLibs
+        this.debugLibs = debugLibs
         this.systemLibs = systemLibs
 
         this.targetPlatform = targetPlatform
@@ -65,6 +67,10 @@ public class ETNativeDepSet implements NativeDependencySet, SystemLibsDependency
         return project.files {
             return dynamicLibs.files
         }
+    }
+
+    FileCollection getDebugFiles() {
+        return debugLibs
     }
 
     boolean appliesTo(Flavor flav, BuildType btype, NativePlatform plat) {

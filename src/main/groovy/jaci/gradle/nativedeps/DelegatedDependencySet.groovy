@@ -66,6 +66,14 @@ class DelegatedDependencySet implements NativeDependencySet, SystemLibsDependenc
         return depSet.getSourceRoots()
     }
 
+    FileCollection getDebugFiles() {
+        def depSet =  get()
+        if (depSet == null) {
+            return ext.project.files()
+        }
+        return depSet.getDebugFiles()
+    }
+
     @Override
     List<String> getSystemLibs() {
         def depSet =  get()

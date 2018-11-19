@@ -20,6 +20,10 @@ interface NativeLib extends BaseLibSpec {
     void setSharedMatchers(List<String> matchers)
     List<String> getSharedMatchers()
 
+    // Parts of the libraries that are needed for debug
+    void setDebugMatchers(List<String> matchers)
+    List<String> getDebugMatchers()
+
     // Libraries that aren't linked during compile time, but still necessary for the
     // program to run (loose dynamic deps)
     void setDynamicMatchers(List<String> matchers)
