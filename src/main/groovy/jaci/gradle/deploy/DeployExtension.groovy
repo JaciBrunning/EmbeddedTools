@@ -56,12 +56,13 @@ class DeployExtension {
             }
         }
 
-        project.tasks.register("deploy") { Task task ->
+        def deployTask = project.tasks.register("deploy") { Task task ->
             task.group = "EmbeddedTools"
             task.description = "Deploy all artifacts on all targets"
-            project.tasks.withType(ArtifactDeployTask).all { ArtifactDeployTask task2 ->
-                task.dependsOn(task2)
-            }
+            task.dependsOn(project.tasks.withType(ArtifactDeployTask))
+//            project.tasks.withType(ArtifactDeployTask).all { ArtifactDeployTask task2 ->
+//                task.dependsOn(task2)
+//            }
         }
     }
 

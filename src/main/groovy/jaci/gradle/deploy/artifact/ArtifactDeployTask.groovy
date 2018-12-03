@@ -62,9 +62,4 @@ class ArtifactDeployTask extends DefaultTask {
         }
         log.debug("Workers submitted...")
     }
-
-    @Override
-    public String toString() {
-        return "ArtifactDeployTask[${artifact.name} -> ${target.name}]"
-    }
 }

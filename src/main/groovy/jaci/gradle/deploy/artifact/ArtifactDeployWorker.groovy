@@ -2,6 +2,8 @@ package jaci.gradle.deploy.artifact
 
 import groovy.transform.Canonical
 import groovy.transform.CompileStatic
+import groovy.transform.EqualsAndHashCode
+import groovy.transform.TupleConstructor
 import jaci.gradle.deploy.context.DeployContext
 
 import javax.inject.Inject
@@ -14,7 +16,8 @@ class ArtifactDeployWorker implements Runnable {
     // to the worker. To get around this, we store them statically and clear them at the conclusion
     // of the build. It's not at all advised, but it's the best we've got.
 
-    @Canonical
+    @TupleConstructor
+    @EqualsAndHashCode
     @CompileStatic
     private static class DeployStorage {
         DeployContext ctx
@@ -29,8 +32,9 @@ class ArtifactDeployWorker implements Runnable {
 
     public static int submitStorage(DeployContext context, Artifact artifact) {
         def ds = new DeployStorage(context, artifact)
-        deployerStorage.put(ds.hashCode(), ds)
-        return ds.hashCode()
+        def hash = ds.hashCode()
+        deployerStorage.put(hash, ds)
+        return hash
     }
 
     public static int storageCount() {
