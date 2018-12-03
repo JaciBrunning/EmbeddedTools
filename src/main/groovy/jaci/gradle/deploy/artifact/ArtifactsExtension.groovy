@@ -2,6 +2,7 @@ package jaci.gradle.deploy.artifact
 
 import groovy.transform.CompileStatic
 import jaci.gradle.Resolver
+import org.gradle.api.Action
 import org.gradle.api.Project
 import org.gradle.api.internal.DefaultNamedDomainObjectSet
 import org.gradle.internal.reflect.DirectInstantiator

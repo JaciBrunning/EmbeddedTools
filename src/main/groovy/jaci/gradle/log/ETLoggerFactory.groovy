@@ -8,7 +8,7 @@ import org.gradle.internal.logging.text.StyledTextOutputFactory
 
 @CompileStatic
 class ETLoggerFactory {
-    static ETLoggerFactory INSTANCE = new ETLoggerFactory()
+    public static ETLoggerFactory INSTANCE = new ETLoggerFactory()
 
     private StyledTextOutput output = null
 
