@@ -235,24 +235,24 @@ class NativeDepsPlugin implements Plugin<Project> {
             if (lib.flavor == null && (lib.flavors == null || lib.flavors.empty))
                 return [null] as List;
             return (lib.flavors ?: [lib.flavor] as List<String>).collect {
-                flavors.getByName(it) as Flavor
-            }
+                flavors.findByName(it) as Flavor
+            }.findAll { it != null }
         }
 
         private static List<BuildType> getBuildTypes(BaseLibSpec lib, final BuildTypeContainer buildTypes) {
             if (lib.buildType == null && (lib.buildTypes == null || lib.buildTypes.empty))
                 return [null] as List;
             return (lib.buildTypes ?: [lib.buildType] as List<String>).collect {
-                buildTypes.getByName(it) as BuildType
-            }
+                buildTypes.findByName(it) as BuildType
+            }.findAll { it != null }
         }
 
         private static List<NativePlatform> getPlatforms(BaseLibSpec lib, final PlatformContainer platforms) {
             if (lib.targetPlatform == null && (lib.targetPlatforms == null || lib.targetPlatforms.empty))
                 return [] as List;
             return (lib.targetPlatforms ?: [lib.targetPlatform] as List<String>).collect {
-                platforms.getByName(it) as NativePlatform
-            }
+                platforms.findByName(it) as NativePlatform
+            }.findAll { it != null }
         }
     }
 }
