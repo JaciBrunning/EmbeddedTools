@@ -1,5 +1,5 @@
 plugins {
-    id "com.gradle.plugin-publish" version "0.9.9"
+    id "com.gradle.plugin-publish" version "0.10.0"
     id 'java-gradle-plugin'
     id 'groovy'
     id 'maven-publish'
@@ -34,7 +34,7 @@ buildScan {
 
 group = "jaci.gradle"
 archivesBaseName = "EmbeddedTools"
-version = "2018.12.06" // YYYY.MM.DD(revision)
+version = "2018.12.06a" // YYYY.MM.DD(revision)
 
 sourceCompatibility = 1.8
 targetCompatibility = 1.8
@@ -45,33 +45,34 @@ pluginBundle {
     description = 'Additions to the model-based DSL for deploying Java and Native projects to remote targets'
     tags = ['remote', 'target', 'deploy', 'java', 'native']
 
-    plugins {
-        embeddedTools {
-            id = "${project.group}.${project.archivesBaseName}"
-            displayName = 'EmbeddedTools'
-        }
-    }
+//    plugins {
+//        embeddedTools {
+//            id = "${project.group}.${project.archivesBaseName}"
+//            displayName = 'EmbeddedTools'
+//        }
+//    }
 }
 
-publishing {
-    publications {
-        plugin(MavenPublication) {
-            artifact(jar) {
-                artifactId 'EmbeddedTools'
-                if (project.hasProperty('localPublish')) {
-                    classifier null
-                    groupId 'gradle.plugin.' + group
-                    artifactId 'EmbeddedTools'
-                }
-            }
-        }
-    }
-}
+//publishing {
+//    publications {
+//        plugin(MavenPublication) {
+//            artifact(jar) {
+//                artifactId 'EmbeddedTools'
+//                if (project.hasProperty('localPublish')) {
+//                    classifier null
+//                    groupId 'gradle.plugin.' + group
+//                    artifactId 'EmbeddedTools'
+//                }
+//            }
+//        }
+//    }
+//}
 
 gradlePlugin {
     plugins {
         gradleRio {
             id = 'jaci.gradle.EmbeddedTools'
+            displayName = 'EmbeddedTools'
             implementationClass = 'jaci.gradle.EmbeddedTools'
         }
     }
