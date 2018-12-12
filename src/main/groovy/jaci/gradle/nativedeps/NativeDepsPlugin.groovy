@@ -3,6 +3,7 @@ package jaci.gradle.nativedeps
 import groovy.transform.CompileStatic
 import jaci.gradle.EmbeddedTools
 import jaci.gradle.SortUtils
+import jaci.gradle.files.FileTreeSupplier
 import jaci.gradle.files.DefaultDirectoryTree
 import jaci.gradle.files.IDirectoryTree
 import org.gradle.api.*
@@ -23,6 +24,7 @@ import org.gradle.platform.base.VariantComponentSpec
 
 import java.util.concurrent.Callable
 import java.util.function.Supplier
+import java.util.function.Function
 
 @CompileStatic
 class NativeDepsPlugin implements Plugin<Project> {
@@ -147,8 +149,7 @@ class NativeDepsPlugin implements Plugin<Project> {
             return (a == b) || (a != null && b != null && a.equals(b))
         }
 
-        private static File resolve(Configuration cfg, Dependency dep) {
-            def artifacts = cfg.resolvedConfiguration.resolvedArtifacts
+        private static File resolve(Set<ResolvedArtifact> artifacts, Dependency dep) {
             def selected = artifacts.findAll { ResolvedArtifact art ->
                 def mid = art.moduleVersion.id
                 boolean applies = false
@@ -176,9 +177,9 @@ class NativeDepsPlugin implements Plugin<Project> {
             def cfg = proj.configurations.maybeCreate(config)
             if (lib.getMaven() != null) {
                 def dep = proj.dependencies.add(config, lib.getMaven())
-                return {
-                    proj.zipTree(resolve(cfg, dep))
-                } as Supplier<FileTree>
+                return new FileTreeSupplier(cfg, { Set<ResolvedArtifact> artifacts ->
+                    proj.zipTree(resolve(artifacts, dep))
+                } as Function<Set<ResolvedArtifact>, FileTree>)
             } else if (lib.getFile() != null && lib.getFile().directory) {
                 // File is a directory
                 return {
