@@ -29,6 +29,23 @@ interface NativeLib extends BaseLibSpec {
     void setDynamicMatchers(List<String> matchers)
     List<String> getDynamicMatchers()
 
+    // Static Libraries to be excluded during compile time
+    void setStaticExcludes(List<String> excludes)
+    List<String> getStaticExcludes()
+
+    // Shared Libraries to be excluded during compile time
+    void setSharedExcludes(List<String> excludes)
+    List<String> getSharedExcludes()
+
+    // Parts of the libraries that are excluded for debug
+    void setDebugExcludes(List<String> excludes)
+    List<String> getDebugExcludes()
+
+    // Libraries that aren't linked during compile time, but still necessary for the
+    // program to run (loose dynamic deps)
+    void setDynamicExcludes(List<String> excludes)
+    List<String> getDynamicExcludes()
+
     // Library names determine what gets sent to the linker as a -l flag (good for system libraries / grouped .so)
     void setSystemLibs(List<String> libnames)
     List<String> getSystemLibs()

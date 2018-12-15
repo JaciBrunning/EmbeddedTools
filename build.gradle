@@ -4,7 +4,7 @@ plugins {
     id 'groovy'
     id 'maven-publish'
     id "idea"
-    id 'com.gradle.build-scan' version '1.15'
+    id 'com.gradle.build-scan' version '2.0.2'
 }
 
 repositories {
@@ -17,9 +17,8 @@ repositories {
 
 dependencies {
     compile 'com.jcraft:jsch:0.1.53'
-    compile 'com.gradle:build-scan-plugin:1.15'
 
-    testCompile('org.spockframework:spock-core:1.1-groovy-2.4') {
+    testCompile('org.spockframework:spock-core:1.2-groovy-2.5') {
         exclude group: 'org.codehaus.groovy'
     }
     testCompile('cglib:cglib-nodep:2.2')
@@ -34,7 +33,7 @@ buildScan {
 
 group = "jaci.gradle"
 archivesBaseName = "EmbeddedTools"
-version = "2018.12.11" // YYYY.MM.DD(revision)
+version = "2018.12.14" // YYYY.MM.DD(revision)
 
 sourceCompatibility = 1.8
 targetCompatibility = 1.8

@@ -88,10 +88,10 @@ class NativeDepsPlugin implements Plugin<Project> {
                 BuildType buildType = lib.buildType == null ? null : buildTypes.findByName(lib.buildType)
                 List<NativePlatform> targetPlatforms = getPlatforms(lib, platforms)
 
-                FileCollection sharedFiles = matcher(project, rootTree, lib.sharedMatchers)
-                FileCollection staticFiles = matcher(project, rootTree, lib.staticMatchers)
-                FileCollection debugFiles = matcher(project, rootTree, lib.debugMatchers)
-                FileCollection dynamicFiles = matcher(project, rootTree, lib.dynamicMatchers)
+                FileCollection sharedFiles = matcher(project, rootTree, lib.sharedMatchers, lib.sharedExcludes)
+                FileCollection staticFiles = matcher(project, rootTree, lib.staticMatchers, lib.staticExcludes)
+                FileCollection debugFiles = matcher(project, rootTree, lib.debugMatchers, lib.debugExcludes)
+                FileCollection dynamicFiles = matcher(project, rootTree, lib.dynamicMatchers, lib.dynamicExcludes)
 
                 IDirectoryTree headerFiles = new DefaultDirectoryTree(rootTree, lib.headerDirs ?: [] as List<String>)
                 IDirectoryTree sourceFiles = new DefaultDirectoryTree(rootTree, lib.sourceDirs ?: [] as List<String>)
@@ -194,13 +194,14 @@ class NativeDepsPlugin implements Plugin<Project> {
             }
         }
 
-        private static FileCollection matcher(Project proj, Supplier<FileTree> tree, List<String> matchers) {
+        private static FileCollection matcher(Project proj, Supplier<FileTree> tree, List<String> matchers, List<String> excludes) {
             return proj.files({
                 tree.get().matching({ PatternFilterable filter ->
                     // <<!!ET_NOMATCH!!> is a magic string in the case the matchers are null.
                     // This is because, without include, the filter will include all files
                     // by default. We don't want this behavior.
                     filter.include(matchers ?: ["<<!!ET_NOMATCH!!>"])
+                    filter.exclude(excludes ?: [] as List<String>)
                 } as Action<PatternFilterable>)
             } as Callable<FileCollection>)
         }
