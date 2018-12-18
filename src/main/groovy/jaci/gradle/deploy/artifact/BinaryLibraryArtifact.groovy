@@ -17,7 +17,10 @@ class BinaryLibraryArtifact extends FileCollectionArtifact {
 
     @Override
     void deploy(DeployContext ctx) {
-        files.set(binary.libs.collect { it.getRuntimeFiles() }.inject { a,b -> a + b } as FileCollection)
-        super.deploy(ctx)
+        def libs = binary.libs.collect { it.getRuntimeFiles() }
+        if (libs.size() != 0 ) {
+            files.set(libs.inject { a,b -> a + b } as FileCollection)
+            super.deploy(ctx)
+        }
     }
 }
