@@ -17,14 +17,15 @@ class TargetsExtension extends DefaultNamedDomainObjectSet<RemoteTarget> impleme
         this.project = project
     }
 
-    def target(String name, Class<? extends RemoteTarget> type, final Closure config) {
+    RemoteTarget target(String name, Class<? extends RemoteTarget> type, final Closure config) {
         def target = type.newInstance(name, project)
         project.configure(target, config)
         this << (target)
+        return target
     }
 
-    def target(String name, final Closure config) {
-        target(name, RemoteTarget, config)
+    RemoteTarget target(String name, final Closure config) {
+        return target(name, RemoteTarget, config)
     }
 
     @Override
