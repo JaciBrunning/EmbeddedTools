@@ -2,6 +2,7 @@ package jaci.gradle.deploy.cache
 
 import groovy.transform.CompileStatic
 import jaci.gradle.Resolver
+import org.gradle.api.Action
 import org.gradle.api.Project
 import org.gradle.api.internal.DefaultNamedDomainObjectSet
 import org.gradle.internal.reflect.DirectInstantiator
@@ -19,14 +20,14 @@ class CacheExtension extends DefaultNamedDomainObjectSet<CacheMethod> implements
         method("md5sum", Md5SumCacheMethod, {})
     }
 
-    CacheMethod method(String name, Class<? extends AbstractCacheMethod> type, final Closure config) {
+    public <T extends AbstractCacheMethod> CacheMethod method(String name, Class<T> type, final Action<T> config) {
         def cm = type.newInstance(name)
-        project.configure(cm, config)
+        config.execute(cm);
         this << (cm)
         return cm
     }
 
-    CacheMethod method(String name, final Closure config) {
+    CacheMethod method(String name, final Action<? extends DefaultCacheMethod> config) {
         return method(name, DefaultCacheMethod, config)
     }
 

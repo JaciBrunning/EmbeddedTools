@@ -2,8 +2,8 @@ package jaci.gradle.deploy.target.location
 
 import groovy.transform.CompileStatic
 import jaci.gradle.deploy.target.RemoteTarget
+import org.gradle.api.Action
 import org.gradle.api.internal.DefaultDomainObjectSet
-import org.gradle.util.ConfigureUtil
 
 @CompileStatic
 class DeployLocationSet extends DefaultDomainObjectSet<DeployLocation> {
@@ -15,19 +15,19 @@ class DeployLocationSet extends DefaultDomainObjectSet<DeployLocation> {
         this.target = target
     }
 
-    DeployLocation location(Class<? extends DeployLocation> type, final Closure config) {
+    DeployLocation location(Class<? extends DeployLocation> type, final Action<? extends DeployLocation> config) {
         def location = type.newInstance(target)
 
         if (target.isDry())
             location = new DryDeployLocation(location)
         else
-            ConfigureUtil.configure(config, location);
+            config.execute(location)
 
         this << location
         return location
     }
 
-    DeployLocation ssh(final Closure config) {
+    DeployLocation ssh(final Action<? extends DeployLocation> config) {
         return location(SshDeployLocation, config)
     }
 }

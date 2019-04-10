@@ -1,17 +1,15 @@
 package jaci.gradle.deploy.artifact
 
 import groovy.transform.CompileStatic
-import jaci.gradle.ClosureUtils
+import org.gradle.api.Action
 import jaci.gradle.deploy.context.DeployContext
 import org.gradle.api.DomainObjectSet
 import org.gradle.api.Project
 import org.gradle.api.internal.DefaultDomainObjectSet
 import org.gradle.api.tasks.TaskCollection
-import org.gradle.util.Configurable
-import org.gradle.util.ConfigureUtil
 
 @CompileStatic
-abstract class AbstractArtifact implements Artifact, Configurable<Artifact> {
+abstract class AbstractArtifact implements Artifact {
     private final String name
     private final Project project
 
@@ -54,9 +52,9 @@ abstract class AbstractArtifact implements Artifact, Configurable<Artifact> {
 
     // Groovy generates get/set
     String directory = null
-    List<Closure> predeploy  = []
-    List<Closure> postdeploy = []
-    Closure onlyIf           = null
+    List<Action<DeployContext>> predeploy  = []
+    List<Action<DeployContext>> postdeploy = []
+    Action<DeployContext> onlyIf           = null
 
     void setDisabled() {
         setDisabled(true)
@@ -73,11 +71,7 @@ abstract class AbstractArtifact implements Artifact, Configurable<Artifact> {
     boolean isEnabled(DeployContext ctx) {
         return disabled ? false :
                 onlyIf == null ? true :
-                        (ClosureUtils.delegateCall(ctx, onlyIf) || ctx?.deployLocation?.target?.isDry())
-    }
-
-    AbstractArtifact configure(Closure closure) {
-        return ConfigureUtil.configureSelf(closure, this)
+                        (onlyIf.execute(ctx) || ctx?.deployLocation?.target?.isDry())
     }
 
     @Override

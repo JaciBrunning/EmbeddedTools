@@ -2,6 +2,7 @@ package jaci.gradle.deploy.target
 
 import groovy.transform.CompileStatic
 import jaci.gradle.Resolver
+import org.gradle.api.Action
 import org.gradle.api.Project
 import org.gradle.api.internal.DefaultNamedDomainObjectSet
 import org.gradle.internal.reflect.DirectInstantiator
@@ -17,14 +18,14 @@ class TargetsExtension extends DefaultNamedDomainObjectSet<RemoteTarget> impleme
         this.project = project
     }
 
-    RemoteTarget target(String name, Class<? extends RemoteTarget> type, final Closure config) {
+    RemoteTarget target(String name, Class<? extends RemoteTarget> type, final Action<? extends RemoteTarget> config) {
         def target = type.newInstance(name, project)
-        project.configure(target, config)
+        config.execute(target);
         this << (target)
         return target
     }
 
-    RemoteTarget target(String name, final Closure config) {
+    RemoteTarget target(String name, final Action<? extends RemoteTarget> config) {
         return target(name, RemoteTarget, config)
     }
 
