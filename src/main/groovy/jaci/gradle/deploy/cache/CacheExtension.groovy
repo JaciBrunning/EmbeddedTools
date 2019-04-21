@@ -40,9 +40,13 @@ class CacheExtension extends DefaultNamedDomainObjectSet<CacheMethod> implements
             return (CacheMethod)cache
         } else if (cache instanceof String || cache instanceof GString) {
             return getByName(cache.toString())
+        } else if (cache instanceof NeedsUpdateFunction) {
+            def dcm = new DefaultCacheMethod("customCacheMethod")
+            dcm.needsUpdate = (cache as NeedsUpdateFunction)
+            return dcm
         } else if (cache instanceof Closure<Boolean>) {
             def dcm = new DefaultCacheMethod("customCacheMethod")
-            dcm.needsUpdate = (cache as Closure<Boolean>)
+            dcm.needsUpdate = (cache as NeedsUpdateFunction)
             return dcm
         }
 
