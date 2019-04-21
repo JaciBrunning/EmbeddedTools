@@ -28,7 +28,7 @@ class RemoteTarget implements Named {
         this.name = name
         this.project = project
         this.dry = EmbeddedTools.isDryRun(project)
-        locations = ((ExtensionAware)this).extensions.create('locations', DeployLocationSet, this)
+        locations = project.objects.newInstance(DeployLocationSet, this)
         log = Logger.getLogger(toString())
     }
 

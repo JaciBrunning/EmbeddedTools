@@ -5,11 +5,14 @@ import jaci.gradle.deploy.target.RemoteTarget
 import org.gradle.api.Action
 import org.gradle.api.internal.DefaultDomainObjectSet
 
+import javax.inject.Inject
+
 @CompileStatic
 class DeployLocationSet extends DefaultDomainObjectSet<DeployLocation> {
 
     final RemoteTarget target
 
+    @Inject
     DeployLocationSet(RemoteTarget target) {
         super(DeployLocation)
         this.target = target
