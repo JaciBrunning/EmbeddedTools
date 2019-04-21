@@ -5,7 +5,7 @@ import groovy.transform.InheritConstructors
 import jaci.gradle.deploy.context.DeployContext
 
 @CompileStatic
-@InheritConstructors
+@InheritConstructors(constructorAnnotations = true)
 class DefaultCacheMethod extends AbstractCacheMethod {
     public NeedsUpdateFunction needsUpdate = { DeployContext ctx, String filename, File localfile -> true } as NeedsUpdateFunction     // true if needs update
     public CompatibleFunction compatible = { true } as CompatibleFunction

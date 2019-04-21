@@ -9,9 +9,12 @@ import org.gradle.api.file.FileTree
 import org.gradle.api.file.FileVisitDetails
 import org.gradle.api.provider.Property
 
+import javax.inject.Inject
+
 @CompileStatic
 class FileTreeArtifact extends AbstractArtifact implements CacheableArtifact {
 
+    @Inject
     FileTreeArtifact(String name, Project project) {
         super(name, project)
         files = project.objects.property(FileTree.class)

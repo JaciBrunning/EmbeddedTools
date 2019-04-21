@@ -20,7 +20,7 @@ class ArtifactsExtension extends DefaultNamedDomainObjectSet<Artifact> implement
     }
 
     public <T extends Artifact> Artifact  artifact(String name, Class<T> type, final Action<T> config) {
-        def artifact = type.newInstance(name, project)
+        Artifact artifact = project.objects.newInstance(type, name, project)
         config.execute(artifact);
         this << (artifact)
         return artifact

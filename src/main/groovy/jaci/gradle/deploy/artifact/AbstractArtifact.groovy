@@ -8,6 +8,8 @@ import org.gradle.api.Project
 import org.gradle.api.internal.DefaultDomainObjectSet
 import org.gradle.api.tasks.TaskCollection
 
+import javax.inject.Inject
+
 @CompileStatic
 abstract class AbstractArtifact implements Artifact {
     private final String name
@@ -18,6 +20,7 @@ abstract class AbstractArtifact implements Artifact {
 
     private disabled = false
 
+    @Inject
     AbstractArtifact(String name, Project project) {
         this.name = name
         this.project = project

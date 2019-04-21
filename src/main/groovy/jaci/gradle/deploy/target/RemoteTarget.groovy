@@ -12,7 +12,10 @@ import org.gradle.api.DomainObjectCollection
 import org.gradle.api.Named
 import org.gradle.api.Project
 import java.util.function.Function
+import org.gradle.api.plugins.ExtensionAware
 import org.gradle.api.tasks.TaskCollection
+
+import javax.inject.Inject
 
 @CompileStatic
 class RemoteTarget implements Named {
@@ -20,10 +23,12 @@ class RemoteTarget implements Named {
     private final String name
     private final Project project
 
+    @Inject
     RemoteTarget(String name, Project project) {
         this.name = name
         this.project = project
         this.dry = EmbeddedTools.isDryRun(project)
+        locations = ((ExtensionAware)this).extensions.create('locations', DeployLocationSet, this)
         log = Logger.getLogger(toString())
     }
 
@@ -35,7 +40,7 @@ class RemoteTarget implements Named {
     // TODO: Enable this to be called from context
     boolean dry             = false
 
-    DeployLocationSet locations = new DeployLocationSet(this)
+    DeployLocationSet locations// = new DeployLocationSet(this)
 
     Function<DeployContext, Boolean> onlyIf = null  // Delegate: DeployContext
 

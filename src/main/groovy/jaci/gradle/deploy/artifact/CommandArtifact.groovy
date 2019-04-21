@@ -6,7 +6,7 @@ import jaci.gradle.deploy.CommandDeployResult
 import jaci.gradle.deploy.context.DeployContext
 
 @CompileStatic
-@InheritConstructors
+@InheritConstructors(constructorAnnotations = true)
 class CommandArtifact extends AbstractArtifact {
 
     String command = null

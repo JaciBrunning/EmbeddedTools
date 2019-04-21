@@ -21,7 +21,7 @@ class CacheExtension extends DefaultNamedDomainObjectSet<CacheMethod> implements
     }
 
     public <T extends AbstractCacheMethod> CacheMethod method(String name, Class<T> type, final Action<T> config) {
-        def cm = type.newInstance(name)
+        AbstractCacheMethod cm = project.objects.newInstance(type, name)
         config.execute(cm);
         this << (cm)
         return cm

@@ -8,8 +8,11 @@ import org.gradle.api.Project
 import org.gradle.api.artifacts.Configuration
 import org.gradle.api.artifacts.Dependency
 
+import javax.inject.Inject
+
 @CompileStatic
 class MavenArtifact extends FileArtifact {
+    @Inject
     MavenArtifact(String name, Project project) {
         super(name, project)
     }

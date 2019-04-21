@@ -19,7 +19,7 @@ class TargetsExtension extends DefaultNamedDomainObjectSet<RemoteTarget> impleme
     }
 
     RemoteTarget target(String name, Class<? extends RemoteTarget> type, final Action<? extends RemoteTarget> config) {
-        def target = type.newInstance(name, project)
+        RemoteTarget target = project.objects.newInstance(type, name, project)
         config.execute(target);
         this << (target)
         return target

@@ -8,9 +8,12 @@ import org.gradle.api.GradleException
 import org.gradle.api.Project
 import org.gradle.api.file.FileCollection
 
+import javax.inject.Inject
+
 @CompileStatic
 class NativeLibraryArtifact extends FileCollectionArtifact {
 
+    @Inject
     NativeLibraryArtifact(String name, Project project) {
         super(name, project)
         library = name

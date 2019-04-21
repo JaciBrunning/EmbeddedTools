@@ -16,7 +16,7 @@ class DeployLocationSet extends DefaultDomainObjectSet<DeployLocation> {
     }
 
     DeployLocation location(Class<? extends DeployLocation> type, final Action<? extends DeployLocation> config) {
-        def location = type.newInstance(target)
+        DeployLocation location = target.project.objects.newInstance(type, target)
 
         if (target.isDry())
             location = new DryDeployLocation(location)
