@@ -3,6 +3,7 @@ package jaci.gradle.deploy.artifact
 import groovy.transform.CompileStatic
 import org.gradle.api.Action
 import jaci.gradle.deploy.context.DeployContext
+import jaci.gradle.ActionWrapper
 import org.gradle.api.DomainObjectSet
 import org.gradle.api.Project
 import org.gradle.api.internal.DefaultDomainObjectSet
@@ -63,7 +64,7 @@ abstract class AbstractArtifact implements Artifact {
     // Must declare both, as groovy's implicit properties
     // get disabled with an explicit implementation
     void setOnlyIf(Closure closure) {
-        onlyIf = new ActionWrapper(closure)
+        onlyIf = new ActionWrapper<DeployContext>(closure)
     }
 
     void setOnlyIf(Action<DeployContext> action) {

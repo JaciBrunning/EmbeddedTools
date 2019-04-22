@@ -1,6 +1,7 @@
 package jaci.gradle.deploy.artifact
 
 import org.gradle.api.Action
+import jaci.gradle.ActionWrapper
 import groovy.transform.CompileStatic
 import groovy.transform.InheritConstructors
 import jaci.gradle.deploy.context.DeployContext
@@ -11,7 +12,7 @@ import jaci.gradle.deploy.context.DeployContext
 @InheritConstructors
 class WrappedArrayList extends ArrayList<Action<DeployContext>> {
   WrappedArrayList leftShift(Closure closure) {
-    Action<DeployContext> wrapper = new ActionWrapper(closure)
+    Action<DeployContext> wrapper = new ActionWrapper<DeployContext>(closure)
     this.add(wrapper)
     return this
   }

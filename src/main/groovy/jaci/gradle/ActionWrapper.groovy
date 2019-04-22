@@ -1,4 +1,4 @@
-package jaci.gradle.deploy.artifact
+package jaci.gradle
 
 import groovy.transform.CompileStatic
 import org.gradle.api.Action
@@ -10,14 +10,14 @@ import jaci.gradle.ClosureUtils
  * Groovy's cast will never delegate the closure
  */
 @CompileStatic
-class ActionWrapper implements Action<DeployContext> {
+class ActionWrapper<T> implements Action {
   private Closure closure
 
   ActionWrapper(Closure closure) {
     this.closure = closure
   }
 
-  void execute(DeployContext ctx) {
-    ClosureUtils.delegateCall(ctx, closure)
+  void execute(T t) {
+    ClosureUtils.delegateCall(t, closure)
   }
 }
