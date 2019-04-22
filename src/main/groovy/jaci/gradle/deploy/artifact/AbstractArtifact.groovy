@@ -55,9 +55,20 @@ abstract class AbstractArtifact implements Artifact {
 
     // Groovy generates get/set
     String directory = null
-    List<Action<DeployContext>> predeploy  = []
-    List<Action<DeployContext>> postdeploy = []
+    // Need the WrappedArrayList to overload operator <<
+    List<Action<DeployContext>> predeploy  = new WrappedArrayList()
+    List<Action<DeployContext>> postdeploy = new WrappedArrayList()
     Action<DeployContext> onlyIf           = null
+
+    // Must declare both, as groovy's implicit properties
+    // get disabled with an explicit implementation
+    void setOnlyIf(Closure closure) {
+        onlyIf = new ActionWrapper(closure)
+    }
+
+    void setOnlyIf(Action<DeployContext> action) {
+        onlyIf = action
+    }
 
     void setDisabled() {
         setDisabled(true)

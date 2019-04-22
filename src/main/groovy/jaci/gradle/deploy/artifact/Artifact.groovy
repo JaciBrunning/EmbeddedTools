@@ -22,10 +22,8 @@ interface Artifact extends Named {
     String getDirectory()
 
     List<Action<DeployContext>> getPredeploy()
-    void setPredeploy(List<Action<DeployContext>> actions)
 
     List<Action<DeployContext>> getPostdeploy()
-    void setPostdeploy(List<Action<DeployContext>> actions)
 
     void setOnlyIf(Action<DeployContext> action)
 
