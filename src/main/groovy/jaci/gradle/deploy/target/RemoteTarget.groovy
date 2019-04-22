@@ -28,7 +28,7 @@ class RemoteTarget implements Named {
         this.name = name
         this.project = project
         this.dry = EmbeddedTools.isDryRun(project)
-        locations = project.objects.newInstance(DeployLocationSet, this)
+        locations = project.objects.newInstance(DeployLocationSet, project, this)
         log = Logger.getLogger(toString())
     }
 
@@ -40,7 +40,7 @@ class RemoteTarget implements Named {
     // TODO: Enable this to be called from context
     boolean dry             = false
 
-    DeployLocationSet locations// = new DeployLocationSet(this)
+    DeployLocationSet locations
 
     Function<DeployContext, Boolean> onlyIf = null  // Delegate: DeployContext
 

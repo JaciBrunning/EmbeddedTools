@@ -2,14 +2,16 @@ package jaci.gradle.deploy.target.location
 
 import jaci.gradle.deploy.target.RemoteTarget
 import spock.lang.Specification
+import org.gradle.testfixtures.ProjectBuilder
 import spock.lang.Subject
 
 class DeployLocationSetTest extends Specification {
 
+    def project = ProjectBuilder.builder().build()
     def target = Mock(RemoteTarget)
 
     @Subject
-    def locSet = new DeployLocationSet(target)
+    def locSet = project.objects.newInstance(DeployLocationSet, project, target)
 
     def "starts empty"() {
         expect:
