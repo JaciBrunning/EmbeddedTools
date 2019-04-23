@@ -5,6 +5,6 @@ import jaci.gradle.deploy.context.DeployContext
 
 @CompileStatic
 @FunctionalInterface
-interface NeedsUpdateFunction {
+interface CacheCheckerFunction {
   boolean check(DeployContext ctx, String filename, File localFile)
 }
