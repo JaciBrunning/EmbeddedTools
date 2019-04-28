@@ -16,7 +16,7 @@ public class ETNativeDepSet implements NativeDependencySet, SystemLibsDependency
 
     Project         project
     String          name
-    FileCollection  staticLibs, sharedLibs, dynamicLibs, debugLibs
+    FileCollection  linkLibs, dynamicLibs, debugLibs
     IDirectoryTree  headers, sources
     List<String>    systemLibs
     NativePlatform  targetPlatform
@@ -25,18 +25,17 @@ public class ETNativeDepSet implements NativeDependencySet, SystemLibsDependency
 
     public ETNativeDepSet(Project project, String name,
                           IDirectoryTree headers, IDirectoryTree sources,
-                          FileCollection staticLibs, FileCollection sharedLibs,
-                          FileCollection dynamicLibs, FileCollection debugLibs,
-                          List<String> systemLibs, NativePlatform targetPlatform,
-                          Flavor flavor, BuildType buildType) {
+                          FileCollection linkLibs, FileCollection dynamicLibs,
+                          FileCollection debugLibs, List<String> systemLibs,
+                          NativePlatform targetPlatform, Flavor flavor,
+                          BuildType buildType) {
         this.project = project
         this.name = name
 
         this.headers = headers
         this.sources = sources
 
-        this.staticLibs = staticLibs
-        this.sharedLibs = sharedLibs
+        this.linkLibs = linkLibs
         this.dynamicLibs = dynamicLibs
         this.debugLibs = debugLibs
         this.systemLibs = systemLibs
@@ -57,7 +56,7 @@ public class ETNativeDepSet implements NativeDependencySet, SystemLibsDependency
 
     @Override
     FileCollection getLinkFiles() {
-        return sharedLibs + staticLibs
+        return linkLibs
     }
 
     @Override

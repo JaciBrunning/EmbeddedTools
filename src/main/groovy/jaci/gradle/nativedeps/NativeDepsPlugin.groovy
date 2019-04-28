@@ -99,9 +99,8 @@ class NativeDepsPlugin implements Plugin<Project> {
                 targetPlatforms.each { NativePlatform platform ->
                     ETNativeDepSet depSet = new ETNativeDepSet(
                         project, libName,
-                        headerFiles, sourceFiles,
-                        staticFiles, sharedFiles, dynamicFiles,
-                        debugFiles, lib.systemLibs ?: [] as List<String>,
+                        headerFiles, sourceFiles, staticFiles + sharedFiles,
+                        dynamicFiles, debugFiles, lib.systemLibs ?: [] as List<String>,
                         platform, flavor, buildType
                     )
                     dse.sets.add(depSet)
@@ -218,16 +217,14 @@ class NativeDepsPlugin implements Plugin<Project> {
             List<ETNativeDepSet> libs = libNames.collect { dse.find(it, flavor, buildType, platform) }
             IDirectoryTree headers = libs.collect { it.headers }.inject { a, b -> a+b }
             IDirectoryTree sources = libs.collect { it.sources }.inject { a, b -> a+b }
-            FileCollection staticFiles = libs.collect { it.staticLibs }.inject { a, b -> a+b }
-            FileCollection sharedFiles = libs.collect { it.sharedLibs }.inject { a, b -> a+b }
+            FileCollection linkFiles =  libs.collect { it.linkLibs }.inject { a, b -> a+b }
             FileCollection debugFiles = libs.collect { it.debugLibs }.inject { a, b -> a+b }
             FileCollection dynamicFiles = libs.collect { it.dynamicLibs }.inject { a, b -> a+b }
             List<String> systemLibs = libs.collectMany { it.systemLibs as Collection }
 
             return new ETNativeDepSet(
                     proj, name,
-                    headers, sources,
-                    staticFiles, sharedFiles,
+                    headers, sources, linkFiles,
                     dynamicFiles, debugFiles, systemLibs,
                     platform, flavor, buildType
             )
