@@ -6,7 +6,7 @@ import jaci.gradle.log.ETLoggerFactory
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.internal.logging.text.StyledTextOutput
-import org.gradle.internal.text.TreeFormatter
+import org.gradle.internal.logging.text.TreeFormatter
 import org.gradle.language.base.internal.registry.LanguageTransformContainer
 import org.gradle.model.Mutate
 import org.gradle.model.RuleSource
