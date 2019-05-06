@@ -7,9 +7,12 @@ import org.gradle.api.Task
 import org.gradle.nativeplatform.NativeBinarySpec
 import org.gradle.nativeplatform.tasks.AbstractLinkTask
 
+import javax.inject.Inject
+
 @CompileStatic
 class NativeArtifact extends FileArtifact implements TaskHungryArtifact {
 
+    @Inject
     NativeArtifact(String name, Project project) {
         super(name, project)
         component = name

@@ -8,6 +8,6 @@ interface Resolver<T> {
     T resolve(Object o)
 
     @CompileStatic
-    @InheritConstructors
+    @InheritConstructors(constructorAnnotations = true)
     static class ResolveFailedException extends RuntimeException {}
 }

@@ -9,7 +9,7 @@ import java.nio.file.Files
 import java.security.MessageDigest
 
 @CompileStatic
-@InheritConstructors
+@InheritConstructors(constructorAnnotations = true)
 class Md5SumCacheMethod extends AbstractCacheMethod {
     private Logger log = Logger.getLogger(Md5SumCacheMethod)
     private int csI = 0

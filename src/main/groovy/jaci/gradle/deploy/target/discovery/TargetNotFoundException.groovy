@@ -4,6 +4,6 @@ import groovy.transform.CompileStatic
 import groovy.transform.InheritConstructors
 
 @CompileStatic
-@InheritConstructors
+@InheritConstructors(constructorAnnotations = true)
 class TargetNotFoundException extends RuntimeException {
 }

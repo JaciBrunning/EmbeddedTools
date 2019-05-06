@@ -6,7 +6,7 @@ import jaci.gradle.deploy.target.discovery.action.DiscoveryAction
 import jaci.gradle.deploy.target.discovery.action.SshDiscoveryAction
 
 @CompileStatic
-@InheritConstructors
+@InheritConstructors(constructorAnnotations = true)
 class SshDeployLocation extends AbstractDeployLocation {
 
     String address = null

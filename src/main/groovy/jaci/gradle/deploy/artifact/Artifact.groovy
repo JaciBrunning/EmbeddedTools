@@ -1,6 +1,7 @@
 package jaci.gradle.deploy.artifact
 
 import groovy.transform.CompileStatic
+import org.gradle.api.Action
 import jaci.gradle.deploy.context.DeployContext
 import org.gradle.api.DomainObjectSet
 import org.gradle.api.Named
@@ -20,13 +21,11 @@ interface Artifact extends Named {
 
     String getDirectory()
 
-    List<Closure> getPredeploy()
-    void setPredeploy(List<Closure> actions)
+    List<Action<DeployContext>> getPredeploy()
 
-    List<Closure> getPostdeploy()
-    void setPostdeploy(List<Closure> actions)
+    List<Action<DeployContext>> getPostdeploy()
 
-    void setOnlyIf(Closure action)
+    void setOnlyIf(Action<DeployContext> action)
 
     boolean isEnabled(DeployContext context)
 

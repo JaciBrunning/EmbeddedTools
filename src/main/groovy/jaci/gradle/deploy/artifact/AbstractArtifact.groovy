@@ -1,17 +1,18 @@
 package jaci.gradle.deploy.artifact
 
 import groovy.transform.CompileStatic
-import jaci.gradle.ClosureUtils
+import org.gradle.api.Action
 import jaci.gradle.deploy.context.DeployContext
+import jaci.gradle.ActionWrapper
 import org.gradle.api.DomainObjectSet
 import org.gradle.api.Project
 import org.gradle.api.internal.DefaultDomainObjectSet
 import org.gradle.api.tasks.TaskCollection
-import org.gradle.util.Configurable
-import org.gradle.util.ConfigureUtil
+
+import javax.inject.Inject
 
 @CompileStatic
-abstract class AbstractArtifact implements Artifact, Configurable<Artifact> {
+abstract class AbstractArtifact implements Artifact {
     private final String name
     private final Project project
 
@@ -20,6 +21,7 @@ abstract class AbstractArtifact implements Artifact, Configurable<Artifact> {
 
     private disabled = false
 
+    @Inject
     AbstractArtifact(String name, Project project) {
         this.name = name
         this.project = project
@@ -54,9 +56,20 @@ abstract class AbstractArtifact implements Artifact, Configurable<Artifact> {
 
     // Groovy generates get/set
     String directory = null
-    List<Closure> predeploy  = []
-    List<Closure> postdeploy = []
-    Closure onlyIf           = null
+    // Need the WrappedArrayList to overload operator <<
+    List<Action<DeployContext>> predeploy  = new WrappedArrayList()
+    List<Action<DeployContext>> postdeploy = new WrappedArrayList()
+    Action<DeployContext> onlyIf           = null
+
+    // Must declare both, as groovy's implicit properties
+    // get disabled with an explicit implementation
+    void setOnlyIf(Closure closure) {
+        onlyIf = new ActionWrapper<DeployContext>(closure)
+    }
+
+    void setOnlyIf(Action<DeployContext> action) {
+        onlyIf = action
+    }
 
     void setDisabled() {
         setDisabled(true)
@@ -73,11 +86,7 @@ abstract class AbstractArtifact implements Artifact, Configurable<Artifact> {
     boolean isEnabled(DeployContext ctx) {
         return disabled ? false :
                 onlyIf == null ? true :
-                        (ClosureUtils.delegateCall(ctx, onlyIf) || ctx?.deployLocation?.target?.isDry())
-    }
-
-    AbstractArtifact configure(Closure closure) {
-        return ConfigureUtil.configureSelf(closure, this)
+                        (onlyIf.execute(ctx) || ctx?.deployLocation?.target?.isDry())
     }
 
     @Override

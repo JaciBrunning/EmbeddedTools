@@ -2,6 +2,7 @@ package jaci.gradle.deploy.cache
 
 import groovy.transform.CompileStatic
 import jaci.gradle.Resolver
+import org.gradle.api.Action
 import org.gradle.api.Project
 import org.gradle.api.internal.DefaultNamedDomainObjectSet
 import org.gradle.internal.reflect.DirectInstantiator
@@ -19,14 +20,14 @@ class CacheExtension extends DefaultNamedDomainObjectSet<CacheMethod> implements
         method("md5sum", Md5SumCacheMethod, {})
     }
 
-    CacheMethod method(String name, Class<? extends AbstractCacheMethod> type, final Closure config) {
-        def cm = type.newInstance(name)
-        project.configure(cm, config)
+    public <T extends AbstractCacheMethod> CacheMethod method(String name, Class<T> type, final Action<T> config) {
+        AbstractCacheMethod cm = project.objects.newInstance(type, name)
+        config.execute(cm);
         this << (cm)
         return cm
     }
 
-    CacheMethod method(String name, final Closure config) {
+    CacheMethod method(String name, final Action<? extends DefaultCacheMethod> config) {
         return method(name, DefaultCacheMethod, config)
     }
 
@@ -39,9 +40,13 @@ class CacheExtension extends DefaultNamedDomainObjectSet<CacheMethod> implements
             return (CacheMethod)cache
         } else if (cache instanceof String || cache instanceof GString) {
             return getByName(cache.toString())
+        } else if (cache instanceof CacheCheckerFunction) {
+            def dcm = new DefaultCacheMethod("customCacheMethod")
+            dcm.needsUpdate = (cache as CacheCheckerFunction)
+            return dcm
         } else if (cache instanceof Closure<Boolean>) {
             def dcm = new DefaultCacheMethod("customCacheMethod")
-            dcm.needsUpdate = (cache as Closure<Boolean>)
+            dcm.needsUpdate = (cache as CacheCheckerFunction)
             return dcm
         }
 

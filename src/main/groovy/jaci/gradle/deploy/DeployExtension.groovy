@@ -2,13 +2,17 @@ package jaci.gradle.deploy
 
 import groovy.transform.CompileStatic
 import jaci.gradle.deploy.artifact.AbstractArtifact
+import jaci.gradle.deploy.artifact.Artifact
 import jaci.gradle.deploy.artifact.ArtifactDeployTask
 import jaci.gradle.deploy.artifact.ArtifactsExtension
 import jaci.gradle.deploy.artifact.CacheableArtifact
 import jaci.gradle.deploy.cache.CacheExtension
+import jaci.gradle.deploy.cache.CacheMethod
 import jaci.gradle.deploy.target.RemoteTarget
 import jaci.gradle.deploy.target.TargetsExtension
 import jaci.gradle.deploy.target.discovery.TargetDiscoveryTask
+import org.gradle.api.Action
+import org.gradle.api.NamedDomainObjectCollection
 import org.gradle.api.Project
 import org.gradle.api.Task
 import org.gradle.api.plugins.ExtensionAware
@@ -66,15 +70,15 @@ class DeployExtension {
         }
     }
 
-    def targets(final Closure closure) {
-        project.configure(targets as Object, closure)
+    def targets(final Action<NamedDomainObjectCollection<? extends RemoteTarget>> action) {
+        action.execute(targets)
     }
 
-    def artifacts(final Closure closure) {
-        project.configure(artifacts as Object, closure)
+    def artifacts(final Action<NamedDomainObjectCollection<? extends Artifact>> action) {
+        action.execute(artifacts)
     }
 
-    def cache(final Closure closure) {
-        project.configure(cache as Object, closure)
+    def cache(final Action<NamedDomainObjectCollection<? extends CacheMethod>> action) {
+        action.execute(cache)
     }
 }

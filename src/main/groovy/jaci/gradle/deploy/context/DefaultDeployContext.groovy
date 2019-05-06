@@ -8,6 +8,8 @@ import jaci.gradle.deploy.sessions.SessionController
 import jaci.gradle.deploy.target.location.DeployLocation
 import jaci.gradle.log.ETLogger
 
+import javax.inject.Inject
+
 @CompileStatic
 class DefaultDeployContext implements DeployContext {
 
@@ -16,6 +18,7 @@ class DefaultDeployContext implements DeployContext {
     private DeployLocation deployLocation
     private String workingDir
 
+    @Inject
     DefaultDeployContext(SessionController session, ETLogger logger, DeployLocation deployLocation, String workingDir) {
         this.session = session
         this.logger = logger

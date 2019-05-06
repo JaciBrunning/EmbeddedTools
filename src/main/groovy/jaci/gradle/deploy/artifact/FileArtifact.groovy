@@ -7,9 +7,12 @@ import jaci.gradle.deploy.context.DeployContext
 import org.gradle.api.Project
 import org.gradle.api.provider.Property
 
+import javax.inject.Inject
+
 @CompileStatic
 class FileArtifact extends AbstractArtifact implements CacheableArtifact {
 
+    @Inject
     FileArtifact(String name, Project project) {
         super(name, project)
         file = project.objects.property(File.class)
