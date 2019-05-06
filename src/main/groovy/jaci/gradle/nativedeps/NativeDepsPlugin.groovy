@@ -32,34 +32,6 @@ class NativeDepsPlugin implements Plugin<Project> {
     @Override
     void apply(Project project) {
         DependencySpecExtension dse = project.extensions.create("ETDependencySpecs", DependencySpecExtension, project)
-
-        project.extensions.add("useLibrary", { Object closureArg, String... names ->
-            if (closureArg in VariantComponentSpec) {
-                VariantComponentSpec component = (VariantComponentSpec)closureArg
-                component.binaries.withType(NativeBinarySpec).all { NativeBinarySpec bin ->
-                    Set<DelegatedDependencySet> dds = names.collect { String name ->
-                        new DelegatedDependencySet(name, bin, dse)
-                    } as Set
-
-                    dds.each { DelegatedDependencySet set ->
-                        bin.lib(set)
-                    }
-                }
-            } else if (closureArg in NativeBinarySpec) {
-                NativeBinarySpec bin = (NativeBinarySpec) closureArg
-                Set<DelegatedDependencySet> dds = names.collect { String name ->
-                    new DelegatedDependencySet(name, bin, dse)
-                } as Set
-
-                dds.each { DelegatedDependencySet set ->
-                    bin.lib(set)
-                }
-            } else if (closureArg in LanguageSourceSet) {
-                throw new GradleException('The useLibrary command needs to be placed directly in the component. Move it outside of the sources declaration.')
-            } else {
-                throw new GradleException('Unknown type for useLibrary target. You put this declaration in a weird place...')
-            }
-        })
     }
 
     static class NativeDepsRules extends RuleSource {

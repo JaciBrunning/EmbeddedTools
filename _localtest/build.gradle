@@ -109,7 +109,7 @@ model {
             sources.cpp {
                 source.srcDirs "src_c"
             }
-            useLibrary(it, "wpi_headers")
+            embeddedTools.useLibrary(it, "wpi_headers")
         }
     }
 }
@@ -226,7 +226,7 @@ buildScan {
 //                source.srcDirs "src_c"
 //            }
 //
-//            useLibrary(it, "wpilib")
+//            embeddedTools.useLibrary(it, "wpilib")
 //        }
 //    }
 //}

@@ -1,18 +1,18 @@
 EmbeddedTools
 ====
-Compile and Deploy for Embedded Targets in both Java and C++. 
+Compile and Deploy for Embedded Targets in both Java and C++.
 
 EmbeddedTools adds compiler and library rules to make writing native software easier.
 For all projects, you can define deployment targets and artifacts. The deploy process works over SSH/SFTP and
 is extremely quick.
 
-Commands:   
-`gradlew deploy` will deploy all artifacts  
+Commands:
+`gradlew deploy` will deploy all artifacts
 `gradlew deploy<artifact name><target name>` will deploy only the specified artifact to the specified target
 
-Properties:    
-`gradlew deploy -Pdeploy-dirty` will skip the cache check and force redeployment of all files  
-`gradlew deploy -Pdeploy-dry` will do a 'dry run' (will not connect or deploy to target, instead only printing to console)  
+Properties:
+`gradlew deploy -Pdeploy-dirty` will skip the cache check and force redeployment of all files
+`gradlew deploy -Pdeploy-dry` will do a 'dry run' (will not connect or deploy to target, instead only printing to console)
 
 ## Installing plugin
 Include the following in your `build.gradle`
@@ -24,7 +24,7 @@ plugins {
 
 See [https://plugins.gradle.org/plugin/jaci.gradle.EmbeddedTools](https://plugins.gradle.org/plugin/jaci.gradle.EmbeddedTools) for the latest version
 
-## Spec 
+## Spec
 
 ```gradle
 import jaci.gradle.toolchains.*
@@ -87,7 +87,7 @@ deploy {
             // Output will be stored in 'result' after execution
         }
 
-        // JavaArtifact inherits from FileArtifact 
+        // JavaArtifact inherits from FileArtifact
         javaArtifact('myJavaArtifact') {
             jar = 'jar'                         // The jar (or Jar task) to deploy. Default: 'jar'
             // Note: This artifact will automatically depend on the jar build task
@@ -97,7 +97,7 @@ deploy {
         nativeArtifact('myNativeArtifact') {
             component = 'my_program'            // Required. The name of the native component (model.components {}) to deploy.
             targetPlatform = 'desktop'          // The name of the native platform (model.platforms {}) to deploy.
-            
+
             // Note: This artifact will automatically depend on the native component link task
         }
 
@@ -130,7 +130,7 @@ model {
             sharedMatchers << '**/*.so'                     // Shared Libraries to be linked at compile time
             dynamicMatchers << '**/*.so'                    // Libraries that aren't linked, but still needed at runtime.
             systemLibs << 'm'                               // System libs to load with -l (provided by toolchain)
-            
+
             maven = "some.maven.package:mylib:1.0.0@zip"    // Load from maven. Must be a zip or zip-compatible (like a jar)
             file = project.file("mylib.zip")                // Load from filesystem instead. Can be given a zip or a directory.
         }
@@ -143,7 +143,7 @@ model {
 
     components {
         my_program(NativeExecutableSpec) {
-            useLibrary(it, "myComboLib")
+            embeddedTools.useLibrary(it, "myComboLib")
         }
     }
 }
