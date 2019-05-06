@@ -1,6 +1,7 @@
 package jaci.gradle.deploy.artifact
 
 import groovy.transform.CompileStatic
+import org.gradle.api.Action
 import jaci.gradle.Resolver
 import org.gradle.api.Action
 import org.gradle.api.Project
@@ -18,46 +19,46 @@ class ArtifactsExtension extends DefaultNamedDomainObjectSet<Artifact> implement
         this.project = project
     }
 
-    Artifact artifact(String name, Class<? extends Artifact> type, final Closure config) {
-        def artifact = type.newInstance(name, project)
-        project.configure(artifact, config)
+    public <T extends Artifact> Artifact  artifact(String name, Class<T> type, final Action<T> config) {
+        Artifact artifact = project.objects.newInstance(type, name, project)
+        config.execute(artifact);
         this << (artifact)
         return artifact
     }
 
-    Artifact fileArtifact(String name, final Closure config) {
+    Artifact fileArtifact(String name, final Action<? extends FileArtifact> config) {
         return artifact(name, FileArtifact, config)
     }
 
-    Artifact fileCollectionArtifact(String name, final Closure config) {
+    Artifact fileCollectionArtifact(String name, final Action<? extends FileCollectionArtifact> config) {
         return artifact(name, FileCollectionArtifact, config)
     }
 
-    Artifact fileTreeArtifact(String name, final Closure config) {
+    Artifact fileTreeArtifact(String name, final Action<? extends FileTreeArtifact> config) {
         return artifact(name, FileTreeArtifact, config)
     }
 
-    Artifact commandArtifact(String name, final Closure config) {
+    Artifact commandArtifact(String name, final Action<? extends CommandArtifact> config) {
         return artifact(name, CommandArtifact, config)
     }
 
-    Artifact javaArtifact(String name, final Closure config) {
+    Artifact javaArtifact(String name, final Action<? extends JavaArtifact> config) {
         return artifact(name, JavaArtifact, config)
     }
 
-    Artifact nativeArtifact(String name, final Closure config) {
+    Artifact nativeArtifact(String name, final Action<? extends NativeArtifact> config) {
         return artifact(name, NativeArtifact, config)
     }
 
-    Artifact nativeLibraryArtifact(String name, final Closure config) {
+    Artifact nativeLibraryArtifact(String name, final Action<? extends NativeLibraryArtifact> config) {
         return artifact(name, NativeLibraryArtifact, config)
     }
 
-    Artifact binaryLibraryArtifact(String name, final Closure config) {
+    Artifact binaryLibraryArtifact(String name, final Action<? extends BinaryLibraryArtifact> config) {
         return artifact(name, BinaryLibraryArtifact, config)
     }
 
-    Artifact mavenArtifact(String name, final Closure config) {
+    Artifact mavenArtifact(String name, final Action<? extends MavenArtifact> config) {
         return artifact(name, MavenArtifact, config)
     }
 

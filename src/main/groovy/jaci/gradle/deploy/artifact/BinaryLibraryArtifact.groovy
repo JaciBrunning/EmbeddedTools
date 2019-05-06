@@ -6,9 +6,12 @@ import org.gradle.api.Project
 import org.gradle.api.file.FileCollection
 import org.gradle.nativeplatform.NativeBinarySpec
 
+import javax.inject.Inject
+
 @CompileStatic
 class BinaryLibraryArtifact extends FileCollectionArtifact {
 
+    @Inject
     BinaryLibraryArtifact(String name, Project project) {
         super(name, project)
     }

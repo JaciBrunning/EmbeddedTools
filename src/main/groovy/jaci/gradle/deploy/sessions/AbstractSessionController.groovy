@@ -5,6 +5,8 @@ import org.apache.log4j.Logger
 
 import java.util.concurrent.Semaphore
 
+import javax.inject.Inject
+
 @CompileStatic
 abstract class AbstractSessionController implements SessionController {
 
@@ -12,6 +14,7 @@ abstract class AbstractSessionController implements SessionController {
     private Logger log
     private int semI
 
+    @Inject
     AbstractSessionController(int maxConcurrent) {
         semaphore = new Semaphore(maxConcurrent)
         semI = 0

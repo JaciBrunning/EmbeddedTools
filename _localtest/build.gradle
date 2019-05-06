@@ -5,7 +5,7 @@ buildscript {
     }
     dependencies {
         classpath 'com.jcraft:jsch:0.1.53'
-        classpath group: "jaci.gradle", name: "EmbeddedTools", version: "2018.11.05"
+        classpath group: "jaci.gradle", name: "EmbeddedTools", version: "2018.12.222"
     }
 }
 
@@ -109,7 +109,7 @@ model {
             sources.cpp {
                 source.srcDirs "src_c"
             }
-            useLibrary(it, "wpi_headers")
+            embeddedTools.useLibrary(it, "wpi_headers")
         }
     }
 }
@@ -226,7 +226,7 @@ buildScan {
 //                source.srcDirs "src_c"
 //            }
 //
-//            useLibrary(it, "wpilib")
+//            embeddedTools.useLibrary(it, "wpilib")
 //        }
 //    }
 //}
@@ -236,5 +236,5 @@ jar {
 }
 
 wrapper {
-    gradleVersion = '4.9'
+    gradleVersion = '5.0'
 }

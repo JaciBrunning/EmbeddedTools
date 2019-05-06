@@ -1,7 +1,7 @@
 package jaci.gradle.log
 
 import groovy.transform.CompileStatic
-import jaci.gradle.ClosureUtils
+import org.gradle.api.Action
 import org.apache.log4j.Logger
 import org.gradle.internal.logging.text.StyledTextOutput
 
@@ -33,10 +33,10 @@ class ETLogger {
         return new ETLogger(name, colorOut, indent + 2)
     }
 
-    void withLock(Closure c) {
+    void withLock(Action<ETLogger> c) {
         this.semaphore.acquire()
         try {
-            ClosureUtils.delegateCall(this, c)
+            c.execute(this);
         } finally {
             this.semaphore.release()
         }

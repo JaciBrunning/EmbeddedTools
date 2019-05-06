@@ -7,10 +7,12 @@ import org.gradle.api.Task
 import org.gradle.api.tasks.bundling.Jar
 
 import java.util.concurrent.Callable
+import javax.inject.Inject
 
 @CompileStatic
 class JavaArtifact extends FileArtifact implements TaskHungryArtifact {
 
+    @Inject
     JavaArtifact(String name, Project project) {
         super(name, project)
         dependsOn({ jar } as Callable<Object>)

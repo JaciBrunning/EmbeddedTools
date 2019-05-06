@@ -8,9 +8,12 @@ import org.gradle.api.Project
 import org.gradle.api.file.FileCollection
 import org.gradle.api.provider.Property
 
+import javax.inject.Inject
+
 @CompileStatic
 class FileCollectionArtifact extends AbstractArtifact implements CacheableArtifact {
 
+    @Inject
     FileCollectionArtifact(String name, Project project) {
         super(name, project)
         files = project.objects.property(FileCollection.class)
