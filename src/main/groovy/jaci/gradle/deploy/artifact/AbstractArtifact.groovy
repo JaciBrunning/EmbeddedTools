@@ -3,11 +3,12 @@ package jaci.gradle.deploy.artifact
 import groovy.transform.CompileStatic
 import org.gradle.api.Action
 import jaci.gradle.deploy.context.DeployContext
-import jaci.gradle.ActionWrapper
+import jaci.gradle.PredicateWrapper
 import org.gradle.api.DomainObjectSet
 import org.gradle.api.Project
 import org.gradle.api.internal.DefaultDomainObjectSet
 import org.gradle.api.tasks.TaskCollection
+import java.util.function.Predicate
 
 import javax.inject.Inject
 
@@ -59,15 +60,15 @@ abstract class AbstractArtifact implements Artifact {
     // Need the WrappedArrayList to overload operator <<
     List<Action<DeployContext>> predeploy  = new WrappedArrayList()
     List<Action<DeployContext>> postdeploy = new WrappedArrayList()
-    Action<DeployContext> onlyIf           = null
+    Predicate<DeployContext> onlyIf           = null
 
     // Must declare both, as groovy's implicit properties
     // get disabled with an explicit implementation
     void setOnlyIf(Closure closure) {
-        onlyIf = new ActionWrapper<DeployContext>(closure)
+        onlyIf = new PredicateWrapper<DeployContext>(closure)
     }
 
-    void setOnlyIf(Action<DeployContext> action) {
+    void setOnlyIf(Predicate<DeployContext> action) {
         onlyIf = action
     }
 
@@ -86,7 +87,7 @@ abstract class AbstractArtifact implements Artifact {
     boolean isEnabled(DeployContext ctx) {
         return disabled ? false :
                 onlyIf == null ? true :
-                        (onlyIf.execute(ctx) || ctx?.deployLocation?.target?.isDry())
+                        (onlyIf.test(ctx) || ctx?.deployLocation?.target?.isDry())
     }
 
     @Override
