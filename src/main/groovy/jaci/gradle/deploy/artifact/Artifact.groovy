@@ -7,6 +7,7 @@ import org.gradle.api.DomainObjectSet
 import org.gradle.api.Named
 import org.gradle.api.Project
 import org.gradle.api.tasks.TaskCollection
+import java.util.function.Predicate
 
 @CompileStatic
 interface Artifact extends Named {
@@ -25,7 +26,7 @@ interface Artifact extends Named {
 
     List<Action<DeployContext>> getPostdeploy()
 
-    void setOnlyIf(Action<DeployContext> action)
+    void setOnlyIf(Predicate<DeployContext> action)
 
     boolean isEnabled(DeployContext context)
 
