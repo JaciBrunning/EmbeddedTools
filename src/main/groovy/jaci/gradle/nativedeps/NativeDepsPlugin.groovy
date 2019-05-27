@@ -145,20 +145,20 @@ class NativeDepsPlugin implements Plugin<Project> {
 
         private static Supplier<FileTree> addDependency(Project proj, NativeLib lib) {
             def config = lib.getConfiguration() ?: "native_$lib.name".toString()
-            def cfg = proj.configurations.maybeCreate(config)
+            def cfg = proj.rootProject.configurations.maybeCreate(config)
             if (lib.getMaven() != null) {
-                def dep = proj.dependencies.add(config, lib.getMaven())
+                def dep = proj.rootProject.dependencies.add(config, lib.getMaven())
                 return new FileTreeSupplier(cfg, { Set<ResolvedArtifact> artifacts ->
-                    proj.zipTree(resolve(artifacts, dep))
+                    proj.rootProject.zipTree(resolve(artifacts, dep))
                 } as Function<Set<ResolvedArtifact>, FileTree>)
             } else if (lib.getFile() != null && lib.getFile().directory) {
                 // File is a directory
                 return {
-                    proj.fileTree(lib.getFile())
+                    proj.rootProject.fileTree(lib.getFile())
                 } as Supplier<FileTree>
             } else if (lib.getFile() != null && lib.getFile().file) {
                 return {
-                    proj.zipTree(lib.getFile())
+                    proj.rootProject.zipTree(lib.getFile())
                 } as Supplier<FileTree>
             } else {
                 throw new GradleException("No target defined for dependency ${lib.name} (maven=${lib.getMaven()} file=${lib.getFile()})")
