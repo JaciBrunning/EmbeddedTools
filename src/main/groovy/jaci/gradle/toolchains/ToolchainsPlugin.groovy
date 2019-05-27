@@ -21,13 +21,25 @@ import org.gradle.platform.base.internal.BinarySpecInternal
 
 @CompileStatic
 class ToolchainsPlugin implements Plugin<Project> {
+    static List<String> skippedPlatforms = []
+    static boolean singlePrintPerPlatform
+
     void apply(Project project) {
         project.getPluginManager().apply(NativeComponentPlugin.class)
         project.extensions.create("toolchainUtil", ToolchainUtilExtension)
+
+        project.gradle.buildFinished {
+            skippedPlatforms.clear()
+            singlePrintPerPlatform = false
+        }
     }
 
     @CompileStatic
     static class ToolchainUtilExtension {
+        void setSinglePrintPerPlatform() {
+            ToolchainsPlugin.singlePrintPerPlatform = true
+        }
+
         void defineGccTools(GccPlatformToolChain platformToolchain, String prefix, String suffix) {
             platformToolchain.cppCompiler.executable       = prefix + platformToolchain.cppCompiler.executable + suffix
             platformToolchain.cCompiler.executable         = prefix + platformToolchain.cCompiler.executable + suffix
@@ -48,12 +60,14 @@ class ToolchainsPlugin implements Plugin<Project> {
                 "asm" : ToolType.ASSEMBLER
         ]
 
-        static void markUnavailable(ETLogger log, NativeBinarySpec bin, String reason, boolean disable, boolean error) {
+        static void markUnavailable(ETLogger log, NativeBinarySpec bin, String reason, boolean disable, boolean error, boolean skipPrint) {
             String msg = "Skipping build: $bin: $reason"
-            if (error)
-                log.logErrorHead(msg)
-            else
-                log.logStyle(msg, StyledTextOutput.Style.Info)
+            if (!skipPrint) {
+                if (error)
+                    log.logErrorHead(msg)
+                else
+                    log.logStyle(msg, StyledTextOutput.Style.Info)
+            }
 
             if (disable)
                 ((BinarySpecInternal)bin).setBuildable(false)
@@ -83,7 +97,7 @@ class ToolchainsPlugin implements Plugin<Project> {
 
                             def searchResult = toolProvider.locateTool(requiresTool)
                             if (!searchResult.isAvailable()) {
-                                markUnavailable(log, bin, "Toolchain ${tc.name} cannot build ${bin.targetPlatform.name} (tool ${requiresTool} not found)", true, true)
+                                markUnavailable(log, bin, "Toolchain ${tc.name} cannot build ${bin.targetPlatform.name} (tool ${requiresTool} not found)", true, true, true)
                                 log.info("Could not find tool: ${requiresTool}")
                                 def fmt = new TreeFormatter()
                                 searchResult.explain(fmt)
@@ -92,14 +106,22 @@ class ToolchainsPlugin implements Plugin<Project> {
                         }
                     }
                     if (!hasTransform)
-                        markUnavailable(log, bin, "Binary does not have a language transform for input ${ss}.", true, true)
+                        markUnavailable(log, bin, "Binary does not have a language transform for input ${ss}.", true, true, true)
                 }
                 if (bin.inputs.empty) {
-                    markUnavailable(log, bin, "Binary has no inputs", true, true)
+                    markUnavailable(log, bin, "Binary has no inputs", true, true, true)
                 }
             } else {
                 // Gradle automatically disables cases where a toolchain can't be found for this platform.
-                markUnavailable(log, bin, "Could not find valid toolchain for platform ${bin.targetPlatform.name}", false, false)
+                boolean doPrint = true;
+                if (ToolchainsPlugin.singlePrintPerPlatform) {
+                    doPrint = false
+                    if (!ToolchainsPlugin.skippedPlatforms.contains(bin.targetPlatform.name)) {
+                        ToolchainsPlugin.skippedPlatforms.add(bin.targetPlatform.name)
+                        doPrint = true
+                    }
+                }
+                markUnavailable(log, bin, "Could not find valid toolchain for platform ${bin.targetPlatform.name}", false, false, doPrint)
             }
         }
 
