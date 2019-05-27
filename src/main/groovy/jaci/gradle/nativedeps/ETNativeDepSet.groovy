@@ -16,6 +16,7 @@ public class ETNativeDepSet implements NativeDependencySet, SystemLibsDependency
 
     Project         project
     String          name
+    boolean         resolvedDebug
     FileCollection  linkLibs, dynamicLibs, debugLibs
     IDirectoryTree  headers, sources
     List<String>    systemLibs
@@ -56,6 +57,10 @@ public class ETNativeDepSet implements NativeDependencySet, SystemLibsDependency
 
     @Override
     FileCollection getLinkFiles() {
+        if (!resolvedDebug) {
+            debugLibs.getFiles()
+            resolvedDebug = true
+        }
         return linkLibs
     }
 
