@@ -145,16 +145,16 @@ class NativeDepsPlugin implements Plugin<Project> {
 
         private static Supplier<FileTree> addDependency(Project proj, NativeLib lib) {
             def config = lib.getConfiguration() ?: "native_$lib.name".toString()
-            def cfg = proj.rootProject.configurations.maybeCreate(config)
+            def cfg = proj.configurations.maybeCreate(config)
             if (lib.getMaven() != null) {
-                def dep = proj.rootProject.dependencies.add(config, lib.getMaven())
+                def dep = proj.dependencies.add(config, lib.getMaven())
                 return new FileTreeSupplier(cfg, { Set<ResolvedArtifact> artifacts ->
                     proj.rootProject.zipTree(resolve(artifacts, dep))
                 } as Function<Set<ResolvedArtifact>, FileTree>)
             } else if (lib.getFile() != null && lib.getFile().directory) {
                 // File is a directory
                 return {
-                    proj.rootProject.fileTree(lib.getFile())
+                    proj.fileTree(lib.getFile())
                 } as Supplier<FileTree>
             } else if (lib.getFile() != null && lib.getFile().file) {
                 return {
