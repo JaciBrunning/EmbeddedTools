@@ -21,6 +21,7 @@ abstract class AbstractArtifact implements Artifact {
     private DomainObjectSet<Object> targets = new DefaultDomainObjectSet<>(Object)
 
     private disabled = false
+    private explicit = false
 
     @Inject
     AbstractArtifact(String name, Project project) {
@@ -88,6 +89,16 @@ abstract class AbstractArtifact implements Artifact {
         return disabled ? false :
                 onlyIf == null ? true :
                         (onlyIf.test(ctx) || ctx?.deployLocation?.target?.isDry())
+    }
+
+    @Override
+    boolean isExplicit() {
+        return this.explicit
+    }
+
+    @Override
+    void setExplicit(boolean isExplicit) {
+        this.explicit = isExplicit
     }
 
     @Override

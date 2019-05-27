@@ -63,7 +63,7 @@ class DeployExtension {
         def deployTask = project.tasks.register("deploy") { Task task ->
             task.group = "EmbeddedTools"
             task.description = "Deploy all artifacts on all targets"
-            task.dependsOn(project.tasks.withType(ArtifactDeployTask))
+            task.dependsOn({ project.tasks.withType(ArtifactDeployTask).matching { ArtifactDeployTask t -> !t.artifact.explicit }} as Callable<TaskCollection> )
 //            project.tasks.withType(ArtifactDeployTask).all { ArtifactDeployTask task2 ->
 //                task.dependsOn(task2)
 //            }

@@ -34,4 +34,7 @@ interface Artifact extends Named {
     void setDisabled()
 
     void deploy(DeployContext context)
+
+    boolean isExplicit()
+    void setExplicit(boolean explicit)
 }
