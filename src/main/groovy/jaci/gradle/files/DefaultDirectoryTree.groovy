@@ -2,6 +2,7 @@ package jaci.gradle.files
 
 import groovy.transform.CompileStatic
 import org.gradle.api.file.DirectoryTree
+import org.gradle.api.file.FileCollection
 import org.gradle.api.file.FileTree
 import org.gradle.api.file.FileVisitDetails
 import org.gradle.api.internal.file.collections.FileSystemMirroringFileTree
@@ -43,6 +44,8 @@ class DefaultDirectoryTree extends AbstractDirectoryTree {
                 else
                     dirTree = (lTree as LocalFileTree).getLocalContents().first()
                 rootDir = dirTree.dir
+            } else if (tree instanceof FileCollection) {
+                tree = ((FileCollection)tree).files
             }
 
             new File(rootDir, subdir)

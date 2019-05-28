@@ -5,12 +5,12 @@ buildscript {
     }
     dependencies {
         classpath 'com.jcraft:jsch:0.1.53'
-        classpath group: "jaci.gradle", name: "EmbeddedTools", version: "2018.12.222"
+        classpath group: "jaci.gradle", name: "EmbeddedTools", version: "2019.5.26"
     }
 }
 
 plugins {
-    id 'com.gradle.build-scan' version '1.15'
+    id 'com.gradle.build-scan' version '2.0.2'
 }
 
 apply plugin: "java"
@@ -26,6 +26,10 @@ import jaci.gradle.toolchains.*
 repositories.maven { repo ->
     repo.name = "WPI"
     repo.url = "http://first.wpi.edu/FRC/roborio/maven/release"
+}
+
+dependencies {
+    compile "edu.wpi.first.wpilibj:wpilibj-java:+"
 }
 
 deploy {
@@ -89,6 +93,12 @@ model {
             maven = "edu.wpi.first.wpilibc:wpilibc:2018.4.1:headers@zip"
             configuration = "wpilib"
         }
+        wpi_sources(NativeLib) {
+            targetPlatform = "desktop"
+            maven = "edu.wpi.first.wpilibc:wpilibc:2018.4.1:windowsx86-64@zip"
+            configuration = "wpilibsources"
+            staticMatchers = ["**/static/*.lib"];
+        }
     }
 
     platforms {
@@ -109,14 +119,14 @@ model {
             sources.cpp {
                 source.srcDirs "src_c"
             }
-            embeddedTools.useLibrary(it, "wpi_headers")
+            embeddedTools.useLibrary(it, "wpi_headers", "wpi_sources")
         }
     }
 }
 
 buildScan {
-  licenseAgreementUrl = 'https://gradle.com/terms-of-service'
-  licenseAgree = 'yes'
+    termsOfServiceUrl = 'https://gradle.com/terms-of-service'
+    termsOfServiceAgree = 'yes'
 }
 
 //model {
@@ -236,5 +246,5 @@ jar {
 }
 
 wrapper {
-    gradleVersion = '5.0'
+    gradleVersion = '5.4.1'
 }
