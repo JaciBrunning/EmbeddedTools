@@ -6,6 +6,10 @@ import jaci.gradle.SortUtils
 import jaci.gradle.files.FileTreeSupplier
 import jaci.gradle.files.DefaultDirectoryTree
 import jaci.gradle.files.IDirectoryTree
+import org.gradle.api.artifacts.type.ArtifactTypeDefinition
+import org.gradle.api.attributes.Usage
+import org.gradle.api.internal.artifacts.ArtifactAttributes
+import org.gradle.api.internal.artifacts.transform.UnzipTransform
 import org.gradle.api.*
 import org.gradle.api.artifacts.*
 import org.gradle.api.file.FileCollection
@@ -25,6 +29,9 @@ import org.gradle.platform.base.VariantComponentSpec
 import java.util.concurrent.Callable
 import java.util.function.Supplier
 import java.util.function.Function
+
+import static org.gradle.api.artifacts.type.ArtifactTypeDefinition.DIRECTORY_TYPE
+import static org.gradle.api.artifacts.type.ArtifactTypeDefinition.ZIP_TYPE
 
 @CompileStatic
 class NativeDepsPlugin implements Plugin<Project> {
@@ -144,13 +151,23 @@ class NativeDepsPlugin implements Plugin<Project> {
         }
 
         private static Supplier<FileTree> addDependency(Project proj, NativeLib lib) {
+            def objects = proj.objects
             def config = lib.getConfiguration() ?: "native_$lib.name".toString()
             def cfg = proj.configurations.maybeCreate(config)
+            proj.dependencies.registerTransform(UnzipTransform, { variantTransform->
+                variantTransform.getFrom().attribute(ArtifactAttributes.ARTIFACT_FORMAT, ZIP_TYPE);
+                variantTransform.getTo().attribute(ArtifactAttributes.ARTIFACT_FORMAT, DIRECTORY_TYPE);
+            })
             if (lib.getMaven() != null) {
                 def dep = proj.dependencies.add(config, lib.getMaven())
-                return new FileTreeSupplier(cfg, { Set<ResolvedArtifact> artifacts ->
-                    proj.zipTree(resolve(artifacts, dep))
-                } as Function<Set<ResolvedArtifact>, FileTree>)
+                def includeDirs = cfg.getIncoming().artifactView({ viewConfiguration ->
+                    viewConfiguration.attributes({ attributeContainer ->
+                        attributeContainer.attribute(ArtifactAttributes.ARTIFACT_FORMAT, ArtifactTypeDefinition.DIRECTORY_TYPE);
+                    });
+                });
+                return {
+                    proj.fileTree(includeDirs.files.singleFile)
+                } as Supplier<FileTree>
             } else if (lib.getFile() != null && lib.getFile().directory) {
                 // File is a directory
                 return {
@@ -158,7 +175,7 @@ class NativeDepsPlugin implements Plugin<Project> {
                 } as Supplier<FileTree>
             } else if (lib.getFile() != null && lib.getFile().file) {
                 return {
-                    proj.zipTree(lib.getFile())
+                    proj.rootProject.zipTree(lib.getFile())
                 } as Supplier<FileTree>
             } else {
                 throw new GradleException("No target defined for dependency ${lib.name} (maven=${lib.getMaven()} file=${lib.getFile()})")
