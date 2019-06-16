@@ -5,6 +5,7 @@ import jaci.gradle.log.ETLogger
 import jaci.gradle.log.ETLoggerFactory
 import org.gradle.api.Plugin
 import org.gradle.api.Project
+import org.gradle.api.plugins.ExtensionContainer
 import org.gradle.internal.logging.text.StyledTextOutput
 import org.gradle.internal.logging.text.TreeFormatter
 import org.gradle.language.base.internal.registry.LanguageTransformContainer
@@ -21,24 +22,16 @@ import org.gradle.platform.base.internal.BinarySpecInternal
 
 @CompileStatic
 class ToolchainsPlugin implements Plugin<Project> {
-    static List<String> skippedPlatforms = []
-    static boolean singlePrintPerPlatform
 
     void apply(Project project) {
         project.getPluginManager().apply(NativeComponentPlugin.class)
         project.extensions.create("toolchainUtil", ToolchainUtilExtension)
 
-        project.gradle.buildFinished {
-            skippedPlatforms.clear()
-            singlePrintPerPlatform = false
-        }
     }
 
     @CompileStatic
     static class ToolchainUtilExtension {
-        void setSinglePrintPerPlatform() {
-            ToolchainsPlugin.singlePrintPerPlatform = true
-        }
+        boolean skipBinaryToolchainMissingWarning = false
 
         void defineGccTools(GccPlatformToolChain platformToolchain, String prefix, String suffix) {
             platformToolchain.cppCompiler.executable       = prefix + platformToolchain.cppCompiler.executable + suffix
@@ -60,9 +53,9 @@ class ToolchainsPlugin implements Plugin<Project> {
                 "asm" : ToolType.ASSEMBLER
         ]
 
-        static void markUnavailable(ETLogger log, NativeBinarySpec bin, String reason, boolean disable, boolean error, boolean skipPrint) {
+        static void markUnavailable(ETLogger log, NativeBinarySpec bin, String reason, boolean disable, boolean error, boolean doPrint) {
             String msg = "Skipping build: $bin: $reason"
-            if (!skipPrint) {
+            if (doPrint) {
                 if (error)
                     log.logErrorHead(msg)
                 else
@@ -74,7 +67,7 @@ class ToolchainsPlugin implements Plugin<Project> {
         }
 
         // TODO: drive this logic based on the platform (i.e. OptionalNativePlatform)
-        static void configureOptional(NativeBinarySpec bin, LanguageTransformContainer langTransforms) {
+        static void configureOptional(NativeBinarySpec bin, LanguageTransformContainer langTransforms, ToolchainUtilExtension tcExt) {
             def log = ETLoggerFactory.INSTANCE.create("ToolchainRules")
 
             log.debug("Configuring optionals for binary: $bin")
@@ -113,22 +106,15 @@ class ToolchainsPlugin implements Plugin<Project> {
                 }
             } else {
                 // Gradle automatically disables cases where a toolchain can't be found for this platform.
-                boolean doPrint = true;
-                if (ToolchainsPlugin.singlePrintPerPlatform) {
-                    doPrint = false
-                    if (!ToolchainsPlugin.skippedPlatforms.contains(bin.targetPlatform.name)) {
-                        ToolchainsPlugin.skippedPlatforms.add(bin.targetPlatform.name)
-                        doPrint = true
-                    }
-                }
-                markUnavailable(log, bin, "Could not find valid toolchain for platform ${bin.targetPlatform.name}", false, false, doPrint)
+                markUnavailable(log, bin, "Could not find valid toolchain for platform ${bin.targetPlatform.name}", false, false, !tcExt.skipBinaryToolchainMissingWarning)
             }
         }
 
         @Mutate
-        void configureOptionalBuildables(BinaryContainer binaries, LanguageTransformContainer languageTransforms) {
+        void configureOptionalBuildables(BinaryContainer binaries, LanguageTransformContainer languageTransforms, final ExtensionContainer ext) {
+            ToolchainUtilExtension tcExt = ext.getByType(ToolchainUtilExtension)
             binaries.withType(NativeBinarySpec) { NativeBinarySpec bin ->
-                configureOptional(bin, languageTransforms)
+                configureOptional(bin, languageTransforms, tcExt)
             }
         }
     }

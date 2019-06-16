@@ -33,7 +33,7 @@ buildScan {
 
 group = "jaci.gradle"
 archivesBaseName = "EmbeddedTools"
-version = "2019.5.26" // YYYY.MM.DD(revision)
+version = "2019.6.16" // YYYY.MM.DD(revision)
 
 sourceCompatibility = 1.8
 targetCompatibility = 1.8
@@ -78,6 +78,6 @@ gradlePlugin {
 }
 
 wrapper {
-    gradleVersion = '5.4'
+    gradleVersion = '5.4.1'
     distributionType = Wrapper.DistributionType.ALL
 }
