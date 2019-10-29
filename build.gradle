@@ -33,7 +33,7 @@ buildScan {
 
 group = "jaci.gradle"
 archivesBaseName = "EmbeddedTools"
-version = "2019.6.16" // YYYY.MM.DD(revision)
+version = "2019.10.1" // YYYY.MM.DD(revision)
 
 sourceCompatibility = 1.8
 targetCompatibility = 1.8

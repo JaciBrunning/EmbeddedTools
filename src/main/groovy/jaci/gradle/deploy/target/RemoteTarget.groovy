@@ -79,5 +79,6 @@ class RemoteTarget implements Named {
             log.debug("OnlyIf check failed! Not connecting...")
             return false
         }
+        return true
     }
 }
