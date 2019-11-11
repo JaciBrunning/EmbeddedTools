@@ -10,7 +10,7 @@ import jaci.gradle.ClosureUtils
  * Groovy's cast will never delegate the closure
  */
 @CompileStatic
-class ActionWrapper<T> implements Action {
+class ActionWrapper<T> implements Action<T> {
   private Closure closure
 
   ActionWrapper(Closure closure) {
