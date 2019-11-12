@@ -52,6 +52,10 @@ class ArtifactDeployTask extends DefaultTask {
 
         log.debug("Found ${discoveries.size()} discovery tasks")
 
+        artifact.preWorkerThread.each {
+            it.execute(artifact)
+        }
+
         def codes = discoveries.collect { TargetDiscoveryTask discover ->
             def hashcode = ArtifactDeployWorker.submitStorage(discover.activeContext(), artifact)
             workerExecutor.submit(ArtifactDeployWorker, ({ WorkerConfiguration config ->

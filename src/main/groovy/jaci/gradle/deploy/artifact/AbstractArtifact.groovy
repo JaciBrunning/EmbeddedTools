@@ -61,6 +61,7 @@ abstract class AbstractArtifact implements Artifact {
     // Need the WrappedArrayList to overload operator <<
     List<Action<DeployContext>> predeploy  = new WrappedArrayList()
     List<Action<DeployContext>> postdeploy = new WrappedArrayList()
+    List<Action<Artifact>> preWorkerThread = new WrappedArrayList()
     Predicate<DeployContext> onlyIf           = null
 
     // Must declare both, as groovy's implicit properties

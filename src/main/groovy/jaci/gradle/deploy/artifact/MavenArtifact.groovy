@@ -7,14 +7,23 @@ import jaci.gradle.deploy.context.DeployContext
 import org.gradle.api.Project
 import org.gradle.api.artifacts.Configuration
 import org.gradle.api.artifacts.Dependency
+import jaci.gradle.ActionWrapper
 
 import javax.inject.Inject
 
 @CompileStatic
 class MavenArtifact extends FileArtifact {
+
+    Set<File> deployFiles
+
     @Inject
     MavenArtifact(String name, Project project) {
         super(name, project)
+
+        preWorkerThread << new ActionWrapper({
+            if (configuration == null || dependency == null) return
+            deployFiles = configuration.files(dependency)
+        })
     }
 
     Dependency dependency
@@ -26,7 +35,7 @@ class MavenArtifact extends FileArtifact {
             ctx.logger?.log("No configuration or dependency set")
             return
         }
-        def files = configuration.files(dependency)
+        def files = deployFiles
         if (files.size() == 1) {
             File f = files.first()
             file.set(f)

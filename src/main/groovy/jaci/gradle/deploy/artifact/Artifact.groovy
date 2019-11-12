@@ -15,6 +15,8 @@ interface Artifact extends Named {
 
     void dependsOn(Object... paths)
 
+    List<Action<Artifact>> getPreWorkerThread()
+
     DomainObjectSet<Object> getDependencies()
     DomainObjectSet<Object> getTargets()
 
