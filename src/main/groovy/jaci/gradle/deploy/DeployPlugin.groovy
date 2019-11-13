@@ -40,7 +40,11 @@ class DeployPlugin implements Plugin<Project> {
         @Mutate
         void createBinariesTasks(final ModelMap<Task> tasks, final ExtensionContainer ext, final BinaryContainer binaries) {
             def deployExtension = ext.getByType(DeployExtension)
+            List<NativeArtifact> artifacts = []
             deployExtension.artifacts.withType(NativeArtifact).each { NativeArtifact artifact ->
+                artifacts << artifact
+            }
+            artifacts.each { NativeArtifact artifact ->
                 binaries.withType(NativeBinarySpec).each { NativeBinarySpec bin ->
                     if (artifact.appliesTo(bin)) {
                         bin.tasks.withType(AbstractLinkTask) { AbstractLinkTask task ->
@@ -51,6 +55,9 @@ class DeployPlugin implements Plugin<Project> {
                             deployExtension.artifacts.binaryLibraryArtifact("${artifact.name}Libraries") { BinaryLibraryArtifact bla ->
                                 bla.binary = bin
                                 artifact.configureLibsArtifact(bla)
+                                bin.tasks.withType(AbstractLinkTask) { AbstractLinkTask task ->
+                                    bla.dependsOn(task)
+                                }
                             }
                         }
                     }

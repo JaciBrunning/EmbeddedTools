@@ -4,6 +4,7 @@ import groovy.transform.CompileStatic
 import org.gradle.api.GradleException
 import org.gradle.api.Project
 import org.gradle.api.Task
+import org.gradle.api.provider.Property
 import org.gradle.nativeplatform.NativeBinarySpec
 import org.gradle.nativeplatform.tasks.AbstractLinkTask
 
@@ -16,6 +17,7 @@ class NativeArtifact extends FileArtifact implements TaskHungryArtifact {
     NativeArtifact(String name, Project project) {
         super(name, project)
         component = name
+        libraryDirectory = project.objects.property(String)
     }
 
     // Accessed in DeployPlugin rules.
@@ -24,6 +26,7 @@ class NativeArtifact extends FileArtifact implements TaskHungryArtifact {
     String buildType = null
     String flavor = null
     boolean deployLibraries = true
+    final Property<String> libraryDirectory
 
     @Override
     void taskDependenciesAvailable(Set<Task> tasks) {
@@ -42,7 +45,11 @@ class NativeArtifact extends FileArtifact implements TaskHungryArtifact {
 
     void configureLibsArtifact(BinaryLibraryArtifact bla) {
         bla.targets.addAll(targets.toSet())
-        bla.setDirectory(getDirectory())
+        if (!libraryDirectory.present) {
+            bla.setDirectory(getDirectory())
+        } else {
+            bla.setDirectory(libraryDirectory.get())
+        }
     }
 
     boolean appliesTo(NativeBinarySpec bin) {
