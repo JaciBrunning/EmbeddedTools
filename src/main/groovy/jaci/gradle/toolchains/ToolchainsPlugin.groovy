@@ -88,6 +88,10 @@ class ToolchainsPlugin implements Plugin<Project> {
                             log.debug("Found transform: ${transform.languageName}")
                             log.debug("Requires tool: ${requiresTool}")
 
+                            if (requiresTool.equals(ToolType.WINDOW_RESOURCES_COMPILER)) {
+                                continue
+                            }
+
                             def searchResult = toolProvider.locateTool(requiresTool)
                             if (!searchResult.isAvailable()) {
                                 markUnavailable(log, bin, "Toolchain ${tc.name} cannot build ${bin.targetPlatform.name} (tool ${requiresTool} not found)", true, true, true)
